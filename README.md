@@ -1,32 +1,34 @@
-# God Roll
+# 🎲 God Roll
 
-A full-stack monorepo built with Nx, featuring a React frontend and Express backend.
+A 3D dice rolling game built with Three.js and React. Roll dice with realistic physics, and try to avoid rolling a total divisible by 7!
 
-## Tech Stack
+![God Roll](https://img.shields.io/badge/Game-Dice%20Roller-green)
 
-### Frontend (`apps/web`)
+## 🎮 How to Play
 
-- **React 19** with TypeScript
-- **Vite** for fast development and builds
-- **TanStack Query** for server state management
-- **React Router DOM** for routing
+1. Click **Roll** to throw the dice
+2. Each round, you gain 1 additional die
+3. Your score accumulates with each roll
+4. **Game Over** if your roll total is divisible by 7!
+5. Try to get the highest score possible
+
+## ✨ Features
+
+- **3D Physics** - Realistic dice rolling with bounce and spin
+- **Craps-style Throws** - Dice shoot across the table left to right
+- **Cryptographic Randomness** - Uses Web Crypto API for truly unpredictable rolls
+- **Progressive Difficulty** - More dice each round = higher risk
+- **Clean UI** - Minimalist green theme
+
+## 🛠️ Tech Stack
+
+- **React 19** + TypeScript
+- **Three.js** for 3D rendering
+- **Vite** for fast builds
 - **Tailwind CSS** for styling
-- **shadcn/ui** for UI components
-- **Vitest** for unit testing
-- **Playwright** for E2E testing
+- **Nx** monorepo
 
-### Backend (`apps/api`)
-
-- **Express.js** with TypeScript
-- **Node.js** runtime
-
-### Tooling
-
-- **Nx** for monorepo management
-- **oxlint** for fast linting
-- **TypeScript** for type safety
-
-## Getting Started
+## 🚀 Getting Started
 
 ### Prerequisites
 
@@ -41,106 +43,46 @@ npm install
 
 ### Development
 
-Run the frontend:
-
 ```bash
 npm run dev:web
-# or
-nx serve @god-roll/web
 ```
 
-Run the backend:
-
-```bash
-npm run dev:api
-# or
-nx serve @god-roll/api
-```
+Open [http://localhost:4200](http://localhost:4200)
 
 ### Build
 
-Build all projects:
-
-```bash
-npm run build
-```
-
-Build individual projects:
-
 ```bash
 npm run build:web
-npm run build:api
 ```
 
-### Testing
-
-Run all tests:
+### Test
 
 ```bash
 npm run test
 ```
 
-### Linting
-
-Lint the codebase:
-
-```bash
-npm run lint
-```
-
-Fix linting issues:
-
-```bash
-npm run lint:fix
-```
-
-### Nx Commands
-
-View the project graph:
-
-```bash
-npm run graph
-```
-
-## Project Structure
+## 📁 Project Structure
 
 ```
 god-roll/
 ├── apps/
-│   ├── web/           # React frontend
-│   ├── web-e2e/       # Playwright E2E tests
-│   └── api/           # Express backend
-├── packages/          # Shared libraries
-├── nx.json            # Nx configuration
-├── oxlint.json        # Oxlint configuration
-└── package.json       # Root package.json
+│   ├── web/              # React frontend
+│   │   └── src/
+│   │       └── components/
+│   │           └── DiceRoller/   # Main game component
+│   ├── web-e2e/          # Playwright E2E tests
+│   └── api/              # Express backend (optional)
+├── packages/             # Shared libraries
+└── netlify.toml          # Netlify deployment config
 ```
 
-## Adding shadcn/ui Components
+## 🎯 Game Rules
 
-Add new components using the shadcn CLI:
+| Condition          | Result                  |
+| ------------------ | ----------------------- |
+| Roll total % 7 ≠ 0 | Score added, gain 1 die |
+| Roll total % 7 = 0 | **Game Over!**          |
 
-```bash
-cd apps/web
-npx shadcn@latest add dialog
-npx shadcn@latest add dropdown-menu
-npx shadcn@latest add form
-```
-
-## Useful Nx Commands
-
-Generate a shared library:
-
-```bash
-npx nx g @nx/js:lib packages/shared --publishable --importPath=@god-roll/shared
-```
-
-View project graph:
-
-```bash
-npx nx graph
-```
-
-## License
+## 📜 License
 
 MIT
