@@ -43,6 +43,16 @@ export function GameStats({
     setResetProgress(0);
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault(); // Prevent mouse event emulation
+    handleMouseDown();
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    e.preventDefault();
+    handleMouseUp();
+  };
+
   return (
     <div className="absolute top-4 right-4 z-10 text-right">
       <div className="text-2xl font-bold" style={{ color: COLORS.textPrimary }}>
@@ -55,7 +65,10 @@ export function GameStats({
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        className="mt-2 text-sm font-bold px-4 py-1 rounded-full transition-all relative overflow-hidden"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
+        className="mt-2 text-sm font-bold px-4 py-1 rounded-full transition-all relative overflow-hidden touch-none"
         style={{
           backgroundColor: COLORS.textPrimary,
           color: COLORS.backgroundCss,
