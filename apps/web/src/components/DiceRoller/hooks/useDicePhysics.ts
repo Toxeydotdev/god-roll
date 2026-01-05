@@ -331,7 +331,7 @@ export function useDicePhysics({
           const targetQuat = correctionQuat.clone().multiply(currentQuat);
 
           const speedFactor = Math.max(0, 1 - (velMag + angMag * 0.5) * 2);
-          const settleRate = 0.02 + speedFactor * 0.08;
+          const settleRate = 0.05 + speedFactor * 0.15;
 
           const newQuat = currentQuat.clone().slerp(targetQuat, settleRate);
           const newEuler = new THREE.Euler().setFromQuaternion(newQuat);
@@ -340,18 +340,18 @@ export function useDicePhysics({
           physics.rotation.z = newEuler.z;
 
           const nearFlat = tiltAmount < 0.15;
-          const frictionMultiplier = nearFlat ? 0.9 : 0.95;
+          const frictionMultiplier = nearFlat ? 0.85 : 0.92;
           physics.velocity.x *= frictionMultiplier;
           physics.velocity.z *= frictionMultiplier;
           physics.angularVelocity.x *= frictionMultiplier;
           physics.angularVelocity.y *= frictionMultiplier;
           physics.angularVelocity.z *= frictionMultiplier;
 
-          const isFlat = tiltAmount < 0.015;
-          const isStationary = velMag < 0.12 && angMag < 0.2;
+          const isFlat = tiltAmount < 0.03;
+          const isStationary = velMag < 0.2 && angMag < 0.4;
 
           state.settleFrames++;
-          const forceSettle = state.settleFrames > 180 && tiltAmount < 0.15;
+          const forceSettle = state.settleFrames > 90 && tiltAmount < 0.2;
 
           if ((isFlat && isStationary) || forceSettle) {
             state.settled = true;
