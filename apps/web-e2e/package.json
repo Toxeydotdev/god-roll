@@ -1,0 +1,10 @@
+{
+  "name": "@god-roll/web-e2e",
+  "version": "0.0.1",
+  "private": true,
+  "nx": {
+    "implicitDependencies": [
+      "@god-roll/web"
+    ]
+  }
+}
