@@ -32,21 +32,21 @@ function getZoomForDiceCount(
   }
 
   // Gradually zoom out as dice count increases
-  // Start zooming at 4+ dice, max zoom at 10 dice
+  // Start zooming at 4+ dice
   const zoomThreshold = 3;
   if (diceCount <= zoomThreshold) {
     return base;
   }
 
-  // Scale from 1.0 at threshold to 1.4 at 10 dice
-  const zoomRange = 10 - zoomThreshold;
-  const zoomProgress = (diceCount - zoomThreshold) / zoomRange;
-  const zoomMultiplier = 1 + zoomProgress * 0.4;
+  // Scale progressively - slower zoom as count increases
+  // Uses logarithmic scaling for smoother progression at high counts
+  const diceAboveThreshold = diceCount - zoomThreshold;
+  const zoomMultiplier = 1 + Math.log10(1 + diceAboveThreshold) * 0.5;
 
   return {
     y: base.y * zoomMultiplier,
     z: base.z * zoomMultiplier,
-    fov: Math.min(base.fov + zoomProgress * 8, 60),
+    fov: Math.min(base.fov + (zoomMultiplier - 1) * 20, 70),
   };
 }
 

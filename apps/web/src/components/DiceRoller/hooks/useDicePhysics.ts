@@ -77,8 +77,8 @@ export function useDicePhysics({
 
     isRollingRef.current = true;
 
-    // Add new dice for this round (current dice count + 1 for the new round, max 10)
-    const targetDiceCount = Math.min(diceStatesRef.current.length + 1, 10);
+    // Add new dice for this round (current dice count + 1 for the new round)
+    const targetDiceCount = diceStatesRef.current.length + 1;
     const currentCount = diceStatesRef.current.length;
 
     // Notify camera to zoom out for new dice count
