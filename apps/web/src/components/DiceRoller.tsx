@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
+import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 
 // Type definitions
 interface Vector3D {
@@ -206,9 +207,16 @@ export function DiceRoller(): React.ReactElement {
     []
   );
 
-  // Create simple box dice
+  // Create simple box dice with rounded corners
   const createSimpleDice = useCallback((): THREE.Mesh => {
-    const geometry = new THREE.BoxGeometry(DICE_SIZE, DICE_SIZE, DICE_SIZE);
+    // RoundedBoxGeometry(width, height, depth, segments, radius)
+    const geometry = new RoundedBoxGeometry(
+      DICE_SIZE,
+      DICE_SIZE,
+      DICE_SIZE,
+      4,
+      0.1
+    );
     geometry.computeVertexNormals();
 
     const materials: THREE.MeshStandardMaterial[] = [
