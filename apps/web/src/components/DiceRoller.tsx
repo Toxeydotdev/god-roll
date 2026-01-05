@@ -39,16 +39,17 @@ const FACE_NORMALS: Array<{ normal: THREE.Vector3; value: DiceFaceNumber }> = [
 ];
 
 // Physics constants
-const GRAVITY = -25; // Balanced gravity
+const GRAVITY = -40; // Strong gravity to bring dice down fast
 const FLOOR_Y = 0;
+const CEILING_Y = 4; // Maximum height dice can reach
 const DICE_SIZE = 1;
 const DICE_HALF_SIZE = DICE_SIZE / 2;
 const RESTITUTION = 0.25; // Slightly bouncy
 const FRICTION = 0.95; // Moderate friction
 const ANGULAR_FRICTION = 0.92; // Moderate angular friction
 
-// Colors matching the image
-const BACKGROUND_COLOR = 0xf0e68c; // Yellow/khaki
+// Colors - fun green theme
+const BACKGROUND_COLOR = 0x90ee90; // Light green
 const DICE_COLOR = "#fafafa";
 const DOT_COLOR = "#4a4a4a";
 const DOT_COLOR_ONE = "#c44"; // Red for center dot on 1
@@ -632,6 +633,12 @@ export function DiceRoller(): React.ReactElement {
           physics.angularVelocity.z *= ANGULAR_FRICTION;
         }
 
+        // Ceiling collision - prevent dice from going too high
+        if (physics.position.y > CEILING_Y - DICE_HALF_SIZE) {
+          physics.position.y = CEILING_Y - DICE_HALF_SIZE;
+          physics.velocity.y = -Math.abs(physics.velocity.y) * 0.3; // Push down hard
+        }
+
         // Boundary collisions - realistic tumbling on impact
         if (physics.position.x < bounds.left + DICE_HALF_SIZE) {
           physics.position.x = bounds.left + DICE_HALF_SIZE;
@@ -815,20 +822,20 @@ export function DiceRoller(): React.ReactElement {
               const normal = { x: dx / dist, y: dy / dist, z: dz / dist };
               const overlap = minDist - dist;
 
-              // Separate dice more aggressively
+              // Separate dice - only horizontally to prevent launching upward
               const separationForce = overlap * 0.6;
               if (!state1.settled) {
                 state1.physics.position.x -= normal.x * separationForce;
-                state1.physics.position.y -= normal.y * separationForce;
+                state1.physics.position.y -= normal.y * separationForce * 0.3; // Limit vertical separation
                 state1.physics.position.z -= normal.z * separationForce;
               }
               if (!state2.settled) {
                 state2.physics.position.x += normal.x * separationForce;
-                state2.physics.position.y += normal.y * separationForce;
+                state2.physics.position.y += normal.y * separationForce * 0.3; // Limit vertical separation
                 state2.physics.position.z += normal.z * separationForce;
               }
 
-              // Bounce velocities with minimum separation speed
+              // Bounce velocities - dampen vertical component to prevent launching
               const relVel = {
                 x: state1.physics.velocity.x - state2.physics.velocity.x,
                 y: state1.physics.velocity.y - state2.physics.velocity.y,
@@ -837,18 +844,21 @@ export function DiceRoller(): React.ReactElement {
               const dotProduct =
                 relVel.x * normal.x + relVel.y * normal.y + relVel.z * normal.z;
 
-              // Apply impulse even if moving apart slowly, to push them away
+              // Apply impulse - reduce vertical component significantly
               const minSeparationSpeed = 2;
               const impulse = Math.max(dotProduct * 0.8, minSeparationSpeed);
+              const verticalDamping = 0.2; // Only 20% of impulse goes to Y
 
               if (!state1.settled) {
                 state1.physics.velocity.x -= impulse * normal.x;
-                state1.physics.velocity.y -= impulse * normal.y;
+                state1.physics.velocity.y -=
+                  impulse * normal.y * verticalDamping;
                 state1.physics.velocity.z -= impulse * normal.z;
               }
               if (!state2.settled) {
                 state2.physics.velocity.x += impulse * normal.x;
-                state2.physics.velocity.y += impulse * normal.y;
+                state2.physics.velocity.y +=
+                  impulse * normal.y * verticalDamping;
                 state2.physics.velocity.z += impulse * normal.z;
               }
             }
@@ -939,13 +949,13 @@ export function DiceRoller(): React.ReactElement {
   return (
     <div
       className="relative w-full h-screen overflow-hidden"
-      style={{ backgroundColor: "#f0e68c" }}
+      style={{ backgroundColor: "#90EE90" }}
     >
       {/* Title */}
       <div className="absolute top-4 left-4 z-10">
         <h1
           className="text-3xl font-black tracking-tight"
-          style={{ color: "#4a4a2a" }}
+          style={{ color: "#1a5a1a" }}
         >
           GOD
           <br />
@@ -956,10 +966,10 @@ export function DiceRoller(): React.ReactElement {
       {/* Game Stats - only show when game started */}
       {gameStarted && (
         <div className="absolute top-4 right-4 z-10 text-right">
-          <div className="text-2xl font-bold" style={{ color: "#4a4a2a" }}>
+          <div className="text-2xl font-bold" style={{ color: "#1a5a1a" }}>
             SCORE: {totalScore}
           </div>
-          <div className="text-lg" style={{ color: "#6a6a4a" }}>
+          <div className="text-lg" style={{ color: "#2a7a2a" }}>
             Round {round}
           </div>
           <button
@@ -995,7 +1005,7 @@ export function DiceRoller(): React.ReactElement {
               setResetProgress(0);
             }}
             className="mt-2 text-sm font-bold px-4 py-1 rounded-full transition-all relative overflow-hidden"
-            style={{ backgroundColor: "#4a4a2a", color: "#f0e68c" }}
+            style={{ backgroundColor: "#1a5a1a", color: "#90EE90" }}
           >
             <span
               className="absolute inset-0 bg-red-500 transition-none"
@@ -1020,20 +1030,20 @@ export function DiceRoller(): React.ReactElement {
           <div className="text-center">
             <h2
               className="text-6xl font-black mb-4"
-              style={{ color: "#4a4a2a" }}
+              style={{ color: "#1a5a1a" }}
             >
               GOD ROLL
             </h2>
-            <p className="text-xl mb-2" style={{ color: "#6a6a4a" }}>
+            <p className="text-xl mb-2" style={{ color: "#2a7a2a" }}>
               Roll dice to score points
             </p>
-            <p className="text-lg mb-6" style={{ color: "#8a8a6a" }}>
+            <p className="text-lg mb-6" style={{ color: "#4a9a4a" }}>
               Avoid totals divisible by 7!
             </p>
             <button
               onClick={startGame}
               className="text-3xl font-black px-10 py-4 rounded-full transition-all hover:scale-105 active:scale-95"
-              style={{ backgroundColor: "#4a4a2a", color: "#f0e68c" }}
+              style={{ backgroundColor: "#1a5a1a", color: "#90EE90" }}
             >
               START GAME
             </button>
@@ -1051,19 +1061,19 @@ export function DiceRoller(): React.ReactElement {
             <h2 className="text-4xl font-black mb-2" style={{ color: "#c44" }}>
               GAME OVER!
             </h2>
-            <p className="text-xl mb-1" style={{ color: "#4a4a2a" }}>
+            <p className="text-xl mb-1" style={{ color: "#1a5a1a" }}>
               You rolled {lastRollTotal} (divisible by 7)
             </p>
-            <p className="text-2xl font-bold mb-4" style={{ color: "#4a4a2a" }}>
+            <p className="text-2xl font-bold mb-4" style={{ color: "#1a5a1a" }}>
               Final Score: {totalScore}
             </p>
-            <p className="text-lg mb-4" style={{ color: "#6a6a4a" }}>
+            <p className="text-lg mb-4" style={{ color: "#2a7a2a" }}>
               You survived {round - 1} round{round - 1 !== 1 ? "s" : ""}!
             </p>
             <button
               onClick={startNewGame}
               className="text-2xl font-black px-8 py-3 rounded-full transition-all hover:scale-105 active:scale-95"
-              style={{ backgroundColor: "#4a4a2a", color: "#f0e68c" }}
+              style={{ backgroundColor: "#1a5a1a", color: "#90EE90" }}
             >
               PLAY AGAIN
             </button>
@@ -1085,7 +1095,7 @@ export function DiceRoller(): React.ReactElement {
               </span>
               <span
                 className="text-sm tracking-wider"
-                style={{ color: "#8a8a6a" }}
+                style={{ color: "#4a9a4a" }}
               >
                 [{results.join(" + ")}]
               </span>
