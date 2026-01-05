@@ -39,13 +39,13 @@ const FACE_NORMALS: Array<{ normal: THREE.Vector3; value: DiceFaceNumber }> = [
 ];
 
 // Physics constants
-const GRAVITY = -20;
+const GRAVITY = -25; // Balanced gravity
 const FLOOR_Y = 0;
 const DICE_SIZE = 1;
 const DICE_HALF_SIZE = DICE_SIZE / 2;
-const RESTITUTION = 0.35;
-const FRICTION = 0.97;
-const ANGULAR_FRICTION = 0.94;
+const RESTITUTION = 0.25; // Slightly bouncy
+const FRICTION = 0.95; // Moderate friction
+const ANGULAR_FRICTION = 0.92; // Moderate angular friction
 
 // Colors matching the image
 const BACKGROUND_COLOR = 0xf0e68c; // Yellow/khaki
@@ -81,6 +81,8 @@ export function DiceRoller(): React.ReactElement {
   const [round, setRound] = useState<number>(1);
   const [gameOver, setGameOver] = useState<boolean>(false);
   const [lastRollTotal, setLastRollTotal] = useState<number>(0);
+  const [resetProgress, setResetProgress] = useState<number>(0);
+  const resetTimerRef = useRef<number | null>(null);
 
   // Get the top face value of a dice based on its rotation
   const getTopFace = useCallback((mesh: THREE.Mesh): DiceFaceNumber => {
@@ -538,20 +540,15 @@ export function DiceRoller(): React.ReactElement {
       // Stagger the release - each die thrown slightly later
       const releaseOffset = index * 0.8;
 
-      // Check if dice is on-screen (has been rolled before and settled on the table)
-      const isOnScreen = state.physics.position.x > bounds.left;
-      const startX = isOnScreen
-        ? state.physics.position.x - 2 // Pull back slightly from current position
-        : bounds.left - DICE_SIZE * 2 - releaseOffset;
+      // Always start from the left side for consistent left-to-right throw
+      const startX = bounds.left - DICE_SIZE * 2 - releaseOffset;
       const startY = FLOOR_Y + DICE_HALF_SIZE + 0.2 + Math.random() * 0.6;
-      const startZ = isOnScreen
-        ? state.physics.position.z + (Math.random() - 0.5) * 0.5
-        : (Math.random() - 0.5) * 2 + index * 0.3;
+      const startZ = (Math.random() - 0.5) * 2 + index * 0.3;
 
       // Throw direction: varied speeds so dice settle at different times
-      const baseSpeed = 340 + index * 15; // Each die slightly different base speed
-      const throwSpeed = baseSpeed + Math.random() * 60; // Add randomness
-      const upwardSpeed = 0.5 + Math.random() * 2 + index * 0.3; // Varied arc
+      const baseSpeed = 1920 + index * 60; // Each die slightly different base speed (4x faster)
+      const throwSpeed = baseSpeed + Math.random() * 240; // Add randomness
+      const upwardSpeed = 0.3 + Math.random() * 0.5; // Keep dice low - minimal arc
       const depthVariation = (Math.random() - 0.5) * 3; // Spread in Z
 
       state.physics = {
@@ -799,51 +796,51 @@ export function DiceRoller(): React.ReactElement {
         }
       });
 
-      // Dice-to-dice collisions
-      for (let i = 0; i < diceStatesRef.current.length; i++) {
-        for (let j = i + 1; j < diceStatesRef.current.length; j++) {
-          const state1 = diceStatesRef.current[i];
-          const state2 = diceStatesRef.current[j];
+      // Dice-to-dice collisions - run multiple iterations to prevent sticking
+      for (let iteration = 0; iteration < 3; iteration++) {
+        for (let i = 0; i < diceStatesRef.current.length; i++) {
+          for (let j = i + 1; j < diceStatesRef.current.length; j++) {
+            const state1 = diceStatesRef.current[i];
+            const state2 = diceStatesRef.current[j];
 
-          if (state1.settled && state2.settled) continue;
+            if (state1.settled && state2.settled) continue;
 
-          const { collided, normal } = checkDiceCollision(
-            state1.physics.position,
-            state2.physics.position
-          );
+            const dx = state2.physics.position.x - state1.physics.position.x;
+            const dy = state2.physics.position.y - state1.physics.position.y;
+            const dz = state2.physics.position.z - state1.physics.position.z;
+            const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+            const minDist = DICE_SIZE * 1.15; // Slightly larger collision radius
 
-          if (collided) {
-            // Separate dice
-            const overlap =
-              DICE_SIZE * 1.1 -
-              Math.sqrt(
-                (state2.physics.position.x - state1.physics.position.x) ** 2 +
-                  (state2.physics.position.y - state1.physics.position.y) ** 2 +
-                  (state2.physics.position.z - state1.physics.position.z) ** 2
-              );
+            if (dist < minDist && dist > 0.001) {
+              const normal = { x: dx / dist, y: dy / dist, z: dz / dist };
+              const overlap = minDist - dist;
 
-            if (!state1.settled) {
-              state1.physics.position.x -= normal.x * overlap * 0.5;
-              state1.physics.position.y -= normal.y * overlap * 0.5;
-              state1.physics.position.z -= normal.z * overlap * 0.5;
-            }
-            if (!state2.settled) {
-              state2.physics.position.x += normal.x * overlap * 0.5;
-              state2.physics.position.y += normal.y * overlap * 0.5;
-              state2.physics.position.z += normal.z * overlap * 0.5;
-            }
+              // Separate dice more aggressively
+              const separationForce = overlap * 0.6;
+              if (!state1.settled) {
+                state1.physics.position.x -= normal.x * separationForce;
+                state1.physics.position.y -= normal.y * separationForce;
+                state1.physics.position.z -= normal.z * separationForce;
+              }
+              if (!state2.settled) {
+                state2.physics.position.x += normal.x * separationForce;
+                state2.physics.position.y += normal.y * separationForce;
+                state2.physics.position.z += normal.z * separationForce;
+              }
 
-            // Bounce velocities
-            const relVel = {
-              x: state1.physics.velocity.x - state2.physics.velocity.x,
-              y: state1.physics.velocity.y - state2.physics.velocity.y,
-              z: state1.physics.velocity.z - state2.physics.velocity.z,
-            };
-            const dotProduct =
-              relVel.x * normal.x + relVel.y * normal.y + relVel.z * normal.z;
+              // Bounce velocities with minimum separation speed
+              const relVel = {
+                x: state1.physics.velocity.x - state2.physics.velocity.x,
+                y: state1.physics.velocity.y - state2.physics.velocity.y,
+                z: state1.physics.velocity.z - state2.physics.velocity.z,
+              };
+              const dotProduct =
+                relVel.x * normal.x + relVel.y * normal.y + relVel.z * normal.z;
 
-            if (dotProduct > 0) {
-              const impulse = dotProduct * 0.8;
+              // Apply impulse even if moving apart slowly, to push them away
+              const minSeparationSpeed = 2;
+              const impulse = Math.max(dotProduct * 0.8, minSeparationSpeed);
+
               if (!state1.settled) {
                 state1.physics.velocity.x -= impulse * normal.x;
                 state1.physics.velocity.y -= impulse * normal.y;
@@ -965,6 +962,52 @@ export function DiceRoller(): React.ReactElement {
           <div className="text-lg" style={{ color: "#6a6a4a" }}>
             Round {round}
           </div>
+          <button
+            onMouseDown={() => {
+              let progress = 0;
+              const startTime = Date.now();
+              const holdDuration = 1000; // 1 second hold
+              const tick = () => {
+                const elapsed = Date.now() - startTime;
+                progress = Math.min(elapsed / holdDuration, 1);
+                setResetProgress(progress);
+                if (progress >= 1) {
+                  startNewGame();
+                  setResetProgress(0);
+                } else {
+                  resetTimerRef.current = requestAnimationFrame(tick);
+                }
+              };
+              resetTimerRef.current = requestAnimationFrame(tick);
+            }}
+            onMouseUp={() => {
+              if (resetTimerRef.current) {
+                cancelAnimationFrame(resetTimerRef.current);
+                resetTimerRef.current = null;
+              }
+              setResetProgress(0);
+            }}
+            onMouseLeave={() => {
+              if (resetTimerRef.current) {
+                cancelAnimationFrame(resetTimerRef.current);
+                resetTimerRef.current = null;
+              }
+              setResetProgress(0);
+            }}
+            className="mt-2 text-sm font-bold px-4 py-1 rounded-full transition-all relative overflow-hidden"
+            style={{ backgroundColor: "#4a4a2a", color: "#f0e68c" }}
+          >
+            <span
+              className="absolute inset-0 bg-red-500 transition-none"
+              style={{
+                width: `${resetProgress * 100}%`,
+                opacity: 0.6,
+              }}
+            />
+            <span className="relative">
+              {resetProgress > 0 ? "HOLD..." : "RESET"}
+            </span>
+          </button>
         </div>
       )}
 
