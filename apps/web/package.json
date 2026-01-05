@@ -2,5 +2,9 @@
   "name": "@god-roll/web",
   "version": "0.0.1",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "@types/three": "^0.182.0",
+    "three": "^0.182.0"
+  }
 }
