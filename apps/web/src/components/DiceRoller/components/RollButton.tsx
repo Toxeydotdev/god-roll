@@ -16,7 +16,10 @@ export function RollButton({
   onRoll,
 }: RollButtonProps): React.ReactElement {
   return (
-    <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2">
+    <div
+      className="absolute left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2"
+      style={{ bottom: "max(1rem, env(safe-area-inset-bottom, 1rem))" }}
+    >
       {/* Show results */}
       {results.length > 0 && !isRolling && (
         <div className="flex flex-col items-center gap-1 mb-2">

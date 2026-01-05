@@ -10,7 +10,8 @@ import { COLORS } from "./constants";
 import { useDicePhysics, useGameState, useThreeScene } from "./hooks";
 
 export function DiceRoller(): React.ReactElement {
-  const { containerRef, sceneRef, boundsRef } = useThreeScene();
+  const { containerRef, sceneRef, boundsRef, adjustCameraForDiceCount } =
+    useThreeScene();
 
   const {
     gameStarted,
@@ -32,6 +33,7 @@ export function DiceRoller(): React.ReactElement {
     boundsRef,
     onRollComplete: handleRollComplete,
     onResultsUpdate: setResults,
+    onDiceCountChange: adjustCameraForDiceCount,
   });
 
   const handleRoll = useCallback(() => {
@@ -42,17 +44,19 @@ export function DiceRoller(): React.ReactElement {
 
   const startGame = useCallback(() => {
     clearAllDice();
+    adjustCameraForDiceCount(1); // Reset camera to 1 die zoom
     baseStartGame();
-  }, [clearAllDice, baseStartGame]);
+  }, [clearAllDice, baseStartGame, adjustCameraForDiceCount]);
 
   const startNewGame = useCallback(() => {
     clearAllDice();
+    adjustCameraForDiceCount(1); // Reset camera to 1 die zoom
     baseStartNewGame();
-  }, [clearAllDice, baseStartNewGame]);
+  }, [clearAllDice, baseStartNewGame, adjustCameraForDiceCount]);
 
   return (
     <div
-      className="relative w-full h-screen overflow-hidden"
+      className="relative w-full h-dvh overflow-hidden touch-none"
       style={{ backgroundColor: COLORS.backgroundCss }}
     >
       <GameTitle />

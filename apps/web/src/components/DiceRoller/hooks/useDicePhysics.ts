@@ -20,6 +20,7 @@ interface UseDicePhysicsProps {
   boundsRef: React.RefObject<Bounds>;
   onRollComplete: (rollTotal: number, results: DiceFaceNumber[]) => void;
   onResultsUpdate: (results: DiceFaceNumber[]) => void;
+  onDiceCountChange?: (diceCount: number) => void;
 }
 
 interface UseDicePhysicsReturn {
@@ -35,6 +36,7 @@ export function useDicePhysics({
   boundsRef,
   onRollComplete,
   onResultsUpdate,
+  onDiceCountChange,
 }: UseDicePhysicsProps): UseDicePhysicsReturn {
   const diceStatesRef = useRef<DiceState[]>([]);
   const isRollingRef = useRef<boolean>(false);
@@ -79,6 +81,11 @@ export function useDicePhysics({
     const targetDiceCount = Math.min(diceStatesRef.current.length + 1, 10);
     const currentCount = diceStatesRef.current.length;
 
+    // Notify camera to zoom out for new dice count
+    if (onDiceCountChange) {
+      onDiceCountChange(targetDiceCount);
+    }
+
     // Add any needed new dice
     for (let i = currentCount; i < targetDiceCount; i++) {
       const mesh = createDiceMesh();
@@ -115,21 +122,43 @@ export function useDicePhysics({
 
     const bounds = boundsRef.current;
 
+    // Detect portrait mode for throw direction
+    const isPortrait = window.innerHeight > window.innerWidth;
+
     // Initialize physics for each dice
     diceStatesRef.current.forEach((state, index) => {
       const releaseOffset = index * 0.8;
-      const startX = bounds.left - DICE_SIZE * 2 - releaseOffset;
-      const startY = FLOOR_Y + DICE_HALF_SIZE + 0.2 + secureRandom() * 0.6;
-      const startZ = (secureRandom() - 0.5) * 2 + index * 0.3;
 
-      const baseSpeed = 1920 + index * 60;
-      const throwSpeed = baseSpeed + secureRandom() * 240;
+      let startX: number, startY: number, startZ: number;
+      let velocityX: number, velocityZ: number;
+
+      if (isPortrait) {
+        // Mobile portrait: throw from bottom (front) toward back
+        startX = (secureRandom() - 0.5) * 2 + index * 0.3;
+        startY = FLOOR_Y + DICE_HALF_SIZE + 0.2 + secureRandom() * 0.6;
+        startZ = bounds.front + DICE_SIZE * 2 + releaseOffset;
+
+        const baseSpeed = 1920 + index * 60;
+        const throwSpeed = baseSpeed + secureRandom() * 240;
+        velocityX = (secureRandom() - 0.5) * 3; // side variation
+        velocityZ = -throwSpeed; // throw toward back (negative Z)
+      } else {
+        // Desktop/landscape: throw from left toward right
+        startX = bounds.left - DICE_SIZE * 2 - releaseOffset;
+        startY = FLOOR_Y + DICE_HALF_SIZE + 0.2 + secureRandom() * 0.6;
+        startZ = (secureRandom() - 0.5) * 2 + index * 0.3;
+
+        const baseSpeed = 1920 + index * 60;
+        const throwSpeed = baseSpeed + secureRandom() * 240;
+        velocityX = throwSpeed;
+        velocityZ = (secureRandom() - 0.5) * 3; // depth variation
+      }
+
       const upwardSpeed = 0.3 + secureRandom() * 0.5;
-      const depthVariation = (secureRandom() - 0.5) * 3;
 
       state.physics = {
         position: { x: startX, y: startY, z: startZ },
-        velocity: { x: throwSpeed, y: upwardSpeed, z: depthVariation },
+        velocity: { x: velocityX, y: upwardSpeed, z: velocityZ },
         rotation: {
           x: state.mesh.rotation.x,
           y: state.mesh.rotation.y,
