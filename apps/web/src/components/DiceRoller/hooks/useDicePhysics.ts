@@ -138,7 +138,7 @@ export function useDicePhysics({
         startY = FLOOR_Y + DICE_HALF_SIZE + 0.2 + secureRandom() * 0.6;
         startZ = bounds.front + DICE_SIZE * 2 + releaseOffset;
 
-        const baseSpeed = 1920 + index * 60;
+        const baseSpeed = 3600 + index * 60;
         const throwSpeed = baseSpeed + secureRandom() * 240;
         velocityX = (secureRandom() - 0.5) * 3; // side variation
         velocityZ = -throwSpeed; // throw toward back (negative Z)
@@ -148,13 +148,13 @@ export function useDicePhysics({
         startY = FLOOR_Y + DICE_HALF_SIZE + 0.2 + secureRandom() * 0.6;
         startZ = (secureRandom() - 0.5) * 2 + index * 0.3;
 
-        const baseSpeed = 1920 + index * 60;
+        const baseSpeed = 3600 + index * 60;
         const throwSpeed = baseSpeed + secureRandom() * 240;
         velocityX = throwSpeed;
         velocityZ = (secureRandom() - 0.5) * 3; // depth variation
       }
 
-      const upwardSpeed = 0.3 + secureRandom() * 0.5;
+      const upwardSpeed = 0.7 + secureRandom() * 0.5;
 
       state.physics = {
         position: { x: startX, y: startY, z: startZ },
