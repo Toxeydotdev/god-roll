@@ -10,8 +10,13 @@ import { COLORS } from "./constants";
 import { useDicePhysics, useGameState, useThreeScene } from "./hooks";
 
 export function DiceRoller(): React.ReactElement {
-  const { containerRef, sceneRef, boundsRef, adjustCameraForDiceCount } =
-    useThreeScene();
+  const {
+    containerRef,
+    sceneRef,
+    boundsRef,
+    adjustCameraForDiceCount,
+    resetCamera,
+  } = useThreeScene();
 
   const {
     gameStarted,
@@ -44,15 +49,15 @@ export function DiceRoller(): React.ReactElement {
 
   const startGame = useCallback(() => {
     clearAllDice();
-    adjustCameraForDiceCount(1); // Reset camera to 1 die zoom
+    resetCamera();
     baseStartGame();
-  }, [clearAllDice, baseStartGame, adjustCameraForDiceCount]);
+  }, [clearAllDice, baseStartGame, resetCamera]);
 
   const startNewGame = useCallback(() => {
     clearAllDice();
-    adjustCameraForDiceCount(1); // Reset camera to 1 die zoom
+    resetCamera();
     baseStartNewGame();
-  }, [clearAllDice, baseStartNewGame, adjustCameraForDiceCount]);
+  }, [clearAllDice, baseStartNewGame, resetCamera]);
 
   return (
     <div

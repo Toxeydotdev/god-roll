@@ -452,7 +452,14 @@ export function useDicePhysics({
     };
 
     requestAnimationFrame(simulatePhysics);
-  }, [sceneRef, boundsRef, getTopFace, onRollComplete, onResultsUpdate]);
+  }, [
+    sceneRef,
+    boundsRef,
+    getTopFace,
+    onRollComplete,
+    onResultsUpdate,
+    onDiceCountChange,
+  ]);
 
   return {
     diceStatesRef,

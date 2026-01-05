@@ -3,46 +3,50 @@ import * as THREE from "three";
 import { COLORS, DEFAULT_BOUNDS, FLOOR_Y } from "../constants";
 import { Bounds } from "../types";
 
-// Get camera settings based on screen size AND dice count
-function getCameraSettings(
+// Get base camera settings for device type
+function getBaseCameraSettings(
   width: number,
-  height: number,
-  diceCount: number
+  height: number
 ): { y: number; z: number; fov: number } {
   const isPortrait = height > width;
   const isSmallScreen = Math.min(width, height) < 500;
 
-  // Base settings per device type
-  let baseY: number, baseZ: number, baseFov: number;
-  let zoomPerDie: number;
-
   if (isPortrait) {
-    // Mobile portrait - start closer, zoom out more aggressively
-    baseY = 12;
-    baseZ = 8;
-    baseFov = 55;
-    zoomPerDie = 2.5; // Zoom out more per die on portrait
+    return { y: 12, z: 8, fov: 55 };
   } else if (isSmallScreen || width < 768) {
-    // Mobile landscape
-    baseY = 10;
-    baseZ = 6;
-    baseFov = 50;
-    zoomPerDie = 1.5;
-  } else {
-    // Desktop
-    baseY = 10;
-    baseZ = 6;
-    baseFov = 45;
-    zoomPerDie = 1.0;
+    return { y: 10, z: 6, fov: 50 };
+  }
+  return { y: 10, z: 6, fov: 45 };
+}
+
+// Calculate zoom based on dice count
+function getZoomForDiceCount(
+  diceCount: number,
+  width: number,
+  height: number
+): { y: number; z: number; fov: number } {
+  const base = getBaseCameraSettings(width, height);
+
+  if (diceCount <= 1) {
+    return base;
   }
 
-  // Progressive zoom out as dice are added (starting from dice 1)
-  const extraZoom = Math.max(0, diceCount - 1) * zoomPerDie;
+  // Gradually zoom out as dice count increases
+  // Start zooming at 4+ dice, max zoom at 10 dice
+  const zoomThreshold = 3;
+  if (diceCount <= zoomThreshold) {
+    return base;
+  }
+
+  // Scale from 1.0 at threshold to 1.4 at 10 dice
+  const zoomRange = 10 - zoomThreshold;
+  const zoomProgress = (diceCount - zoomThreshold) / zoomRange;
+  const zoomMultiplier = 1 + zoomProgress * 0.4;
 
   return {
-    y: baseY + extraZoom,
-    z: baseZ + extraZoom * 0.6,
-    fov: Math.min(baseFov + extraZoom * 1.5, 85), // Cap FOV at 85
+    y: base.y * zoomMultiplier,
+    z: base.z * zoomMultiplier,
+    fov: Math.min(base.fov + zoomProgress * 8, 60),
   };
 }
 
@@ -53,6 +57,7 @@ interface UseThreeSceneReturn {
   rendererRef: React.RefObject<THREE.WebGLRenderer | null>;
   boundsRef: React.RefObject<Bounds>;
   adjustCameraForDiceCount: (diceCount: number) => void;
+  resetCamera: () => void;
 }
 
 export function useThreeScene(): UseThreeSceneReturn {
@@ -62,7 +67,7 @@ export function useThreeScene(): UseThreeSceneReturn {
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const animationRef = useRef<number | null>(null);
   const boundsRef = useRef<Bounds>(DEFAULT_BOUNDS);
-  const currentDiceCountRef = useRef<number>(1);
+  const currentDiceCountRef = useRef<number>(0);
 
   const calculateBounds = useCallback(
     (camera: THREE.PerspectiveCamera): Bounds => {
@@ -82,7 +87,7 @@ export function useThreeScene(): UseThreeSceneReturn {
     []
   );
 
-  // Function to adjust camera when dice count changes
+  // Function to adjust camera based on dice count
   const adjustCameraForDiceCount = useCallback(
     (diceCount: number) => {
       const camera = cameraRef.current;
@@ -92,7 +97,7 @@ export function useThreeScene(): UseThreeSceneReturn {
       currentDiceCountRef.current = diceCount;
       const width = container.clientWidth;
       const height = container.clientHeight;
-      const settings = getCameraSettings(width, height, diceCount);
+      const settings = getZoomForDiceCount(diceCount, width, height);
 
       camera.fov = settings.fov;
       camera.position.set(0, settings.y, settings.z);
@@ -102,6 +107,24 @@ export function useThreeScene(): UseThreeSceneReturn {
     },
     [calculateBounds]
   );
+
+  // Reset camera to default (no dice)
+  const resetCamera = useCallback(() => {
+    const camera = cameraRef.current;
+    const container = containerRef.current;
+    if (!camera || !container) return;
+
+    currentDiceCountRef.current = 0;
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    const settings = getBaseCameraSettings(width, height);
+
+    camera.fov = settings.fov;
+    camera.position.set(0, settings.y, settings.z);
+    camera.lookAt(0, 0, 0);
+    camera.updateProjectionMatrix();
+    boundsRef.current = calculateBounds(camera);
+  }, [calculateBounds]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -115,8 +138,8 @@ export function useThreeScene(): UseThreeSceneReturn {
     scene.background = new THREE.Color(COLORS.background);
     sceneRef.current = scene;
 
-    // Camera - start with settings for 1 die
-    const cameraSettings = getCameraSettings(width, height, 1);
+    // Camera - start with base settings (no dice)
+    const cameraSettings = getBaseCameraSettings(width, height);
     const camera = new THREE.PerspectiveCamera(
       cameraSettings.fov,
       width / height,
@@ -175,14 +198,14 @@ export function useThreeScene(): UseThreeSceneReturn {
     };
     animate();
 
-    // Handle resize - also update camera settings for orientation changes
+    // Handle resize - recalculate zoom based on current dice count
     const handleResize = (): void => {
       const newWidth = container.clientWidth;
       const newHeight = container.clientHeight;
-      const newSettings = getCameraSettings(
+      const newSettings = getZoomForDiceCount(
+        currentDiceCountRef.current,
         newWidth,
-        newHeight,
-        currentDiceCountRef.current
+        newHeight
       );
 
       camera.fov = newSettings.fov;
@@ -215,5 +238,6 @@ export function useThreeScene(): UseThreeSceneReturn {
     rendererRef,
     boundsRef,
     adjustCameraForDiceCount,
+    resetCamera,
   };
 }
