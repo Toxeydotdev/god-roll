@@ -13,6 +13,7 @@ import {
 } from "../constants";
 import { Bounds, DiceFaceNumber, DiceState } from "../types";
 import { createDiceMesh, disposeDiceMesh } from "../utils/diceTextures";
+import { secureRandom } from "../utils/secureRandom";
 
 interface UseDicePhysicsProps {
   sceneRef: React.RefObject<THREE.Scene | null>;
@@ -81,11 +82,11 @@ export function useDicePhysics({
     // Add any needed new dice
     for (let i = currentCount; i < targetDiceCount; i++) {
       const mesh = createDiceMesh();
-      mesh.position.set(-10, DICE_HALF_SIZE, (Math.random() - 0.5) * 2);
+      mesh.position.set(-10, DICE_HALF_SIZE, (secureRandom() - 0.5) * 2);
       mesh.rotation.set(
-        Math.random() * Math.PI * 2,
-        Math.random() * Math.PI * 2,
-        Math.random() * Math.PI * 2
+        secureRandom() * Math.PI * 2,
+        secureRandom() * Math.PI * 2,
+        secureRandom() * Math.PI * 2
       );
       scene.add(mesh);
 
@@ -118,13 +119,13 @@ export function useDicePhysics({
     diceStatesRef.current.forEach((state, index) => {
       const releaseOffset = index * 0.8;
       const startX = bounds.left - DICE_SIZE * 2 - releaseOffset;
-      const startY = FLOOR_Y + DICE_HALF_SIZE + 0.2 + Math.random() * 0.6;
-      const startZ = (Math.random() - 0.5) * 2 + index * 0.3;
+      const startY = FLOOR_Y + DICE_HALF_SIZE + 0.2 + secureRandom() * 0.6;
+      const startZ = (secureRandom() - 0.5) * 2 + index * 0.3;
 
       const baseSpeed = 1920 + index * 60;
-      const throwSpeed = baseSpeed + Math.random() * 240;
-      const upwardSpeed = 0.3 + Math.random() * 0.5;
-      const depthVariation = (Math.random() - 0.5) * 3;
+      const throwSpeed = baseSpeed + secureRandom() * 240;
+      const upwardSpeed = 0.3 + secureRandom() * 0.5;
+      const depthVariation = (secureRandom() - 0.5) * 3;
 
       state.physics = {
         position: { x: startX, y: startY, z: startZ },
@@ -135,9 +136,9 @@ export function useDicePhysics({
           z: state.mesh.rotation.z,
         },
         angularVelocity: {
-          x: (Math.random() - 0.5) * 40 + index * 3,
-          y: (Math.random() - 0.5) * 40,
-          z: (Math.random() - 0.5) * 40 - index * 2,
+          x: (secureRandom() - 0.5) * 40 + index * 3,
+          y: (secureRandom() - 0.5) * 40,
+          z: (secureRandom() - 0.5) * 40 - index * 2,
         },
       };
       state.settled = false;
