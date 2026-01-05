@@ -71,9 +71,16 @@ export function DiceRoller(): React.ReactElement {
   const isRollingRef = useRef<boolean>(false);
   const boundsRef = useRef<Bounds>({ left: -4, right: 4, front: 4, back: -4 });
 
-  const [diceCount, setDiceCount] = useState<number>(5);
+  const [diceCount, setDiceCount] = useState<number>(5); // Start screen shows 5 decorative dice
   const [isRolling, setIsRolling] = useState<boolean>(false);
   const [results, setResults] = useState<DiceFaceNumber[]>([]);
+
+  // Game state
+  const [gameStarted, setGameStarted] = useState<boolean>(false);
+  const [totalScore, setTotalScore] = useState<number>(0);
+  const [round, setRound] = useState<number>(1);
+  const [gameOver, setGameOver] = useState<boolean>(false);
+  const [lastRollTotal, setLastRollTotal] = useState<number>(0);
 
   // Get the top face value of a dice based on its rotation
   const getTopFace = useCallback((mesh: THREE.Mesh): DiceFaceNumber => {
@@ -363,40 +370,61 @@ export function DiceRoller(): React.ReactElement {
     };
   }, [calculateBounds]);
 
-  // Create initial dice when count changes
+  // Manage dice when count changes - only add new dice, keep existing ones
   useEffect(() => {
     const scene = sceneRef.current;
     if (!scene) return;
 
-    // Remove existing dice
-    diceStatesRef.current.forEach((state) => {
-      scene.remove(state.mesh);
-      state.mesh.geometry.dispose();
-      if (Array.isArray(state.mesh.material)) {
-        state.mesh.material.forEach((m) => m.dispose());
-      } else {
-        state.mesh.material.dispose();
-      }
-    });
-    diceStatesRef.current = [];
+    const currentCount = diceStatesRef.current.length;
 
-    // Create new dice
-    for (let i = 0; i < diceCount; i++) {
+    // If we need fewer dice (only on new game), remove extras
+    if (diceCount < currentCount) {
+      const toRemove = diceStatesRef.current.splice(diceCount);
+      toRemove.forEach((state) => {
+        scene.remove(state.mesh);
+        state.mesh.geometry.dispose();
+        if (Array.isArray(state.mesh.material)) {
+          state.mesh.material.forEach((m) => m.dispose());
+        } else {
+          state.mesh.material.dispose();
+        }
+      });
+    }
+
+    // If we need more dice, add new ones
+    for (let i = currentCount; i < diceCount; i++) {
       const mesh = createSimpleDice();
 
-      // Spread dice in a circle
-      const angle = (i / diceCount) * Math.PI * 2;
-      const radius = 1.5 + Math.random() * 0.5;
-      mesh.position.set(
-        Math.cos(angle) * radius,
-        DICE_HALF_SIZE,
-        Math.sin(angle) * radius
-      );
-      mesh.rotation.set(
-        Math.random() * Math.PI,
-        Math.random() * Math.PI,
-        Math.random() * Math.PI
-      );
+      // Position dice in a spread on the table
+      // For single die, center it; for multiple, spread in a circle
+      let xPos: number, zPos: number;
+      if (diceCount === 1) {
+        xPos = 0;
+        zPos = 0;
+      } else {
+        const angle = (i / diceCount) * Math.PI * 2;
+        const radius = 1.5 + (i % 2) * 0.5;
+        xPos = Math.cos(angle) * radius;
+        zPos = Math.sin(angle) * radius - 1;
+      }
+
+      mesh.position.set(xPos, DICE_HALF_SIZE, zPos);
+
+      // Give each die a random flat rotation (rotated on Y axis only so it sits flat)
+      mesh.rotation.set(0, Math.random() * Math.PI * 2, 0);
+
+      // Randomly choose which face is up
+      const randomFace = Math.floor(Math.random() * 6);
+      const rotations = [
+        { x: 0, z: 0 }, // 1 up
+        { x: Math.PI / 2, z: 0 }, // 2 up
+        { x: 0, z: -Math.PI / 2 }, // 3 up
+        { x: 0, z: Math.PI / 2 }, // 4 up
+        { x: -Math.PI / 2, z: 0 }, // 5 up
+        { x: Math.PI, z: 0 }, // 6 up
+      ];
+      mesh.rotation.x = rotations[randomFace].x;
+      mesh.rotation.z = rotations[randomFace].z;
 
       scene.add(mesh);
 
@@ -450,10 +478,57 @@ export function DiceRoller(): React.ReactElement {
   // Roll all dice
   const rollDice = useCallback((): void => {
     if (isRollingRef.current) return;
+    const scene = sceneRef.current;
+    if (!scene) return;
 
     isRollingRef.current = true;
     setIsRolling(true);
-    setResults([]);
+    // Don't clear results immediately - they stay visible until dice start moving
+
+    // Increment round at the start of the roll
+    setRound((prev) => prev + 1);
+
+    // Add new dice for this round (current dice count + 1 for the new round, max 10)
+    const targetDiceCount = Math.min(diceStatesRef.current.length + 1, 10);
+    const currentCount = diceStatesRef.current.length;
+
+    // Update the diceCount state for UI display
+    setDiceCount(targetDiceCount);
+
+    // Add any needed new dice
+    for (let i = currentCount; i < targetDiceCount; i++) {
+      const mesh = createSimpleDice();
+      // Start new dice off-screen to the left
+      mesh.position.set(-10, DICE_HALF_SIZE, (Math.random() - 0.5) * 2);
+      mesh.rotation.set(
+        Math.random() * Math.PI * 2,
+        Math.random() * Math.PI * 2,
+        Math.random() * Math.PI * 2
+      );
+      scene.add(mesh);
+
+      diceStatesRef.current.push({
+        mesh,
+        physics: {
+          position: {
+            x: mesh.position.x,
+            y: mesh.position.y,
+            z: mesh.position.z,
+          },
+          velocity: { x: 0, y: 0, z: 0 },
+          rotation: {
+            x: mesh.rotation.x,
+            y: mesh.rotation.y,
+            z: mesh.rotation.z,
+          },
+          angularVelocity: { x: 0, y: 0, z: 0 },
+        },
+        settled: false,
+        settleFrames: 0,
+        isSettling: false,
+        targetFlatQuat: null,
+      });
+    }
 
     const bounds = boundsRef.current;
 
@@ -463,10 +538,15 @@ export function DiceRoller(): React.ReactElement {
       // Stagger the release - each die thrown slightly later
       const releaseOffset = index * 0.8;
 
-      // Start position: off-screen left, staggered positions
-      const startX = bounds.left - DICE_SIZE * 2 - releaseOffset; // Stagger start position
-      const startY = FLOOR_Y + DICE_HALF_SIZE + 0.2 + Math.random() * 0.6; // Just above table
-      const startZ = (Math.random() - 0.5) * 2 + index * 0.3; // Spread in depth
+      // Check if dice is on-screen (has been rolled before and settled on the table)
+      const isOnScreen = state.physics.position.x > bounds.left;
+      const startX = isOnScreen
+        ? state.physics.position.x - 2 // Pull back slightly from current position
+        : bounds.left - DICE_SIZE * 2 - releaseOffset;
+      const startY = FLOOR_Y + DICE_HALF_SIZE + 0.2 + Math.random() * 0.6;
+      const startZ = isOnScreen
+        ? state.physics.position.z + (Math.random() - 0.5) * 0.5
+        : (Math.random() - 0.5) * 2 + index * 0.3;
 
       // Throw direction: varied speeds so dice settle at different times
       const baseSpeed = 340 + index * 15; // Each die slightly different base speed
@@ -486,9 +566,9 @@ export function DiceRoller(): React.ReactElement {
           z: depthVariation, // Slight depth variation
         },
         rotation: {
-          x: Math.random() * Math.PI * 2,
-          y: Math.random() * Math.PI * 2,
-          z: Math.random() * Math.PI * 2,
+          x: state.mesh ? state.mesh.rotation.x : Math.random() * Math.PI * 2,
+          y: state.mesh ? state.mesh.rotation.y : Math.random() * Math.PI * 2,
+          z: state.mesh ? state.mesh.rotation.z : Math.random() * Math.PI * 2,
         },
         angularVelocity: {
           x: (Math.random() - 0.5) * 40 + index * 3,
@@ -785,6 +865,19 @@ export function DiceRoller(): React.ReactElement {
           getTopFace(state.mesh)
         );
         setResults(diceResults);
+
+        // Calculate roll total
+        const rollTotal = diceResults.reduce((sum, val) => sum + val, 0);
+        setLastRollTotal(rollTotal);
+
+        // Check if divisible by 7 (game over)
+        if (rollTotal % 7 === 0) {
+          setGameOver(true);
+        } else {
+          // Add to score - round already incremented at roll start
+          setTotalScore((prev) => prev + rollTotal);
+        }
+
         isRollingRef.current = false;
         setIsRolling(false);
       } else {
@@ -793,14 +886,57 @@ export function DiceRoller(): React.ReactElement {
     };
 
     requestAnimationFrame(simulatePhysics);
-  }, [checkDiceCollision, getTopFace, snapToFlat]);
+  }, [checkDiceCollision, getTopFace, snapToFlat, createSimpleDice]);
 
-  const incrementDice = (): void => {
-    if (diceCount < 10) setDiceCount((c) => c + 1);
+  const startGame = (): void => {
+    // Start the game from title screen
+    setGameStarted(true);
+    setTotalScore(0);
+    setRound(0); // Start at 0, first roll will increment to 1
+    setGameOver(false);
+    setResults([]);
+    setLastRollTotal(0);
+
+    // Clear all existing decorative dice first
+    const scene = sceneRef.current;
+    if (scene) {
+      diceStatesRef.current.forEach((state) => {
+        scene.remove(state.mesh);
+        state.mesh.geometry.dispose();
+        if (Array.isArray(state.mesh.material)) {
+          state.mesh.material.forEach((m) => m.dispose());
+        } else {
+          state.mesh.material.dispose();
+        }
+      });
+      diceStatesRef.current = [];
+    }
+    // Dice will be added when user clicks Roll
   };
 
-  const decrementDice = (): void => {
-    if (diceCount > 1) setDiceCount((c) => c - 1);
+  const startNewGame = (): void => {
+    // Reset and restart after game over
+    setTotalScore(0);
+    setRound(0); // Start at 0, first roll will increment to 1
+    setGameOver(false);
+    setResults([]);
+    setLastRollTotal(0);
+
+    // Clear all existing dice first
+    const scene = sceneRef.current;
+    if (scene) {
+      diceStatesRef.current.forEach((state) => {
+        scene.remove(state.mesh);
+        state.mesh.geometry.dispose();
+        if (Array.isArray(state.mesh.material)) {
+          state.mesh.material.forEach((m) => m.dispose());
+        } else {
+          state.mesh.material.dispose();
+        }
+      });
+      diceStatesRef.current = [];
+    }
+    // Dice will be added when user clicks Roll
   };
 
   return (
@@ -814,49 +950,104 @@ export function DiceRoller(): React.ReactElement {
           className="text-3xl font-black tracking-tight"
           style={{ color: "#4a4a2a" }}
         >
-          DICE
+          GOD
           <br />
-          3D
+          ROLL
         </h1>
       </div>
+
+      {/* Game Stats - only show when game started */}
+      {gameStarted && (
+        <div className="absolute top-4 right-4 z-10 text-right">
+          <div className="text-2xl font-bold" style={{ color: "#4a4a2a" }}>
+            SCORE: {totalScore}
+          </div>
+          <div className="text-lg" style={{ color: "#6a6a4a" }}>
+            Round {round}
+          </div>
+        </div>
+      )}
 
       {/* Three.js Canvas */}
       <div ref={containerRef} className="w-full h-full" />
 
-      {/* Controls */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2">
-        {/* Show results */}
-        {results.length > 0 && !isRolling && (
-          <div className="flex flex-col items-center gap-1 mb-2">
-            <span
-              className="text-lg font-bold tracking-wide"
-              style={{ color: "#5a4a3a" }}
+      {/* Start Screen Overlay */}
+      {!gameStarted && (
+        <div className="absolute inset-0 flex items-center justify-center z-20">
+          <div className="text-center">
+            <h2
+              className="text-6xl font-black mb-4"
+              style={{ color: "#4a4a2a" }}
             >
-              TOTAL: {results.reduce((sum, val) => sum + val, 0)}
-            </span>
-            <span
-              className="text-sm tracking-wider"
-              style={{ color: "#8a8a6a" }}
+              GOD ROLL
+            </h2>
+            <p className="text-xl mb-2" style={{ color: "#6a6a4a" }}>
+              Roll dice to score points
+            </p>
+            <p className="text-lg mb-6" style={{ color: "#8a8a6a" }}>
+              Avoid totals divisible by 7!
+            </p>
+            <button
+              onClick={startGame}
+              className="text-3xl font-black px-10 py-4 rounded-full transition-all hover:scale-105 active:scale-95"
+              style={{ backgroundColor: "#4a4a2a", color: "#f0e68c" }}
             >
-              [{results.join(", ")}]
-            </span>
+              START GAME
+            </button>
+            <p className="text-sm mt-4" style={{ color: "#aaa" }}>
+              Dice increase each round
+            </p>
           </div>
-        )}
-        <span
-          className="text-sm font-medium tracking-wider"
-          style={{ color: "#8a8a6a" }}
-        >
-          AMOUNT: {diceCount}
-        </span>
-        <div className="flex items-center gap-6">
-          <button
-            onClick={decrementDice}
-            disabled={diceCount <= 1 || isRolling}
-            className="text-5xl font-bold transition-all hover:scale-110 active:scale-95 disabled:opacity-30"
-            style={{ color: "#6a6a4a" }}
-          >
-            −
-          </button>
+        </div>
+      )}
+
+      {/* Game Over Overlay */}
+      {gameOver && (
+        <div className="absolute inset-0 flex items-center justify-center z-20 bg-black/50">
+          <div className="bg-white/95 rounded-2xl p-8 text-center shadow-2xl">
+            <h2 className="text-4xl font-black mb-2" style={{ color: "#c44" }}>
+              GAME OVER!
+            </h2>
+            <p className="text-xl mb-1" style={{ color: "#4a4a2a" }}>
+              You rolled {lastRollTotal} (divisible by 7)
+            </p>
+            <p className="text-2xl font-bold mb-4" style={{ color: "#4a4a2a" }}>
+              Final Score: {totalScore}
+            </p>
+            <p className="text-lg mb-4" style={{ color: "#6a6a4a" }}>
+              You survived {round - 1} round{round - 1 !== 1 ? "s" : ""}!
+            </p>
+            <button
+              onClick={startNewGame}
+              className="text-2xl font-black px-8 py-3 rounded-full transition-all hover:scale-105 active:scale-95"
+              style={{ backgroundColor: "#4a4a2a", color: "#f0e68c" }}
+            >
+              PLAY AGAIN
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Controls - only show when game started and not game over */}
+      {gameStarted && !gameOver && (
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2">
+          {/* Show results */}
+          {results.length > 0 && !isRolling && (
+            <div className="flex flex-col items-center gap-1 mb-2">
+              <span
+                className="text-lg font-bold tracking-wide"
+                style={{ color: "#5a4a3a" }}
+              >
+                ROLL: {lastRollTotal} {lastRollTotal % 7 === 0 ? "💀" : "✓"}
+              </span>
+              <span
+                className="text-sm tracking-wider"
+                style={{ color: "#8a8a6a" }}
+              >
+                [{results.join(" + ")}]
+              </span>
+            </div>
+          )}
           <button
             onClick={rollDice}
             disabled={isRolling}
@@ -865,16 +1056,8 @@ export function DiceRoller(): React.ReactElement {
           >
             ROLL
           </button>
-          <button
-            onClick={incrementDice}
-            disabled={diceCount >= 10 || isRolling}
-            className="text-5xl font-bold transition-all hover:scale-110 active:scale-95 disabled:opacity-30"
-            style={{ color: "#8a8a6a" }}
-          >
-            +
-          </button>
         </div>
-      </div>
+      )}
     </div>
   );
 }
