@@ -42,8 +42,8 @@ god-roll/
 │   │       └── components/
 │   │           └── DiceRoller/   # Main game component
 │   ├── web-e2e/          # Playwright E2E tests
-│   └── api/              # Express backend (optional)
-└── packages/             # Shared libraries
+│   └── api/              # Express backend
+└── packages/             # Shared libraries (currently empty)
 ```
 
 ## Coding Standards & Conventions
