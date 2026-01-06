@@ -1,5 +1,5 @@
 import React from "react";
-import { COLORS } from "../constants";
+import { ColorTheme } from "../colorThemes";
 import { clearLeaderboard, LeaderboardEntry } from "../leaderboard";
 
 interface GameOverScreenProps {
@@ -10,6 +10,7 @@ interface GameOverScreenProps {
   highlightIndex?: number;
   leaderboardEntries: LeaderboardEntry[];
   onLeaderboardChange: (entries: LeaderboardEntry[]) => void;
+  theme: ColorTheme;
 }
 
 export function GameOverScreen({
@@ -20,6 +21,7 @@ export function GameOverScreen({
   highlightIndex,
   leaderboardEntries,
   onLeaderboardChange,
+  theme,
 }: GameOverScreenProps): React.ReactElement {
   const roundsSurvived = round - 1;
 
@@ -48,18 +50,18 @@ export function GameOverScreen({
             >
               GAME OVER!
             </h2>
-            <p className="text-lg mb-1" style={{ color: COLORS.textPrimary }}>
+            <p className="text-lg mb-1" style={{ color: theme.textPrimary }}>
               You rolled {lastRollTotal} (divisible by 7)
             </p>
             <p
               className="text-xl md:text-2xl font-bold mb-2"
-              style={{ color: COLORS.textPrimary }}
+              style={{ color: theme.textPrimary }}
             >
               Final Score: {totalScore}
             </p>
             <p
               className="text-base mb-4"
-              style={{ color: COLORS.textSecondary }}
+              style={{ color: theme.textSecondary }}
             >
               You survived {roundsSurvived} round
               {roundsSurvived !== 1 ? "s" : ""}!
@@ -68,8 +70,8 @@ export function GameOverScreen({
               onClick={onPlayAgain}
               className="text-xl md:text-2xl font-black px-6 md:px-8 py-2 md:py-3 rounded-full transition-all hover:scale-105 active:scale-95"
               style={{
-                backgroundColor: COLORS.textPrimary,
-                color: COLORS.backgroundCss,
+                backgroundColor: theme.textPrimary,
+                color: theme.backgroundCss,
               }}
             >
               PLAY AGAIN
@@ -84,19 +86,19 @@ export function GameOverScreen({
           <div className="text-center min-w-[200px]">
             <h3
               className="text-xl font-black mb-3"
-              style={{ color: COLORS.textPrimary }}
+              style={{ color: theme.textPrimary }}
             >
               🏆 Leaderboard
             </h3>
             {leaderboardEntries.length === 0 ? (
-              <p className="text-sm" style={{ color: COLORS.textSecondary }}>
+              <p className="text-sm" style={{ color: theme.textSecondary }}>
                 No scores yet!
               </p>
             ) : (
               <div className="max-h-[30vh] overflow-y-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr style={{ color: COLORS.textSecondary }}>
+                    <tr style={{ color: theme.textSecondary }}>
                       <th className="pb-1 text-center">#</th>
                       <th className="pb-1 text-right">Score</th>
                       <th className="pb-1 text-right">Rnds</th>
@@ -108,7 +110,7 @@ export function GameOverScreen({
                       <tr
                         key={i}
                         className={highlightIndex === i ? "bg-yellow-100" : ""}
-                        style={{ color: COLORS.textPrimary }}
+                        style={{ color: theme.textPrimary }}
                       >
                         <td className="py-0.5 text-center font-bold">
                           {i + 1}
@@ -119,7 +121,7 @@ export function GameOverScreen({
                         <td className="py-0.5 text-right">{entry.rounds}</td>
                         <td
                           className="py-0.5 text-right text-xs"
-                          style={{ color: COLORS.textTertiary }}
+                          style={{ color: theme.textTertiary }}
                         >
                           {formatDate(entry.date)}
                         </td>

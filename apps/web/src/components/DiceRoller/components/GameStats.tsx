@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { COLORS } from "../constants";
+import { ColorTheme } from "../colorThemes";
 
 interface GameStatsProps {
   totalScore: number;
@@ -7,6 +7,8 @@ interface GameStatsProps {
   onReset: () => void;
   onShowLeaderboard: () => void;
   onShowRules: () => void;
+  onShowColorPicker: () => void;
+  theme: ColorTheme;
 }
 
 export function GameStats({
@@ -15,6 +17,8 @@ export function GameStats({
   onReset,
   onShowLeaderboard,
   onShowRules,
+  onShowColorPicker,
+  theme,
 }: GameStatsProps): React.ReactElement {
   const [resetProgress, setResetProgress] = useState<number>(0);
   const resetTimerRef = useRef<number | null>(null);
@@ -59,19 +63,29 @@ export function GameStats({
 
   return (
     <div className="absolute top-4 right-4 z-10 text-right">
-      <div className="text-2xl font-bold" style={{ color: COLORS.textPrimary }}>
+      <div className="text-2xl font-bold" style={{ color: theme.textPrimary }}>
         SCORE: {totalScore}
       </div>
-      <div className="text-lg" style={{ color: COLORS.textSecondary }}>
+      <div className="text-lg" style={{ color: theme.textSecondary }}>
         Round {round}
       </div>
       <div className="flex gap-2 mt-2 justify-end">
         <button
+          onClick={onShowColorPicker}
+          className="text-sm font-bold px-3 py-1 rounded-full transition-all hover:scale-105 active:scale-95"
+          style={{
+            backgroundColor: theme.textSecondary,
+            color: theme.backgroundCss,
+          }}
+        >
+          🎨
+        </button>
+        <button
           onClick={onShowRules}
           className="text-sm font-bold px-3 py-1 rounded-full transition-all hover:scale-105 active:scale-95"
           style={{
-            backgroundColor: COLORS.textSecondary,
-            color: COLORS.backgroundCss,
+            backgroundColor: theme.textSecondary,
+            color: theme.backgroundCss,
           }}
         >
           ❓
@@ -80,8 +94,8 @@ export function GameStats({
           onClick={onShowLeaderboard}
           className="text-sm font-bold px-3 py-1 rounded-full transition-all hover:scale-105 active:scale-95"
           style={{
-            backgroundColor: COLORS.textSecondary,
-            color: COLORS.backgroundCss,
+            backgroundColor: theme.textSecondary,
+            color: theme.backgroundCss,
           }}
         >
           🏆
@@ -95,8 +109,8 @@ export function GameStats({
           onTouchCancel={handleTouchEnd}
           className="text-sm font-bold px-4 py-1 rounded-full transition-all relative overflow-hidden touch-none"
           style={{
-            backgroundColor: COLORS.textPrimary,
-            color: COLORS.backgroundCss,
+            backgroundColor: theme.textPrimary,
+            color: theme.backgroundCss,
           }}
         >
           <span

@@ -1,5 +1,5 @@
 import React from "react";
-import { COLORS } from "../constants";
+import { ColorTheme } from "../colorThemes";
 import { DiceFaceNumber } from "../types";
 
 interface RollButtonProps {
@@ -7,6 +7,7 @@ interface RollButtonProps {
   lastRollTotal: number;
   isRolling: boolean;
   onRoll: () => void;
+  theme: ColorTheme;
 }
 
 export function RollButton({
@@ -14,6 +15,7 @@ export function RollButton({
   lastRollTotal,
   isRolling,
   onRoll,
+  theme,
 }: RollButtonProps): React.ReactElement {
   return (
     <div
@@ -25,13 +27,13 @@ export function RollButton({
         <div className="flex flex-col items-center gap-1 mb-2">
           <span
             className="text-lg font-bold tracking-wide"
-            style={{ color: "#5a4a3a" }}
+            style={{ color: theme.textPrimary }}
           >
             ROLL: {lastRollTotal} {lastRollTotal % 7 === 0 ? "💀" : "✓"}
           </span>
           <span
             className="text-sm tracking-wider"
-            style={{ color: COLORS.textTertiary }}
+            style={{ color: theme.textTertiary }}
           >
             [{results.join(" + ")}]
           </span>
@@ -41,7 +43,7 @@ export function RollButton({
         onClick={onRoll}
         disabled={isRolling}
         className="text-4xl font-black tracking-wider px-8 py-2 rounded-full transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
-        style={{ color: "#5a4a3a" }}
+        style={{ color: theme.textPrimary }}
       >
         ROLL
       </button>

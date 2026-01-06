@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { COLORS } from "../constants";
+import { ColorTheme } from "../colorThemes";
 import {
   clearLeaderboard,
   getLeaderboard,
@@ -9,11 +9,13 @@ import {
 interface LeaderboardProps {
   onClose: () => void;
   highlightIndex?: number; // Index of the newly added entry to highlight
+  theme: ColorTheme;
 }
 
 export function Leaderboard({
   onClose,
   highlightIndex,
+  theme,
 }: LeaderboardProps): React.ReactElement {
   const [entries, setEntries] = useState<LeaderboardEntry[]>(() =>
     getLeaderboard()
@@ -38,19 +40,19 @@ export function Leaderboard({
       <div className="bg-white/95 rounded-2xl p-6 text-center shadow-2xl min-w-[300px] max-w-[90vw]">
         <h2
           className="text-2xl font-black mb-4"
-          style={{ color: COLORS.textPrimary }}
+          style={{ color: theme.textPrimary }}
         >
           🏆 Leaderboard
         </h2>
         {entries.length === 0 ? (
-          <p className="mb-4 text-lg" style={{ color: COLORS.textSecondary }}>
+          <p className="mb-4 text-lg" style={{ color: theme.textSecondary }}>
             No scores yet. Play a game!
           </p>
         ) : (
           <div className="mb-4 max-h-[50vh] overflow-y-auto">
             <table className="w-full text-left">
               <thead>
-                <tr style={{ color: COLORS.textSecondary }}>
+                <tr style={{ color: theme.textSecondary }}>
                   <th className="pb-2 text-center">#</th>
                   <th className="pb-2 text-right">Score</th>
                   <th className="pb-2 text-right">Rounds</th>
@@ -62,14 +64,14 @@ export function Leaderboard({
                   <tr
                     key={i}
                     className={highlightIndex === i ? "bg-yellow-100" : ""}
-                    style={{ color: COLORS.textPrimary }}
+                    style={{ color: theme.textPrimary }}
                   >
                     <td className="py-1 text-center font-bold">{i + 1}</td>
                     <td className="py-1 text-right font-mono">{entry.score}</td>
                     <td className="py-1 text-right">{entry.rounds}</td>
                     <td
                       className="py-1 text-right text-sm"
-                      style={{ color: COLORS.textTertiary }}
+                      style={{ color: theme.textTertiary }}
                     >
                       {formatDate(entry.date)}
                     </td>
@@ -84,8 +86,8 @@ export function Leaderboard({
             onClick={onClose}
             className="px-5 py-2 rounded-full font-bold text-base transition-all hover:scale-105 active:scale-95"
             style={{
-              backgroundColor: COLORS.textPrimary,
-              color: COLORS.backgroundCss,
+              backgroundColor: theme.textPrimary,
+              color: theme.backgroundCss,
             }}
           >
             Close

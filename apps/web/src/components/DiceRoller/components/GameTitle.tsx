@@ -1,12 +1,16 @@
 import React from "react";
-import { COLORS } from "../constants";
+import { ColorTheme } from "../colorThemes";
 
-export function GameTitle(): React.ReactElement {
+interface GameTitleProps {
+  theme: ColorTheme;
+}
+
+export function GameTitle({ theme }: GameTitleProps): React.ReactElement {
   return (
     <div className="absolute top-4 left-4 z-10">
       <h1
         className="text-3xl font-black tracking-tight"
-        style={{ color: COLORS.textPrimary }}
+        style={{ color: theme.textPrimary }}
       >
         GOD
         <br />

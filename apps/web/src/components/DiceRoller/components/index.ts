@@ -1,3 +1,4 @@
+export { ColorPicker } from "./ColorPicker";
 export { GameOverScreen } from "./GameOverScreen";
 export { GameRules } from "./GameRules";
 export { GameStats } from "./GameStats";

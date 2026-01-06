@@ -1,24 +1,28 @@
 import React from "react";
-import { COLORS } from "../constants";
+import { ColorTheme } from "../colorThemes";
 
 interface GameRulesProps {
   onClose: () => void;
+  theme: ColorTheme;
 }
 
-export function GameRules({ onClose }: GameRulesProps): React.ReactElement {
+export function GameRules({
+  onClose,
+  theme,
+}: GameRulesProps): React.ReactElement {
   return (
     <div className="absolute inset-0 flex items-center justify-center z-30 bg-black/60 p-4">
       <div className="bg-white/95 rounded-2xl p-6 text-left shadow-2xl max-w-md max-h-[90vh] overflow-auto">
         <h2
           className="text-2xl font-black mb-4 text-center"
-          style={{ color: COLORS.textPrimary }}
+          style={{ color: theme.textPrimary }}
         >
           📜 How to Play
         </h2>
 
         <div
           className="space-y-3 text-base"
-          style={{ color: COLORS.textPrimary }}
+          style={{ color: theme.textPrimary }}
         >
           <div>
             <span className="font-bold">🎯 Goal:</span> Score as high as
@@ -51,8 +55,8 @@ export function GameRules({ onClose }: GameRulesProps): React.ReactElement {
             onClick={onClose}
             className="px-6 py-2 rounded-full font-bold text-lg transition-all hover:scale-105 active:scale-95"
             style={{
-              backgroundColor: COLORS.textPrimary,
-              color: COLORS.backgroundCss,
+              backgroundColor: theme.textPrimary,
+              color: theme.backgroundCss,
             }}
           >
             Got it!

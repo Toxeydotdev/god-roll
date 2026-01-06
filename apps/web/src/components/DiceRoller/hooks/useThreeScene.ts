@@ -58,6 +58,7 @@ interface UseThreeSceneReturn {
   boundsRef: React.RefObject<Bounds>;
   adjustCameraForDiceCount: (diceCount: number) => void;
   resetCamera: () => void;
+  setSceneBackground: (color: number) => void;
 }
 
 export function useThreeScene(): UseThreeSceneReturn {
@@ -231,6 +232,13 @@ export function useThreeScene(): UseThreeSceneReturn {
     };
   }, [calculateBounds]);
 
+  // Function to update scene background color
+  const setSceneBackground = useCallback((color: number) => {
+    if (sceneRef.current) {
+      sceneRef.current.background = new THREE.Color(color);
+    }
+  }, []);
+
   return {
     containerRef,
     sceneRef,
@@ -239,5 +247,6 @@ export function useThreeScene(): UseThreeSceneReturn {
     boundsRef,
     adjustCameraForDiceCount,
     resetCamera,
+    setSceneBackground,
   };
 }

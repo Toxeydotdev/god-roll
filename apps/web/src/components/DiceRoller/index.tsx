@@ -1,5 +1,12 @@
 import React, { useCallback, useEffect, useState } from "react";
 import {
+  ColorTheme,
+  getSavedThemeId,
+  getThemeById,
+  saveThemeId,
+} from "./colorThemes";
+import {
+  ColorPicker,
   GameOverScreen,
   GameRules,
   GameStats,
@@ -8,13 +15,16 @@ import {
   RollButton,
   StartScreen,
 } from "./components";
-import { COLORS } from "./constants";
 import { useDicePhysics, useGameState, useThreeScene } from "./hooks";
 import { addLeaderboardEntry } from "./leaderboard";
 
 export function DiceRoller(): React.ReactElement {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showRules, setShowRules] = useState(false);
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [theme, setTheme] = useState<ColorTheme>(() =>
+    getThemeById(getSavedThemeId())
+  );
   const [highlightIndex, setHighlightIndex] = useState<number | undefined>(
     undefined
   );
@@ -28,6 +38,7 @@ export function DiceRoller(): React.ReactElement {
     boundsRef,
     adjustCameraForDiceCount,
     resetCamera,
+    setSceneBackground,
   } = useThreeScene();
 
   const {
@@ -90,12 +101,27 @@ export function DiceRoller(): React.ReactElement {
     }
   }, [gameOver, totalScore, round]);
 
+  // Handle theme change
+  const handleThemeChange = useCallback(
+    (newTheme: ColorTheme) => {
+      setTheme(newTheme);
+      saveThemeId(newTheme.id);
+      setSceneBackground(newTheme.background);
+    },
+    [setSceneBackground]
+  );
+
+  // Update scene background when theme loads
+  useEffect(() => {
+    setSceneBackground(theme.background);
+  }, [theme.background, setSceneBackground]);
+
   return (
     <div
       className="relative w-full h-dvh overflow-hidden touch-none"
-      style={{ backgroundColor: COLORS.backgroundCss }}
+      style={{ backgroundColor: theme.backgroundCss }}
     >
-      <GameTitle />
+      <GameTitle theme={theme} />
 
       {gameStarted && (
         <GameStats
@@ -107,12 +133,20 @@ export function DiceRoller(): React.ReactElement {
             setShowLeaderboard(true);
           }}
           onShowRules={() => setShowRules(true)}
+          onShowColorPicker={() => setShowColorPicker(true)}
+          theme={theme}
         />
       )}
 
       <div ref={containerRef} className="w-full h-full" />
 
-      {!gameStarted && <StartScreen onStartGame={startGame} />}
+      {!gameStarted && (
+        <StartScreen
+          onStartGame={startGame}
+          onShowColorPicker={() => setShowColorPicker(true)}
+          theme={theme}
+        />
+      )}
 
       {gameOver && (
         <GameOverScreen
@@ -123,6 +157,7 @@ export function DiceRoller(): React.ReactElement {
           highlightIndex={highlightIndex}
           leaderboardEntries={leaderboardEntries}
           onLeaderboardChange={setLeaderboardEntries}
+          theme={theme}
         />
       )}
 
@@ -132,6 +167,7 @@ export function DiceRoller(): React.ReactElement {
           lastRollTotal={lastRollTotal}
           isRolling={isRolling}
           onRoll={handleRoll}
+          theme={theme}
         />
       )}
 
@@ -144,8 +180,8 @@ export function DiceRoller(): React.ReactElement {
           }}
           className="absolute bottom-24 left-1/2 -translate-x-1/2 px-6 py-2 rounded-full font-bold text-lg transition-all hover:scale-105 active:scale-95"
           style={{
-            backgroundColor: COLORS.textSecondary,
-            color: COLORS.backgroundCss,
+            backgroundColor: theme.textSecondary,
+            color: theme.backgroundCss,
           }}
         >
           🏆 Leaderboard
@@ -157,11 +193,23 @@ export function DiceRoller(): React.ReactElement {
         <Leaderboard
           onClose={() => setShowLeaderboard(false)}
           highlightIndex={highlightIndex}
+          theme={theme}
         />
       )}
 
       {/* Game Rules modal */}
-      {showRules && <GameRules onClose={() => setShowRules(false)} />}
+      {showRules && (
+        <GameRules onClose={() => setShowRules(false)} theme={theme} />
+      )}
+
+      {/* Color Picker modal */}
+      {showColorPicker && (
+        <ColorPicker
+          currentTheme={theme}
+          onSelectTheme={handleThemeChange}
+          onClose={() => setShowColorPicker(false)}
+        />
+      )}
     </div>
   );
 }
