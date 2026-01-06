@@ -1,5 +1,6 @@
 export { ColorPicker } from "./ColorPicker/ColorPicker";
 export { ControlsPanel } from "./ControlsPanel/ControlsPanel";
+export { DiceSkinPicker } from "./DiceSkinPicker/DiceSkinPicker";
 export { GameOverScreen } from "./GameOverScreen/GameOverScreen";
 export { GameRules } from "./GameRules/GameRules";
 export { GameStats } from "./GameStats/GameStats";

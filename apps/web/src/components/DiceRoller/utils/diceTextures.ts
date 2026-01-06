@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
-import { COLORS, DICE_SIZE } from "../constants";
+import { DICE_SIZE } from "../constants";
+import { DiceSkin, getDiceSkin } from "../diceSkins";
 import { DiceFaceNumber } from "../types";
 
 // Dot positions for each number (scaled for 256px canvas)
@@ -39,7 +40,8 @@ const DOT_POSITIONS: Record<DiceFaceNumber, Array<[number, number]>> = {
 };
 
 export function createFaceTexture(
-  faceNumber: DiceFaceNumber
+  faceNumber: DiceFaceNumber,
+  skin: DiceSkin
 ): THREE.CanvasTexture {
   const size = 256;
   const canvas = document.createElement("canvas");
@@ -52,7 +54,7 @@ export function createFaceTexture(
   }
 
   // Background
-  ctx.fillStyle = COLORS.dice;
+  ctx.fillStyle = skin.diceColor;
   ctx.fillRect(0, 0, size, size);
 
   // Draw dots
@@ -60,9 +62,11 @@ export function createFaceTexture(
   const dotRadius = 22;
 
   dots.forEach(([x, y], index) => {
-    // Use red for center dot on face 1
+    // Use special color for center dot on face 1 if defined
     const isCenter = faceNumber === 1 && index === 0;
-    ctx.fillStyle = isCenter ? COLORS.dotOne : COLORS.dot;
+    const dotColor =
+      isCenter && skin.dotOneColor ? skin.dotOneColor : skin.dotColor;
+    ctx.fillStyle = dotColor;
     ctx.beginPath();
     ctx.arc(x, y, dotRadius, 0, Math.PI * 2);
     ctx.fill();
@@ -73,7 +77,9 @@ export function createFaceTexture(
   return texture;
 }
 
-export function createDiceMesh(): THREE.Mesh {
+export function createDiceMesh(skinId?: string): THREE.Mesh {
+  const skin = getDiceSkin(skinId || "classic");
+
   const geometry = new RoundedBoxGeometry(
     DICE_SIZE,
     DICE_SIZE,
@@ -83,30 +89,43 @@ export function createDiceMesh(): THREE.Mesh {
   );
   geometry.computeVertexNormals();
 
+  const materialProps: THREE.MeshStandardMaterialParameters = {
+    roughness: skin.roughness ?? 0.2,
+    metalness: skin.metalness ?? 0,
+    transparent: skin.opacity !== undefined && skin.opacity < 1,
+    opacity: skin.opacity ?? 1,
+  };
+
+  // Add emissive properties if skin has them
+  if (skin.emissive) {
+    materialProps.emissive = new THREE.Color(skin.emissive);
+    materialProps.emissiveIntensity = skin.emissiveIntensity ?? 0;
+  }
+
   const materials: THREE.MeshStandardMaterial[] = [
     new THREE.MeshStandardMaterial({
-      map: createFaceTexture(3),
-      roughness: 0.2,
+      ...materialProps,
+      map: createFaceTexture(3, skin),
     }),
     new THREE.MeshStandardMaterial({
-      map: createFaceTexture(4),
-      roughness: 0.2,
+      ...materialProps,
+      map: createFaceTexture(4, skin),
     }),
     new THREE.MeshStandardMaterial({
-      map: createFaceTexture(1),
-      roughness: 0.2,
+      ...materialProps,
+      map: createFaceTexture(1, skin),
     }),
     new THREE.MeshStandardMaterial({
-      map: createFaceTexture(6),
-      roughness: 0.2,
+      ...materialProps,
+      map: createFaceTexture(6, skin),
     }),
     new THREE.MeshStandardMaterial({
-      map: createFaceTexture(2),
-      roughness: 0.2,
+      ...materialProps,
+      map: createFaceTexture(2, skin),
     }),
     new THREE.MeshStandardMaterial({
-      map: createFaceTexture(5),
-      roughness: 0.2,
+      ...materialProps,
+      map: createFaceTexture(5, skin),
     }),
   ];
 
@@ -123,5 +142,77 @@ export function disposeDiceMesh(mesh: THREE.Mesh): void {
     mesh.material.forEach((m) => m.dispose());
   } else {
     mesh.material.dispose();
+  }
+}
+
+export function updateDiceSkin(mesh: THREE.Mesh, skinId: string): void {
+  const skin = getDiceSkin(skinId);
+
+  // Dispose old materials and textures
+  if (Array.isArray(mesh.material)) {
+    mesh.material.forEach((m) => {
+      if (m.map) {
+        m.map.dispose();
+      }
+      m.dispose();
+    });
+  }
+
+  const materialProps: THREE.MeshStandardMaterialParameters = {
+    roughness: skin.roughness ?? 0.2,
+    metalness: skin.metalness ?? 0,
+    transparent: skin.opacity !== undefined && skin.opacity < 1,
+    opacity: skin.opacity ?? 1,
+  };
+
+  // Add emissive properties if skin has them
+  if (skin.emissive) {
+    materialProps.emissive = new THREE.Color(skin.emissive);
+    materialProps.emissiveIntensity = skin.emissiveIntensity ?? 0;
+  }
+
+  // Create new materials with updated skin
+  // Face order: +X(3), -X(4), +Y(1), -Y(6), +Z(2), -Z(5)
+  const materials: THREE.MeshStandardMaterial[] = [
+    new THREE.MeshStandardMaterial({
+      ...materialProps,
+      map: createFaceTexture(3, skin),
+    }),
+    new THREE.MeshStandardMaterial({
+      ...materialProps,
+      map: createFaceTexture(4, skin),
+    }),
+    new THREE.MeshStandardMaterial({
+      ...materialProps,
+      map: createFaceTexture(1, skin),
+    }),
+    new THREE.MeshStandardMaterial({
+      ...materialProps,
+      map: createFaceTexture(6, skin),
+    }),
+    new THREE.MeshStandardMaterial({
+      ...materialProps,
+      map: createFaceTexture(2, skin),
+    }),
+    new THREE.MeshStandardMaterial({
+      ...materialProps,
+      map: createFaceTexture(5, skin),
+    }),
+  ];
+
+  // Apply new materials
+  mesh.material = materials;
+
+  // Mark materials as needing update
+  materials.forEach((mat) => {
+    mat.needsUpdate = true;
+    if (mat.map) {
+      mat.map.needsUpdate = true;
+    }
+  });
+
+  // Force geometry to update
+  if (mesh.geometry) {
+    mesh.geometry.attributes.position.needsUpdate = true;
   }
 }

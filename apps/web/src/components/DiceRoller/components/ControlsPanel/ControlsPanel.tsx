@@ -60,6 +60,11 @@ function ControlButtons({ isOpen }: ControlButtonsProps) {
       label: "Change theme",
       onClick: () => openModal("colorPicker"),
     },
+    {
+      icon: "🎲",
+      label: "Change dice skin",
+      onClick: () => openModal("diceSkin"),
+    },
     { icon: "❓", label: "Show rules", onClick: () => openModal("rules") },
     {
       icon: "🏆",

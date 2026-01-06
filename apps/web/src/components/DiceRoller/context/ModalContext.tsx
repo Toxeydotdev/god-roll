@@ -8,6 +8,7 @@
 import { ColorTheme } from "@/components/DiceRoller/colorThemes";
 import {
   ColorPicker,
+  DiceSkinPicker,
   GameRules,
   Leaderboard,
 } from "@/components/DiceRoller/components";
@@ -25,7 +26,7 @@ import { useTheme } from "./ThemeContext";
 // TYPES
 // ============================================================================
 
-export type ModalType = "leaderboard" | "rules" | "colorPicker";
+export type ModalType = "leaderboard" | "rules" | "colorPicker" | "diceSkin";
 
 interface LeaderboardModalProps {
   highlightIndex?: number;
@@ -114,6 +115,10 @@ export function ModalProvider({
             onClose={closeModal}
           />
         );
+        break;
+
+      case "diceSkin":
+        modalElement = <DiceSkinPicker onClose={closeModal} theme={theme} />;
         break;
     }
 

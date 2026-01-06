@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import * as THREE from "three";
 import {
   ANGULAR_FRICTION,
@@ -12,7 +12,7 @@ import {
   RESTITUTION,
 } from "../constants";
 import { Bounds, DiceFaceNumber, DiceState } from "../types";
-import { createDiceMesh, disposeDiceMesh } from "../utils/diceTextures";
+import { createDiceMesh, disposeDiceMesh, updateDiceSkin } from "../utils/diceTextures";
 import { secureRandom } from "../utils/secureRandom";
 
 export interface SoundCallbacks {
@@ -26,6 +26,7 @@ interface UseDicePhysicsProps {
   onResultsUpdate: (results: DiceFaceNumber[]) => void;
   onDiceCountChange?: (diceCount: number) => void;
   soundCallbacks?: SoundCallbacks;
+  skinId?: string; // Optional skin ID for dice
 }
 
 interface UseDicePhysicsReturn {
@@ -34,6 +35,7 @@ interface UseDicePhysicsReturn {
   rollDice: () => void;
   clearAllDice: () => void;
   getTopFace: (mesh: THREE.Mesh) => DiceFaceNumber;
+  updateAllDiceSkins: (skinId: string) => void;
 }
 
 export function useDicePhysics({
@@ -43,9 +45,16 @@ export function useDicePhysics({
   onResultsUpdate,
   onDiceCountChange,
   soundCallbacks,
+  skinId,
 }: UseDicePhysicsProps): UseDicePhysicsReturn {
   const diceStatesRef = useRef<DiceState[]>([]);
   const isRollingRef = useRef<boolean>(false);
+  const skinIdRef = useRef<string>(skinId);
+
+  // Keep skinIdRef in sync with the latest skinId
+  useEffect(() => {
+    skinIdRef.current = skinId;
+  }, [skinId]);
 
   const getTopFace = useCallback((mesh: THREE.Mesh): DiceFaceNumber => {
     const euler = mesh.rotation;
@@ -76,6 +85,12 @@ export function useDicePhysics({
     diceStatesRef.current = [];
   }, [sceneRef]);
 
+  const updateAllDiceSkins = useCallback((newSkinId: string) => {
+    diceStatesRef.current.forEach((state) => {
+      updateDiceSkin(state.mesh, newSkinId);
+    });
+  }, []);
+
   const rollDice = useCallback(() => {
     if (isRollingRef.current) return;
     const scene = sceneRef.current;
@@ -94,7 +109,7 @@ export function useDicePhysics({
 
     // Add any needed new dice
     for (let i = currentCount; i < targetDiceCount; i++) {
-      const mesh = createDiceMesh();
+      const mesh = createDiceMesh(skinIdRef.current);
       mesh.position.set(-10, DICE_HALF_SIZE, (secureRandom() - 0.5) * 2);
       mesh.rotation.set(
         secureRandom() * Math.PI * 2,
@@ -476,5 +491,6 @@ export function useDicePhysics({
     rollDice,
     clearAllDice,
     getTopFace,
+    updateAllDiceSkins,
   };
 }

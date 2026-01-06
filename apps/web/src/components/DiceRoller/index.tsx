@@ -6,9 +6,11 @@ import {
   StartScreen,
 } from "@/components/DiceRoller/components";
 import {
+  DiceSkinProvider,
   ModalProvider,
   SoundProvider,
   ThemeProvider,
+  useDiceSkin,
   useSound,
   useTheme,
 } from "@/components/DiceRoller/context";
@@ -31,9 +33,11 @@ export function DiceRoller(): React.ReactElement {
   return (
     <ThemeProvider>
       <SoundProvider>
-        <ModalProvider>
-          <DiceRollerContent />
-        </ModalProvider>
+        <DiceSkinProvider>
+          <ModalProvider>
+            <DiceRollerContent />
+          </ModalProvider>
+        </DiceSkinProvider>
       </SoundProvider>
     </ThemeProvider>
   );
@@ -51,6 +55,7 @@ function DiceRollerContent(): React.ReactElement {
 
   const { theme } = useTheme();
   const { playDiceHit } = useSound();
+  const { skinId } = useDiceSkin();
 
   const {
     containerRef,
@@ -84,14 +89,21 @@ function DiceRollerContent(): React.ReactElement {
     startNewGame: baseStartNewGame,
   } = useGameState();
 
-  const { isRollingRef, rollDice, clearAllDice } = useDicePhysics({
-    sceneRef,
-    boundsRef,
-    onRollComplete: handleRollComplete,
-    onResultsUpdate: setResults,
-    onDiceCountChange: adjustCameraForDiceCount,
-    soundCallbacks,
-  });
+  const { isRollingRef, rollDice, clearAllDice, updateAllDiceSkins } =
+    useDicePhysics({
+      sceneRef,
+      boundsRef,
+      onRollComplete: handleRollComplete,
+      onResultsUpdate: setResults,
+      onDiceCountChange: adjustCameraForDiceCount,
+      soundCallbacks,
+      skinId,
+    });
+
+  // Update existing dice when skin changes
+  useEffect(() => {
+    updateAllDiceSkins(skinId);
+  }, [skinId, updateAllDiceSkins]);
 
   const handleRoll = useCallback(() => {
     if (isRollingRef.current) return;
