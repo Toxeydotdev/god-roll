@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
 import { ColorTheme } from "../colorThemes";
 
-interface GameStatsProps {
+export interface GameStatsProps {
   totalScore: number;
   round: number;
   onReset: () => void;

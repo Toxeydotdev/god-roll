@@ -1,17 +1,156 @@
 /**
  * @vitest-environment jsdom
+ *
+ * GameStats User Interaction Tests following SIFERS methodology:
+ * - Setup: Prepare test environment and dependencies
+ * - Invoke: Trigger user actions
+ * - Find: Locate affected elements
+ * - Expect: Assert expected outcomes
+ * - Reset: Clean up after test
  */
 import {
   act,
   cleanup,
   fireEvent,
   render,
+  RenderResult,
   screen,
 } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { GameStats } from "./GameStats";
+import { afterEach, beforeEach, describe, expect, it, Mock, vi } from "vitest";
+import { hexToRgb, mockOceanTheme, mockTheme } from "../../../test-utils";
+import { GameStats, GameStatsProps } from "./GameStats";
 
-describe("GameStats", () => {
+// ============================================================================
+// SETUP FUNCTION - Reusable test setup with configurable scenarios
+// ============================================================================
+
+interface SetupOptions {
+  totalScore?: number;
+  round?: number;
+  onReset?: Mock;
+  onShowLeaderboard?: Mock;
+  onShowRules?: Mock;
+  onShowColorPicker?: Mock;
+  theme?: typeof mockTheme;
+}
+
+interface SetupResult {
+  // Rendered elements
+  container: RenderResult["container"];
+  // Callbacks for assertions
+  onReset: Mock;
+  onShowLeaderboard: Mock;
+  onShowRules: Mock;
+  onShowColorPicker: Mock;
+  // Helper functions
+  getResetButton: () => HTMLElement;
+  getLeaderboardButton: () => HTMLElement;
+  getRulesButton: () => HTMLElement;
+  getThemeButton: () => HTMLElement;
+  // Hold-to-reset helpers
+  startHold: (type?: "mouse" | "touch") => void;
+  releaseHold: (type?: "mouse" | "touch") => void;
+  cancelHold: (type?: "mouseLeave" | "touchEnd" | "touchCancel") => void;
+  advanceTimer: (ms: number) => Promise<void>;
+}
+
+function setup(options: SetupOptions = {}): SetupResult {
+  const {
+    totalScore = 0,
+    round = 1,
+    onReset = vi.fn(),
+    onShowLeaderboard = vi.fn(),
+    onShowRules = vi.fn(),
+    onShowColorPicker = vi.fn(),
+    theme = mockTheme,
+  } = options;
+
+  const props: GameStatsProps = {
+    totalScore,
+    round,
+    onReset,
+    onShowLeaderboard,
+    onShowRules,
+    onShowColorPicker,
+    theme,
+  };
+
+  const { container } = render(<GameStats {...props} />);
+
+  // Helper to get buttons - reset button may show "RESET" or "HOLD..."
+  const getResetButton = () => {
+    const resetBtn = screen.queryByRole("button", { name: "RESET" });
+    if (resetBtn) return resetBtn;
+    return screen.getByRole("button", { name: "HOLD..." });
+  };
+  // Emoji buttons need to be found by their text content
+  const getLeaderboardButton = () => screen.getByRole("button", { name: "🏆" });
+  const getRulesButton = () => screen.getByRole("button", { name: "❓" });
+  const getThemeButton = () => screen.getByRole("button", { name: "🎨" });
+
+  // Store reference to button before state changes
+  let resetButtonRef: HTMLElement | null = null;
+
+  // Hold interaction helpers
+  const startHold = (type: "mouse" | "touch" = "mouse") => {
+    resetButtonRef = getResetButton();
+    if (type === "mouse") {
+      fireEvent.mouseDown(resetButtonRef);
+    } else {
+      fireEvent.touchStart(resetButtonRef);
+    }
+  };
+
+  const releaseHold = (type: "mouse" | "touch" = "mouse") => {
+    const button = resetButtonRef || getResetButton();
+    if (type === "mouse") {
+      fireEvent.mouseUp(button);
+    } else {
+      fireEvent.touchEnd(button);
+    }
+  };
+
+  const cancelHold = (
+    type: "mouseLeave" | "touchEnd" | "touchCancel" = "mouseLeave"
+  ) => {
+    const button = resetButtonRef || getResetButton();
+    if (type === "mouseLeave") {
+      fireEvent.mouseLeave(button);
+    } else if (type === "touchEnd") {
+      fireEvent.touchEnd(button);
+    } else {
+      fireEvent.touchCancel(button);
+    }
+  };
+
+  const advanceTimer = async (ms: number) => {
+    await act(async () => {
+      vi.advanceTimersByTime(ms);
+    });
+  };
+
+  return {
+    container,
+    onReset,
+    onShowLeaderboard,
+    onShowRules,
+    onShowColorPicker,
+    getResetButton,
+    getLeaderboardButton,
+    getRulesButton,
+    getThemeButton,
+    startHold,
+    releaseHold,
+    cancelHold,
+    advanceTimer,
+  };
+}
+
+// ============================================================================
+// TESTS
+// ============================================================================
+
+describe("GameStats - User Interactions", () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });
@@ -21,194 +160,223 @@ describe("GameStats", () => {
     cleanup();
   });
 
-  it("should render score and round", () => {
-    render(<GameStats totalScore={42} round={3} onReset={() => {}} />);
+  // --------------------------------------------------------------------------
+  // Viewing Game Stats
+  // --------------------------------------------------------------------------
+  describe("when user views game stats during play", () => {
+    it("should display current score prominently", () => {
+      setup({ totalScore: 42 });
 
-    expect(screen.getByText("SCORE: 42")).toBeTruthy();
-    expect(screen.getByText("Round 3")).toBeTruthy();
+      expect(screen.getByText("SCORE: 42")).toBeTruthy();
+    });
+
+    it("should show current round number", () => {
+      setup({ round: 5 });
+
+      expect(screen.getByText("Round 5")).toBeTruthy();
+    });
+
+    it("should display all action buttons", () => {
+      const {
+        getResetButton,
+        getLeaderboardButton,
+        getRulesButton,
+        getThemeButton,
+      } = setup();
+
+      expect(getResetButton()).toBeTruthy();
+      expect(getLeaderboardButton()).toBeTruthy();
+      expect(getRulesButton()).toBeTruthy();
+      expect(getThemeButton()).toBeTruthy();
+    });
   });
 
-  it("should render reset button", () => {
-    render(<GameStats totalScore={0} round={1} onReset={() => {}} />);
+  // --------------------------------------------------------------------------
+  // Modal Triggers
+  // --------------------------------------------------------------------------
+  describe("when user clicks action buttons", () => {
+    it("should open leaderboard when leaderboard button clicked", () => {
+      const { getLeaderboardButton, onShowLeaderboard } = setup();
 
-    expect(screen.getByRole("button", { name: "RESET" })).toBeTruthy();
+      fireEvent.click(getLeaderboardButton());
+
+      expect(onShowLeaderboard).toHaveBeenCalledTimes(1);
+    });
+
+    it("should open rules when rules button clicked", () => {
+      const { getRulesButton, onShowRules } = setup();
+
+      fireEvent.click(getRulesButton());
+
+      expect(onShowRules).toHaveBeenCalledTimes(1);
+    });
+
+    it("should open color picker when theme button clicked", () => {
+      const { getThemeButton, onShowColorPicker } = setup();
+
+      fireEvent.click(getThemeButton());
+
+      expect(onShowColorPicker).toHaveBeenCalledTimes(1);
+    });
   });
 
-  describe("mouse hold-to-reset", () => {
-    it("should show HOLD... text while holding", async () => {
-      render(<GameStats totalScore={0} round={1} onReset={() => {}} />);
+  // --------------------------------------------------------------------------
+  // Theme Styling
+  // --------------------------------------------------------------------------
+  describe("theme styling", () => {
+    it("should apply Forest theme colors", () => {
+      setup({ theme: mockTheme });
 
-      const button = screen.getByRole("button", { name: "RESET" });
+      const scoreElement = screen.getByText(/SCORE:/);
+      expect(scoreElement.style.color).toBe(hexToRgb(mockTheme.textPrimary));
+    });
 
-      fireEvent.mouseDown(button);
+    it("should apply Ocean theme colors", () => {
+      setup({ theme: mockOceanTheme });
 
-      // Advance timers partially
-      await act(async () => {
-        vi.advanceTimersByTime(100);
-      });
+      const scoreElement = screen.getByText(/SCORE:/);
+      expect(scoreElement.style.color).toBe(
+        hexToRgb(mockOceanTheme.textPrimary)
+      );
+    });
+  });
+
+  // --------------------------------------------------------------------------
+  // Hold-to-Reset (Mouse)
+  // --------------------------------------------------------------------------
+  describe("when user holds reset button with mouse", () => {
+    it("should show HOLD... feedback while holding", async () => {
+      const { startHold, releaseHold, advanceTimer } = setup();
+
+      startHold("mouse");
+      await advanceTimer(100);
 
       expect(screen.getByText("HOLD...")).toBeTruthy();
 
-      fireEvent.mouseUp(button);
+      releaseHold("mouse");
     });
 
-    it("should call onReset after holding for 1 second", async () => {
-      const onReset = vi.fn();
-      render(<GameStats totalScore={0} round={1} onReset={onReset} />);
+    it("should trigger reset after holding for 1 second", async () => {
+      const { startHold, advanceTimer, onReset } = setup();
 
-      const button = screen.getByRole("button", { name: "RESET" });
-
-      fireEvent.mouseDown(button);
-
-      // Advance past the hold duration
-      await act(async () => {
-        vi.advanceTimersByTime(1100);
-      });
+      startHold("mouse");
+      await advanceTimer(1100);
 
       expect(onReset).toHaveBeenCalledTimes(1);
     });
 
-    it("should not call onReset if released early", async () => {
-      const onReset = vi.fn();
-      render(<GameStats totalScore={0} round={1} onReset={onReset} />);
+    it("should NOT reset if released before 1 second", async () => {
+      const { startHold, releaseHold, advanceTimer, onReset } = setup();
 
-      const button = screen.getByRole("button", { name: "RESET" });
-
-      fireEvent.mouseDown(button);
-
-      await act(async () => {
-        vi.advanceTimersByTime(500);
-      });
-
-      fireEvent.mouseUp(button);
-
-      await act(async () => {
-        vi.advanceTimersByTime(1000);
-      });
+      startHold("mouse");
+      await advanceTimer(500);
+      releaseHold("mouse");
+      await advanceTimer(1000); // Wait to ensure no delayed trigger
 
       expect(onReset).not.toHaveBeenCalled();
     });
 
-    it("should cancel on mouse leave", async () => {
-      const onReset = vi.fn();
-      render(<GameStats totalScore={0} round={1} onReset={onReset} />);
+    it("should cancel if mouse leaves button", async () => {
+      const { startHold, cancelHold, advanceTimer, onReset } = setup();
 
-      const button = screen.getByRole("button", { name: "RESET" });
-
-      fireEvent.mouseDown(button);
-
-      await act(async () => {
-        vi.advanceTimersByTime(500);
-      });
-
-      fireEvent.mouseLeave(button);
-
-      await act(async () => {
-        vi.advanceTimersByTime(1000);
-      });
+      startHold("mouse");
+      await advanceTimer(500);
+      cancelHold("mouseLeave");
+      await advanceTimer(1000);
 
       expect(onReset).not.toHaveBeenCalled();
       expect(screen.getByText("RESET")).toBeTruthy();
     });
+
+    it("should show progress indicator while holding", async () => {
+      const { startHold, releaseHold, advanceTimer, getResetButton } = setup();
+
+      startHold("mouse");
+      await advanceTimer(500);
+
+      const progressSpan = getResetButton().querySelector("span.absolute");
+      expect(progressSpan).toBeTruthy();
+
+      releaseHold("mouse");
+    });
+
+    it("should reset progress after release", async () => {
+      const { startHold, releaseHold, advanceTimer, getResetButton } = setup();
+
+      startHold("mouse");
+      await advanceTimer(500);
+      releaseHold("mouse");
+      await advanceTimer(50);
+
+      const progressSpan = getResetButton().querySelector(
+        "span.absolute"
+      ) as HTMLElement;
+      expect(progressSpan?.style.width).toBe("0%");
+    });
   });
 
-  describe("touch hold-to-reset (mobile)", () => {
-    it("should trigger reset on touch hold", async () => {
-      const onReset = vi.fn();
-      render(<GameStats totalScore={0} round={1} onReset={onReset} />);
+  // --------------------------------------------------------------------------
+  // Hold-to-Reset (Touch/Mobile)
+  // --------------------------------------------------------------------------
+  describe("when user holds reset button on mobile (touch)", () => {
+    it("should trigger reset after touch hold for 1 second", async () => {
+      const { startHold, advanceTimer, onReset } = setup();
 
-      const button = screen.getByRole("button", { name: "RESET" });
-
-      fireEvent.touchStart(button);
-
-      await act(async () => {
-        vi.advanceTimersByTime(1100);
-      });
+      startHold("touch");
+      await advanceTimer(1100);
 
       expect(onReset).toHaveBeenCalledTimes(1);
     });
 
-    it("should cancel on touch end", async () => {
-      const onReset = vi.fn();
-      render(<GameStats totalScore={0} round={1} onReset={onReset} />);
+    it("should NOT reset if finger lifted early (touchEnd)", async () => {
+      const { startHold, cancelHold, advanceTimer, onReset } = setup();
 
-      const button = screen.getByRole("button", { name: "RESET" });
-
-      fireEvent.touchStart(button);
-
-      await act(async () => {
-        vi.advanceTimersByTime(500);
-      });
-
-      fireEvent.touchEnd(button);
-
-      await act(async () => {
-        vi.advanceTimersByTime(1000);
-      });
+      startHold("touch");
+      await advanceTimer(500);
+      cancelHold("touchEnd");
+      await advanceTimer(1000);
 
       expect(onReset).not.toHaveBeenCalled();
     });
 
-    it("should cancel on touch cancel", async () => {
-      const onReset = vi.fn();
-      render(<GameStats totalScore={0} round={1} onReset={onReset} />);
+    it("should cancel on touch cancel event", async () => {
+      const { startHold, cancelHold, advanceTimer, onReset } = setup();
 
-      const button = screen.getByRole("button", { name: "RESET" });
-
-      fireEvent.touchStart(button);
-
-      await act(async () => {
-        vi.advanceTimersByTime(500);
-      });
-
-      fireEvent.touchCancel(button);
-
-      await act(async () => {
-        vi.advanceTimersByTime(1000);
-      });
+      startHold("touch");
+      await advanceTimer(500);
+      cancelHold("touchCancel");
+      await advanceTimer(1000);
 
       expect(onReset).not.toHaveBeenCalled();
     });
   });
 
-  describe("progress indicator", () => {
-    it("should show progress fill while holding", async () => {
-      render(<GameStats totalScore={0} round={1} onReset={() => {}} />);
+  // --------------------------------------------------------------------------
+  // Edge Cases
+  // --------------------------------------------------------------------------
+  describe("edge cases", () => {
+    it("should handle score of 0", () => {
+      setup({ totalScore: 0 });
 
-      const button = screen.getByRole("button", { name: "RESET" });
-
-      fireEvent.mouseDown(button);
-
-      await act(async () => {
-        vi.advanceTimersByTime(500);
-      });
-
-      // The progress span should have width style set
-      const progressSpan = button.querySelector("span.absolute");
-      expect(progressSpan).toBeTruthy();
-
-      fireEvent.mouseUp(button);
+      expect(screen.getByText("SCORE: 0")).toBeTruthy();
     });
 
-    it("should reset progress after release", async () => {
-      render(<GameStats totalScore={0} round={1} onReset={() => {}} />);
+    it("should handle high scores", () => {
+      setup({ totalScore: 99999 });
 
-      const button = screen.getByRole("button", { name: "RESET" });
+      expect(screen.getByText("SCORE: 99999")).toBeTruthy();
+    });
 
-      fireEvent.mouseDown(button);
+    it("should handle round 1", () => {
+      setup({ round: 1 });
 
-      await act(async () => {
-        vi.advanceTimersByTime(500);
-      });
+      expect(screen.getByText("Round 1")).toBeTruthy();
+    });
 
-      fireEvent.mouseUp(button);
+    it("should handle high round numbers", () => {
+      setup({ round: 100 });
 
-      await act(async () => {
-        vi.advanceTimersByTime(50);
-      });
-
-      const progressSpan = button.querySelector("span.absolute") as HTMLElement;
-      expect(progressSpan?.style.width).toBe("0%");
+      expect(screen.getByText("Round 100")).toBeTruthy();
     });
   });
 });
