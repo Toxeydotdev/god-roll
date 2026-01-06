@@ -23,7 +23,7 @@ interface SoundContextValue {
   toggleSound: () => void;
   playDiceHit: (velocity: number) => void;
   musicEnabled: boolean;
-  toggleMusic: () => void;
+  toggleMusic: () => Promise<void>;
 }
 
 // ============================================================================
