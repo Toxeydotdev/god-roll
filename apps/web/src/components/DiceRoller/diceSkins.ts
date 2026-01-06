@@ -20,6 +20,15 @@ export interface DiceSkin {
 }
 
 export const DICE_SKINS: Record<string, DiceSkin> = {
+  cartoon: {
+    id: "cartoon",
+    name: "Cartoon",
+    description: "Bright and playful cartoon-style dice",
+    diceColor: "#ff6b6b",
+    dotColor: "#ffffff",
+    dotOneColor: "#ffd93d",
+    roughness: 0.25,
+  },
   classic: {
     id: "classic",
     name: "Classic",
@@ -93,7 +102,7 @@ export const DICE_SKINS: Record<string, DiceSkin> = {
   },
 };
 
-export const DEFAULT_SKIN_ID = "classic";
+export const DEFAULT_SKIN_ID = "cartoon";
 
 export function getDiceSkin(skinId: string): DiceSkin {
   return DICE_SKINS[skinId] || DICE_SKINS[DEFAULT_SKIN_ID];
