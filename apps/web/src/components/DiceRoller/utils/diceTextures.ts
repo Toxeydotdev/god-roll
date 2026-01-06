@@ -53,28 +53,77 @@ export function createFaceTexture(
     throw new Error("Could not get 2D context");
   }
 
-  // Background
-  ctx.fillStyle = skin.diceColor;
+  // Background with subtle gradient for depth
+  const gradient = ctx.createRadialGradient(
+    size / 2,
+    size / 2,
+    0,
+    size / 2,
+    size / 2,
+    size / 1.4
+  );
+  gradient.addColorStop(0, skin.diceColor);
+  gradient.addColorStop(1, shadeColor(skin.diceColor, -15));
+  ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, size, size);
 
-  // Draw dots
+  // Draw dots with cartoonish style
   const dots = DOT_POSITIONS[faceNumber];
-  const dotRadius = 22;
+  const dotRadius = 24;
 
   dots.forEach(([x, y], index) => {
     // Use special color for center dot on face 1 if defined
     const isCenter = faceNumber === 1 && index === 0;
     const dotColor =
       isCenter && skin.dotOneColor ? skin.dotOneColor : skin.dotColor;
-    ctx.fillStyle = dotColor;
+    
+    // Draw dot shadow for 3D effect
+    ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+    ctx.beginPath();
+    ctx.arc(x + 2, y + 2, dotRadius, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Draw main dot with gradient
+    const dotGradient = ctx.createRadialGradient(
+      x - dotRadius * 0.3,
+      y - dotRadius * 0.3,
+      0,
+      x,
+      y,
+      dotRadius
+    );
+    dotGradient.addColorStop(0, lightenColor(dotColor, 20));
+    dotGradient.addColorStop(1, dotColor);
+    ctx.fillStyle = dotGradient;
     ctx.beginPath();
     ctx.arc(x, y, dotRadius, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Add highlight for glossy effect
+    ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+    ctx.beginPath();
+    ctx.arc(x - dotRadius * 0.3, y - dotRadius * 0.3, dotRadius * 0.4, 0, Math.PI * 2);
     ctx.fill();
   });
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.needsUpdate = true;
   return texture;
+}
+
+// Helper function to darken/lighten colors
+function shadeColor(color: string, percent: number): string {
+  const num = parseInt(color.replace("#", ""), 16);
+  const amt = Math.round(2.55 * percent);
+  const R = Math.max(0, Math.min(255, (num >> 16) + amt));
+  const G = Math.max(0, Math.min(255, ((num >> 8) & 0x00ff) + amt));
+  const B = Math.max(0, Math.min(255, (num & 0x0000ff) + amt));
+  return "#" + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
+}
+
+// Helper function to lighten colors
+function lightenColor(color: string, percent: number): string {
+  return shadeColor(color, percent);
 }
 
 export function createDiceMesh(skinId?: string): THREE.Mesh {
@@ -85,7 +134,7 @@ export function createDiceMesh(skinId?: string): THREE.Mesh {
     DICE_SIZE,
     DICE_SIZE,
     4,
-    0.1
+    0.15
   );
   geometry.computeVertexNormals();
 

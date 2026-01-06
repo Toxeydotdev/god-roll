@@ -24,6 +24,9 @@
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
+  
+  --font-display: 'Bangers', cursive;
+  --font-body: 'Fredoka', sans-serif;
 }
 
 .dark {
@@ -55,4 +58,5 @@
 body {
   background-color: var(--color-background);
   color: var(--color-foreground);
+  font-family: var(--font-body);
 }
