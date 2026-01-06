@@ -1,5 +1,5 @@
-import React, { useRef, useState } from "react";
 import { ColorTheme } from "@/components/DiceRoller/colorThemes";
+import React, { useRef, useState } from "react";
 
 export interface GameStatsProps {
   totalScore: number;

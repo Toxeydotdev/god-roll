@@ -8,6 +8,7 @@
  * - Expect: Assert expected outcomes
  * - Reset: Clean up after test
  */
+import { hexToRgb, mockOceanTheme, mockTheme } from "@/test-utils";
 import {
   act,
   cleanup,
@@ -17,7 +18,6 @@ import {
   screen,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, Mock, vi } from "vitest";
-import { hexToRgb, mockOceanTheme, mockTheme } from "@/test-utils";
 import { GameStats, GameStatsProps } from "./GameStats";
 
 // ============================================================================

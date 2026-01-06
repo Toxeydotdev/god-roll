@@ -3,6 +3,7 @@
  *
  * StartScreen User Interaction Tests following SIFERS methodology
  */
+import { hexToRgb, mockOceanTheme, mockTheme } from "@/test-utils";
 import {
   cleanup,
   fireEvent,
@@ -11,7 +12,6 @@ import {
   screen,
 } from "@testing-library/react";
 import { afterEach, describe, expect, it, Mock, vi } from "vitest";
-import { hexToRgb, mockOceanTheme, mockTheme } from "@/test-utils";
 import { StartScreen } from "./StartScreen";
 
 // ============================================================================

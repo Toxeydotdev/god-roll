@@ -1,10 +1,3 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
 import {
   ColorTheme,
   getSavedThemeId,
@@ -29,6 +22,13 @@ import {
   useThreeScene,
 } from "@/components/DiceRoller/hooks";
 import { addLeaderboardEntry } from "@/components/DiceRoller/leaderboard";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 export function DiceRoller(): React.ReactElement {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
