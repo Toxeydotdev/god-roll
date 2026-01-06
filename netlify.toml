@@ -2,7 +2,7 @@
   # Base directory for the build
   base = "/"
   # Build command - builds the web app using Nx
-  command = "npm ci && npm run build:web"
+  command = "npm ci --legacy-peer-deps && npm run build:web"
   # Directory containing the built files
   publish = "apps/web/dist"
 
