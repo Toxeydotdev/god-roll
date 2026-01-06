@@ -3,8 +3,9 @@
  *
  * GameOverScreen User Interaction Tests following SIFERS methodology
  */
+import { ThemeProvider } from "@/components/DiceRoller/context";
 import { LeaderboardEntry } from "@/components/DiceRoller/leaderboard";
-import { hexToRgb, mockOceanTheme, mockTheme } from "@/test-utils";
+import { hexToRgb, mockTheme } from "@/test-utils";
 import {
   cleanup,
   fireEvent,
@@ -27,7 +28,6 @@ interface SetupOptions {
   highlightIndex?: number;
   leaderboardEntries?: LeaderboardEntry[];
   onLeaderboardChange?: Mock;
-  theme?: typeof mockTheme;
 }
 
 interface SetupResult {
@@ -47,20 +47,20 @@ function setup(options: SetupOptions = {}): SetupResult {
     highlightIndex,
     leaderboardEntries = [],
     onLeaderboardChange = vi.fn(),
-    theme = mockTheme,
   } = options;
 
   const { container } = render(
-    <GameOverScreen
-      lastRollTotal={lastRollTotal}
-      totalScore={totalScore}
-      round={round}
-      onPlayAgain={onPlayAgain}
-      highlightIndex={highlightIndex}
-      leaderboardEntries={leaderboardEntries}
-      onLeaderboardChange={onLeaderboardChange}
-      theme={theme}
-    />
+    <ThemeProvider>
+      <GameOverScreen
+        lastRollTotal={lastRollTotal}
+        totalScore={totalScore}
+        round={round}
+        onPlayAgain={onPlayAgain}
+        highlightIndex={highlightIndex}
+        leaderboardEntries={leaderboardEntries}
+        onLeaderboardChange={onLeaderboardChange}
+      />
+    </ThemeProvider>
   );
 
   const getPlayAgainButton = () =>
@@ -228,21 +228,14 @@ describe("GameOverScreen - User Interactions", () => {
   // --------------------------------------------------------------------------
   describe("theme styling", () => {
     it("should apply Forest theme to text", () => {
-      setup({ theme: mockTheme });
+      setup();
 
       const finalScore = screen.getByText(/Final Score:/);
       expect(finalScore.style.color).toBe(hexToRgb(mockTheme.textPrimary));
     });
 
-    it("should apply Ocean theme to text", () => {
-      setup({ theme: mockOceanTheme });
-
-      const finalScore = screen.getByText(/Final Score:/);
-      expect(finalScore.style.color).toBe(hexToRgb(mockOceanTheme.textPrimary));
-    });
-
     it("should style Play Again button with theme", () => {
-      const { getPlayAgainButton } = setup({ theme: mockTheme });
+      const { getPlayAgainButton } = setup();
 
       expect(getPlayAgainButton().style.backgroundColor).toBe(
         hexToRgb(mockTheme.textPrimary)

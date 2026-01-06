@@ -1,4 +1,4 @@
-import { ColorTheme } from "@/components/DiceRoller/colorThemes";
+import { useTheme } from "@/components/DiceRoller/context";
 import React from "react";
 import { DiceFaceNumber } from "../types";
 
@@ -7,7 +7,6 @@ interface RollButtonProps {
   lastRollTotal: number;
   isRolling: boolean;
   onRoll: () => void;
-  theme: ColorTheme;
 }
 
 export function RollButton({
@@ -15,8 +14,8 @@ export function RollButton({
   lastRollTotal,
   isRolling,
   onRoll,
-  theme,
 }: RollButtonProps): React.ReactElement {
+  const { theme } = useTheme();
   return (
     <div
       className="absolute left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2"

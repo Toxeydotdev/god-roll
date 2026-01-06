@@ -1,19 +1,15 @@
-import { ColorTheme } from "@/components/DiceRoller/colorThemes";
+import { useModal, useTheme } from "@/components/DiceRoller/context";
 import React from "react";
 
 interface StartScreenProps {
   onStartGame: () => void;
-  onShowColorPicker: () => void;
-  onShowLeaderboard: () => void;
-  theme: ColorTheme;
 }
 
 export function StartScreen({
   onStartGame,
-  onShowColorPicker,
-  onShowLeaderboard,
-  theme,
 }: StartScreenProps): React.ReactElement {
+  const { openModal } = useModal();
+  const { theme } = useTheme();
   return (
     <div className="absolute inset-0 flex items-center justify-center z-20">
       <div className="text-center">
@@ -41,7 +37,7 @@ export function StartScreen({
         </button>
         <div className="mt-4 flex justify-center gap-3">
           <button
-            onClick={onShowColorPicker}
+            onClick={() => openModal("colorPicker")}
             className="px-4 py-2 rounded-full font-bold text-base transition-all hover:scale-105 active:scale-95"
             style={{
               backgroundColor: theme.textSecondary,
@@ -51,7 +47,7 @@ export function StartScreen({
             🎨 Theme
           </button>
           <button
-            onClick={onShowLeaderboard}
+            onClick={() => openModal("leaderboard")}
             className="px-4 py-2 rounded-full font-bold text-base transition-all hover:scale-105 active:scale-95"
             style={{
               backgroundColor: theme.textSecondary,

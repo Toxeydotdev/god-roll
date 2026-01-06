@@ -191,6 +191,133 @@ vi.mock("three", () => ({
 
 ## Component Standards
 
+### Context-Based State Management
+
+Use React Context to avoid prop drilling and centralize shared state.
+
+#### ✅ DO: Use context hooks for global state (theme, sound, modals)
+
+```typescript
+import { useTheme, useSound, useModal } from "@/components/DiceRoller/context";
+
+function MyComponent() {
+  const { theme } = useTheme();
+  const { soundEnabled, toggleSound } = useSound();
+  const { openModal } = useModal();
+
+  return (
+    <button
+      onClick={() => openModal("leaderboard")}
+      style={{ backgroundColor: theme.textPrimary }}
+    >
+      {soundEnabled ? "🔊" : "🔇"}
+    </button>
+  );
+}
+```
+
+#### ✅ DO: Wrap app root with all context providers
+
+```typescript
+import {
+  ThemeProvider,
+  SoundProvider,
+  ModalProvider,
+} from "@/components/DiceRoller/context";
+
+export function DiceRoller() {
+  return (
+    <ThemeProvider>
+      <SoundProvider>
+        <ModalProvider>
+          <DiceRollerContent />
+        </ModalProvider>
+      </SoundProvider>
+    </ThemeProvider>
+  );
+}
+```
+
+#### ❌ DON'T: Pass global state through props
+
+```typescript
+// Bad - prop drilling
+interface ComponentProps {
+  theme: ColorTheme;
+  soundEnabled: boolean;
+  onToggleSound: () => void;
+}
+
+// Instead, use context hooks directly
+```
+
+**When to use Context:**
+
+- Global UI state (theme, modals, notifications)
+- Cross-cutting concerns (authentication, sound settings)
+- State accessed by many components at different levels
+- Avoiding props passed through 3+ component layers
+
+**When NOT to use Context:**
+
+- Local component state
+- State only used by parent-child pairs
+- Frequently changing values that cause unnecessary re-renders
+
+### Modal Management with Context + Portal
+
+Use the centralized `ModalContext` for all modal interactions to avoid prop drilling and z-index issues.
+
+#### ✅ DO: Use useModal hook directly in components
+
+```typescript
+import { useModal } from "@/components/DiceRoller/context";
+
+function MyComponent() {
+  const { openModal } = useModal();
+
+  return (
+    <button onClick={() => openModal("leaderboard")}>Show Leaderboard</button>
+  );
+}
+```
+
+#### ✅ DO: Wrap app with ModalProvider at the root
+
+```typescript
+import { ModalProvider } from "@/components/DiceRoller/context";
+
+function App() {
+  const [theme, setTheme] = useState(defaultTheme);
+
+  return (
+    <ModalProvider theme={theme} onThemeChange={setTheme}>
+      <MyComponent />
+    </ModalProvider>
+  );
+}
+```
+
+#### ❌ DON'T: Pass modal callbacks through props
+
+```typescript
+// Bad - prop drilling
+interface MyComponentProps {
+  onShowLeaderboard: () => void;
+  onShowRules: () => void;
+  onShowColorPicker: () => void;
+}
+
+// Instead, use useModal() hook directly in the component
+```
+
+**Benefits:**
+
+- No prop drilling through multiple component layers
+- All modals render at `document.body` via `createPortal` (fixes z-index issues)
+- Type-safe modal types: `"leaderboard" | "rules" | "colorPicker"`
+- Easy to add new modals - just update `ModalContext`
+
 ### Props Interface Export
 
 Always export prop interfaces for testability.
@@ -248,6 +375,10 @@ src/
 │   └── app.spec.tsx
 ├── components/
 │   └── DiceRoller/
+│       ├── context/                # Global state management
+│       │   ├── ModalContext.tsx    # Modal provider with createPortal
+│       │   ├── ModalContext.spec.tsx
+│       │   └── index.ts
 │       ├── index.tsx           # Main component
 │       ├── colorThemes.ts      # Theme definitions
 │       ├── colorThemes.spec.ts # Theme tests

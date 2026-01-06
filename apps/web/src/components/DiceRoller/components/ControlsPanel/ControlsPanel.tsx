@@ -1,34 +1,15 @@
-import { ColorTheme } from "@/components/DiceRoller/colorThemes";
+import { useModal, useSound, useTheme } from "@/components/DiceRoller/context";
 import React, { useState } from "react";
 
-export interface ControlsPanelProps {
-  soundEnabled: boolean;
-  onToggleSound: () => void;
-  onShowColorPicker: () => void;
-  onShowRules: () => void;
-  onShowLeaderboard: () => void;
-  theme: ColorTheme;
-}
-
 interface ControlButtonsProps {
-  soundEnabled: boolean;
-  onToggleSound: () => void;
-  onShowColorPicker: () => void;
-  onShowRules: () => void;
-  onShowLeaderboard: () => void;
-  theme: ColorTheme;
   isOpen: boolean;
 }
 
-function ControlButtons({
-  soundEnabled,
-  onToggleSound,
-  onShowColorPicker,
-  onShowRules,
-  onShowLeaderboard,
-  theme,
-  isOpen,
-}: ControlButtonsProps) {
+function ControlButtons({ isOpen }: ControlButtonsProps) {
+  const { openModal } = useModal();
+  const { soundEnabled, toggleSound } = useSound();
+  const { theme } = useTheme();
+
   const soundIcon = soundEnabled ? (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -67,11 +48,19 @@ function ControlButtons({
     {
       icon: soundIcon,
       label: soundEnabled ? "Mute sound" : "Unmute sound",
-      onClick: onToggleSound,
+      onClick: toggleSound,
     },
-    { icon: "🎨", label: "Change theme", onClick: onShowColorPicker },
-    { icon: "❓", label: "Show rules", onClick: onShowRules },
-    { icon: "🏆", label: "Show leaderboard", onClick: onShowLeaderboard },
+    {
+      icon: "🎨",
+      label: "Change theme",
+      onClick: () => openModal("colorPicker"),
+    },
+    { icon: "❓", label: "Show rules", onClick: () => openModal("rules") },
+    {
+      icon: "🏆",
+      label: "Show leaderboard",
+      onClick: () => openModal("leaderboard"),
+    },
   ];
 
   return (
@@ -154,15 +143,9 @@ function ControlButtons({
   );
 }
 
-export function ControlsPanel({
-  soundEnabled,
-  onToggleSound,
-  onShowColorPicker,
-  onShowRules,
-  onShowLeaderboard,
-  theme,
-}: ControlsPanelProps): React.ReactElement {
+export function ControlsPanel(): React.ReactElement {
   const [isOpen, setIsOpen] = useState(false);
+  const { theme } = useTheme();
 
   return (
     <div className="fixed z-50" style={{ top: "132px", right: "1rem" }}>
@@ -213,15 +196,7 @@ export function ControlsPanel({
       </button>
 
       {/* Control buttons container */}
-      <ControlButtons
-        soundEnabled={soundEnabled}
-        onToggleSound={onToggleSound}
-        onShowColorPicker={onShowColorPicker}
-        onShowRules={onShowRules}
-        onShowLeaderboard={onShowLeaderboard}
-        theme={theme}
-        isOpen={isOpen}
-      />
+      <ControlButtons isOpen={isOpen} />
     </div>
   );
 }

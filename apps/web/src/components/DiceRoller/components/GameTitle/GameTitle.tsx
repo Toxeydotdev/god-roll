@@ -1,11 +1,8 @@
-import { ColorTheme } from "@/components/DiceRoller/colorThemes";
+import { useTheme } from "@/components/DiceRoller/context";
 import React from "react";
 
-interface GameTitleProps {
-  theme: ColorTheme;
-}
-
-export function GameTitle({ theme }: GameTitleProps): React.ReactElement {
+export function GameTitle(): React.ReactElement {
+  const { theme } = useTheme();
   return (
     <div className="absolute top-4 left-4 z-10">
       <h1

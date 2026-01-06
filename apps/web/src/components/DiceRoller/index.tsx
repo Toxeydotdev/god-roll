@@ -1,24 +1,21 @@
 import {
-  ColorTheme,
-  getSavedThemeId,
-  getThemeById,
-  saveThemeId,
-} from "@/components/DiceRoller/colorThemes";
-import {
-  ColorPicker,
   ControlsPanel,
   GameOverScreen,
-  GameRules,
   GameTitle,
-  Leaderboard,
   RollButton,
   StartScreen,
 } from "@/components/DiceRoller/components";
 import {
+  ModalProvider,
+  SoundProvider,
+  ThemeProvider,
+  useSound,
+  useTheme,
+} from "@/components/DiceRoller/context";
+import {
   SoundCallbacks,
   useDicePhysics,
   useGameState,
-  useSound,
   useThreeScene,
 } from "@/components/DiceRoller/hooks";
 import { addLeaderboardEntry } from "@/components/DiceRoller/leaderboard";
@@ -31,20 +28,29 @@ import React, {
 } from "react";
 
 export function DiceRoller(): React.ReactElement {
-  const [showLeaderboard, setShowLeaderboard] = useState(false);
-  const [showRules, setShowRules] = useState(false);
-  const [showColorPicker, setShowColorPicker] = useState(false);
+  return (
+    <ThemeProvider>
+      <SoundProvider>
+        <ModalProvider>
+          <DiceRollerContent />
+        </ModalProvider>
+      </SoundProvider>
+    </ThemeProvider>
+  );
+}
+
+function DiceRollerContent(): React.ReactElement {
   const [resetProgress, setResetProgress] = useState<number>(0);
   const resetTimerRef = useRef<number | null>(null);
-  const [theme, setTheme] = useState<ColorTheme>(() =>
-    getThemeById(getSavedThemeId())
-  );
   const [highlightIndex, setHighlightIndex] = useState<number | undefined>(
     undefined
   );
   const [leaderboardEntries, setLeaderboardEntries] = useState<
     { score: number; rounds: number; date: string }[]
   >([]);
+
+  const { theme } = useTheme();
+  const { playDiceHit } = useSound();
 
   const {
     containerRef,
@@ -54,8 +60,6 @@ export function DiceRoller(): React.ReactElement {
     resetCamera,
     setSceneBackground,
   } = useThreeScene();
-
-  const { soundEnabled, toggleSound, playDiceHit } = useSound();
 
   // Memoize sound callbacks to avoid recreating on every render
   const soundCallbacks: SoundCallbacks = useMemo(
@@ -126,16 +130,6 @@ export function DiceRoller(): React.ReactElement {
     }
   }, [gameOver, totalScore, round]);
 
-  // Handle theme change
-  const handleThemeChange = useCallback(
-    (newTheme: ColorTheme) => {
-      setTheme(newTheme);
-      saveThemeId(newTheme.id);
-      setSceneBackground(newTheme.background);
-    },
-    [setSceneBackground]
-  );
-
   // Helper functions for reset button
   const handleResetStart = useCallback(
     (
@@ -188,22 +182,10 @@ export function DiceRoller(): React.ReactElement {
       className="relative w-full h-dvh overflow-hidden touch-none"
       style={{ backgroundColor: theme.backgroundCss }}
     >
-      <GameTitle theme={theme} />
+      <GameTitle />
 
       {/* Controls panel - collapsible menu with sound, theme, rules, leaderboard */}
-      {gameStarted && (
-        <ControlsPanel
-          soundEnabled={soundEnabled}
-          onToggleSound={toggleSound}
-          onShowColorPicker={() => setShowColorPicker(true)}
-          onShowRules={() => setShowRules(true)}
-          onShowLeaderboard={() => {
-            setHighlightIndex(undefined);
-            setShowLeaderboard(true);
-          }}
-          theme={theme}
-        />
-      )}
+      {gameStarted && <ControlsPanel />}
 
       {/* Score display during game */}
       {gameStarted && (
@@ -247,14 +229,7 @@ export function DiceRoller(): React.ReactElement {
 
       <div ref={containerRef} className="w-full h-full" />
 
-      {!gameStarted && (
-        <StartScreen
-          onStartGame={startGame}
-          onShowColorPicker={() => setShowColorPicker(true)}
-          onShowLeaderboard={() => setShowLeaderboard(true)}
-          theme={theme}
-        />
-      )}
+      {!gameStarted && <StartScreen onStartGame={startGame} />}
 
       {gameOver && (
         <GameOverScreen
@@ -265,7 +240,6 @@ export function DiceRoller(): React.ReactElement {
           highlightIndex={highlightIndex}
           leaderboardEntries={leaderboardEntries}
           onLeaderboardChange={setLeaderboardEntries}
-          theme={theme}
         />
       )}
 
@@ -275,30 +249,6 @@ export function DiceRoller(): React.ReactElement {
           lastRollTotal={lastRollTotal}
           isRolling={isRolling}
           onRoll={handleRoll}
-          theme={theme}
-        />
-      )}
-
-      {/* Leaderboard modal */}
-      {showLeaderboard && (
-        <Leaderboard
-          onClose={() => setShowLeaderboard(false)}
-          highlightIndex={highlightIndex}
-          theme={theme}
-        />
-      )}
-
-      {/* Game Rules modal */}
-      {showRules && (
-        <GameRules onClose={() => setShowRules(false)} theme={theme} />
-      )}
-
-      {/* Color Picker modal */}
-      {showColorPicker && (
-        <ColorPicker
-          currentTheme={theme}
-          onSelectTheme={handleThemeChange}
-          onClose={() => setShowColorPicker(false)}
         />
       )}
     </div>

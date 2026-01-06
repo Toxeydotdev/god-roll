@@ -1,4 +1,4 @@
-import { ColorTheme } from "@/components/DiceRoller/colorThemes";
+import { useTheme } from "@/components/DiceRoller/context";
 import {
   clearLeaderboard,
   LeaderboardEntry,
@@ -13,7 +13,6 @@ interface GameOverScreenProps {
   highlightIndex?: number;
   leaderboardEntries: LeaderboardEntry[];
   onLeaderboardChange: (entries: LeaderboardEntry[]) => void;
-  theme: ColorTheme;
 }
 
 export function GameOverScreen({
@@ -24,8 +23,8 @@ export function GameOverScreen({
   highlightIndex,
   leaderboardEntries,
   onLeaderboardChange,
-  theme,
 }: GameOverScreenProps): React.ReactElement {
+  const { theme } = useTheme();
   const roundsSurvived = round - 1;
 
   const handleClear = () => {
