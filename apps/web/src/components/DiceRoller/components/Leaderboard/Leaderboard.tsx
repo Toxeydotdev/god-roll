@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { ColorTheme } from "../colorThemes";
+import { ColorTheme } from "@/components/DiceRoller/colorThemes";
 import {
   clearLeaderboard,
   getLeaderboard,
   LeaderboardEntry,
-} from "../leaderboard";
+} from "@/components/DiceRoller/leaderboard";
 
 interface LeaderboardProps {
   onClose: () => void;

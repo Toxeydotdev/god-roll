@@ -5,7 +5,7 @@ export interface LeaderboardEntry {
 }
 
 const STORAGE_KEY = "godroll_leaderboard_v1";
-const MAX_ENTRIES = 5;
+const MAX_ENTRIES = 10;
 
 export function getLeaderboard(): LeaderboardEntry[] {
   const raw = localStorage.getItem(STORAGE_KEY);

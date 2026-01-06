@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ColorTheme } from "../colorThemes";
+import { ColorTheme } from "@/components/DiceRoller/colorThemes";
 
 export interface ControlsPanelProps {
   soundEnabled: boolean;

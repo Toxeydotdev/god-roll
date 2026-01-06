@@ -1,5 +1,5 @@
 import React from "react";
-import { COLOR_THEMES, ColorTheme } from "../colorThemes";
+import { COLOR_THEMES, ColorTheme } from "@/components/DiceRoller/colorThemes";
 
 interface ColorPickerProps {
   currentTheme: ColorTheme;

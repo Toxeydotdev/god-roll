@@ -1,5 +1,5 @@
 import React from "react";
-import { ColorTheme } from "../colorThemes";
+import { ColorTheme } from "@/components/DiceRoller/colorThemes";
 
 export interface SoundToggleProps {
   soundEnabled: boolean;

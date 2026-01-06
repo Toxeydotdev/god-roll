@@ -10,7 +10,7 @@ import {
   getSavedThemeId,
   getThemeById,
   saveThemeId,
-} from "./colorThemes";
+} from "@/components/DiceRoller/colorThemes";
 import {
   ColorPicker,
   ControlsPanel,
@@ -20,15 +20,15 @@ import {
   Leaderboard,
   RollButton,
   StartScreen,
-} from "./components";
+} from "@/components/DiceRoller/components";
 import {
   SoundCallbacks,
   useDicePhysics,
   useGameState,
   useSound,
   useThreeScene,
-} from "./hooks";
-import { addLeaderboardEntry } from "./leaderboard";
+} from "@/components/DiceRoller/hooks";
+import { addLeaderboardEntry } from "@/components/DiceRoller/leaderboard";
 
 export function DiceRoller(): React.ReactElement {
   const [showLeaderboard, setShowLeaderboard] = useState(false);

@@ -1,6 +1,6 @@
 import React from "react";
-import { ColorTheme } from "../colorThemes";
-import { clearLeaderboard, LeaderboardEntry } from "../leaderboard";
+import { ColorTheme } from "@/components/DiceRoller/colorThemes";
+import { clearLeaderboard, LeaderboardEntry } from "@/components/DiceRoller/leaderboard";
 
 interface GameOverScreenProps {
   lastRollTotal: number;
