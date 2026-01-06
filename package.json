@@ -9,6 +9,7 @@
     "build:web": "nx build @god-roll/web",
     "build:api": "nx build @god-roll/api",
     "test": "nx run-many -t test",
+    "e2e:web": "nx e2e @god-roll/web-e2e",
     "lint": "oxlint .",
     "lint:fix": "oxlint --fix .",
     "graph": "nx graph"

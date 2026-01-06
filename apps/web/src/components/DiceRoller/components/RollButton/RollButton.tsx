@@ -49,6 +49,7 @@ export function RollButton({
       <button
         onClick={onRoll}
         disabled={isRolling}
+        data-testid="roll-button"
         className="text-4xl tracking-wider px-8 py-2 rounded-full transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
         style={{ 
           color: theme.textPrimary,
