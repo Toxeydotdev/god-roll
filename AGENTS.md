@@ -253,16 +253,35 @@ src/
 │       ├── colorThemes.spec.ts # Theme tests
 │       ├── leaderboard.ts      # Leaderboard logic
 │       ├── leaderboard.spec.ts # Leaderboard tests
-│       ├── components/         # Sub-components
-│       │   ├── GameStats.tsx
-│       │   └── GameStats.spec.tsx
+│       ├── components/         # Sub-components (organized by feature)
+│       │   ├── GameStats/
+│       │   │   ├── GameStats.tsx
+│       │   │   └── GameStats.spec.tsx
+│       │   ├── GameOverScreen/
+│       │   │   ├── GameOverScreen.tsx
+│       │   │   └── GameOverScreen.spec.tsx
+│       │   ├── StartScreen/
+│       │   │   ├── StartScreen.tsx
+│       │   │   └── StartScreen.spec.tsx
+│       │   ├── ControlsPanel/
+│       │   │   └── ControlsPanel.tsx
+│       │   └── index.ts        # Re-exports all components
 │       ├── hooks/              # Custom hooks
 │       └── utils/              # Utility functions
+│           ├── soundManager.ts
+│           └── soundManager.spec.ts
 └── test-utils/
     ├── index.ts                # Re-exports
     ├── fixtures.ts             # Mock data & factories
     └── mocks.ts                # Mock implementations
 ```
+
+**Component Organization Principles:**
+
+- Each component lives in its own folder with its test file
+- Co-location of component and test improves discoverability
+- `index.ts` provides clean barrel exports
+- Test files use `../../../../test-utils` for shared utilities
 
 ### Test Utils Organization
 
@@ -355,7 +374,7 @@ npm run test
 npm run test -- --coverage
 
 # Run specific test file
-npm run test -- src/components/DiceRoller/components/GameStats.spec.tsx
+npm run test -- src/components/DiceRoller/components/GameStats/GameStats.spec.tsx
 
 # Run in watch mode
 npm run test -- --watch

@@ -2,6 +2,8 @@
 
 A 3D dice rolling game built with Three.js and React. Roll dice with realistic physics, and try to avoid rolling a total divisible by 7!
 
+**🎮 Play now: [https://god-roll.com/](https://god-roll.com/)**
+
 ![God Roll](https://img.shields.io/badge/Game-Dice%20Roller-green)
 
 ## 🎮 How to Play
