@@ -73,8 +73,11 @@ class SoundManager {
    * Play a dice hitting the floor/table sound
    * Simulates the thud of a die landing on felt
    */
-  playDiceHit(options: SoundOptions = {}): void {
+  async playDiceHit(options: SoundOptions = {}): Promise<void> {
     if (!this.isReady()) return;
+
+    // Ensure audio context is running (critical for mobile)
+    await this.resume();
 
     const { volume = 0.6, pitch = 1, duration = 0.15 } = options;
     const ctx = this.audioContext!;
@@ -117,8 +120,11 @@ class SoundManager {
    * Play a dice hitting wall/rail sound
    * Higher pitched "clack" sound
    */
-  playWallHit(options: SoundOptions = {}): void {
+  async playWallHit(options: SoundOptions = {}): Promise<void> {
     if (!this.isReady()) return;
+
+    // Ensure audio context is running (critical for mobile)
+    await this.resume();
 
     const { volume = 0.4, pitch = 1, duration = 0.08 } = options;
     const ctx = this.audioContext!;
@@ -176,8 +182,11 @@ class SoundManager {
    * Play dice rolling/tumbling sound
    * Series of small clicks and rattles
    */
-  playDiceRoll(options: SoundOptions = {}): void {
+  async playDiceRoll(options: SoundOptions = {}): Promise<void> {
     if (!this.isReady()) return;
+
+    // Ensure audio context is running (critical for mobile)
+    await this.resume();
 
     const { volume = 0.3, duration = 0.5 } = options;
     const ctx = this.audioContext!;
@@ -210,8 +219,11 @@ class SoundManager {
   /**
    * Play game over sound (sad trombone-ish)
    */
-  playGameOver(options: SoundOptions = {}): void {
+  async playGameOver(options: SoundOptions = {}): Promise<void> {
     if (!this.isReady()) return;
+
+    // Ensure audio context is running (critical for mobile)
+    await this.resume();
 
     const { volume = 0.5 } = options;
     const ctx = this.audioContext!;
@@ -246,8 +258,11 @@ class SoundManager {
   /**
    * Play success/win sound
    */
-  playWin(options: SoundOptions = {}): void {
+  async playWin(options: SoundOptions = {}): Promise<void> {
     if (!this.isReady()) return;
+
+    // Ensure audio context is running (critical for mobile)
+    await this.resume();
 
     const { volume = 0.4 } = options;
     const ctx = this.audioContext!;
@@ -277,7 +292,7 @@ class SoundManager {
    * Play a sound based on impact velocity
    * Higher velocity = louder and higher pitched
    */
-  playImpact(velocity: number, type: "floor" | "wall" = "floor"): void {
+  async playImpact(velocity: number, type: "floor" | "wall" = "floor"): Promise<void> {
     const normalizedVelocity = Math.min(Math.abs(velocity) / 10, 1);
 
     if (normalizedVelocity < 0.05) return; // Too quiet to bother
@@ -286,9 +301,9 @@ class SoundManager {
     const pitch = 0.8 + normalizedVelocity * 0.4;
 
     if (type === "floor") {
-      this.playDiceHit({ volume, pitch });
+      await this.playDiceHit({ volume, pitch });
     } else {
-      this.playWallHit({ volume, pitch });
+      await this.playWallHit({ volume, pitch });
     }
   }
 
