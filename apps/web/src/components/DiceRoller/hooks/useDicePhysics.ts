@@ -15,12 +15,17 @@ import { Bounds, DiceFaceNumber, DiceState } from "../types";
 import { createDiceMesh, disposeDiceMesh } from "../utils/diceTextures";
 import { secureRandom } from "../utils/secureRandom";
 
+export interface SoundCallbacks {
+  onFloorHit?: (velocity: number) => void;
+}
+
 interface UseDicePhysicsProps {
   sceneRef: React.RefObject<THREE.Scene | null>;
   boundsRef: React.RefObject<Bounds>;
   onRollComplete: (rollTotal: number, results: DiceFaceNumber[]) => void;
   onResultsUpdate: (results: DiceFaceNumber[]) => void;
   onDiceCountChange?: (diceCount: number) => void;
+  soundCallbacks?: SoundCallbacks;
 }
 
 interface UseDicePhysicsReturn {
@@ -37,6 +42,7 @@ export function useDicePhysics({
   onRollComplete,
   onResultsUpdate,
   onDiceCountChange,
+  soundCallbacks,
 }: UseDicePhysicsProps): UseDicePhysicsReturn {
   const diceStatesRef = useRef<DiceState[]>([]);
   const isRollingRef = useRef<boolean>(false);
@@ -215,6 +221,9 @@ export function useDicePhysics({
               physics.velocity.x * 0.15 * impactStrength;
             physics.angularVelocity.x +=
               physics.velocity.z * 0.15 * impactStrength;
+
+            // Play floor hit sound
+            soundCallbacks?.onFloorHit?.(Math.abs(physics.velocity.y));
           }
 
           physics.velocity.y = -physics.velocity.y * RESTITUTION;

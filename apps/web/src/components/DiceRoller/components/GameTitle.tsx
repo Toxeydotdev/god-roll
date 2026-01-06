@@ -12,9 +12,7 @@ export function GameTitle({ theme }: GameTitleProps): React.ReactElement {
         className="text-3xl font-black tracking-tight"
         style={{ color: theme.textPrimary }}
       >
-        GOD
-        <br />
-        ROLL
+        GOD ROLL
       </h1>
     </div>
   );

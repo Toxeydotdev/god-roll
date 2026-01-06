@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   ColorTheme,
   getSavedThemeId,
@@ -7,21 +13,29 @@ import {
 } from "./colorThemes";
 import {
   ColorPicker,
+  ControlsPanel,
   GameOverScreen,
   GameRules,
-  GameStats,
   GameTitle,
   Leaderboard,
   RollButton,
   StartScreen,
 } from "./components";
-import { useDicePhysics, useGameState, useThreeScene } from "./hooks";
+import {
+  SoundCallbacks,
+  useDicePhysics,
+  useGameState,
+  useSound,
+  useThreeScene,
+} from "./hooks";
 import { addLeaderboardEntry } from "./leaderboard";
 
 export function DiceRoller(): React.ReactElement {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showRules, setShowRules] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const [resetProgress, setResetProgress] = useState<number>(0);
+  const resetTimerRef = useRef<number | null>(null);
   const [theme, setTheme] = useState<ColorTheme>(() =>
     getThemeById(getSavedThemeId())
   );
@@ -40,6 +54,16 @@ export function DiceRoller(): React.ReactElement {
     resetCamera,
     setSceneBackground,
   } = useThreeScene();
+
+  const { soundEnabled, toggleSound, playDiceHit } = useSound();
+
+  // Memoize sound callbacks to avoid recreating on every render
+  const soundCallbacks: SoundCallbacks = useMemo(
+    () => ({
+      onFloorHit: (velocity: number) => playDiceHit(velocity),
+    }),
+    [playDiceHit]
+  );
 
   const {
     gameStarted,
@@ -62,6 +86,7 @@ export function DiceRoller(): React.ReactElement {
     onRollComplete: handleRollComplete,
     onResultsUpdate: setResults,
     onDiceCountChange: adjustCameraForDiceCount,
+    soundCallbacks,
   });
 
   const handleRoll = useCallback(() => {
@@ -111,6 +136,48 @@ export function DiceRoller(): React.ReactElement {
     [setSceneBackground]
   );
 
+  // Helper functions for reset button
+  const handleResetStart = useCallback(
+    (
+      onReset: () => void,
+      setProgress: (p: number) => void,
+      timerRef: React.MutableRefObject<number | null>
+    ) => {
+      const startTime = Date.now();
+      const holdDuration = 1000;
+
+      const tick = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / holdDuration, 1);
+        setProgress(progress);
+
+        if (progress >= 1) {
+          onReset();
+          setProgress(0);
+        } else {
+          timerRef.current = requestAnimationFrame(tick);
+        }
+      };
+
+      timerRef.current = requestAnimationFrame(tick);
+    },
+    []
+  );
+
+  const handleResetEnd = useCallback(
+    (
+      setProgress: (p: number) => void,
+      timerRef: React.MutableRefObject<number | null>
+    ) => {
+      if (timerRef.current) {
+        cancelAnimationFrame(timerRef.current);
+        timerRef.current = null;
+      }
+      setProgress(0);
+    },
+    []
+  );
+
   // Update scene background when theme loads
   useEffect(() => {
     setSceneBackground(theme.background);
@@ -123,19 +190,59 @@ export function DiceRoller(): React.ReactElement {
     >
       <GameTitle theme={theme} />
 
+      {/* Controls panel - collapsible menu with sound, theme, rules, leaderboard */}
       {gameStarted && (
-        <GameStats
-          totalScore={totalScore}
-          round={round}
-          onReset={startNewGame}
+        <ControlsPanel
+          soundEnabled={soundEnabled}
+          onToggleSound={toggleSound}
+          onShowColorPicker={() => setShowColorPicker(true)}
+          onShowRules={() => setShowRules(true)}
           onShowLeaderboard={() => {
             setHighlightIndex(undefined);
             setShowLeaderboard(true);
           }}
-          onShowRules={() => setShowRules(true)}
-          onShowColorPicker={() => setShowColorPicker(true)}
           theme={theme}
         />
+      )}
+
+      {/* Score display during game */}
+      {gameStarted && (
+        <div className="absolute top-4 right-4 z-0 text-right">
+          <div
+            className="text-2xl font-bold"
+            style={{ color: theme.textPrimary }}
+          >
+            SCORE: {totalScore}
+          </div>
+          <div className="text-lg" style={{ color: theme.textSecondary }}>
+            Round {round}
+          </div>
+          {/* Reset button */}
+          <button
+            onMouseDown={() =>
+              handleResetStart(startNewGame, setResetProgress, resetTimerRef)
+            }
+            onMouseUp={() => handleResetEnd(setResetProgress, resetTimerRef)}
+            onMouseLeave={() => handleResetEnd(setResetProgress, resetTimerRef)}
+            onTouchStart={(e) => {
+              e.preventDefault();
+              handleResetStart(startNewGame, setResetProgress, resetTimerRef);
+            }}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              handleResetEnd(setResetProgress, resetTimerRef);
+            }}
+            className="text-sm font-bold px-3 py-1 rounded-full transition-all hover:scale-105 active:scale-95 mt-1 block mx-auto"
+            style={{
+              backgroundColor: theme.textSecondary,
+              color: theme.backgroundCss,
+              opacity: 0.7 + resetProgress * 0.3,
+            }}
+            title="Hold to reset game"
+          >
+            Hold to Reset
+          </button>
+        </div>
       )}
 
       <div ref={containerRef} className="w-full h-full" />

@@ -1,8 +1,10 @@
 export { ColorPicker } from "./ColorPicker";
+export { ControlsPanel } from "./ControlsPanel";
 export { GameOverScreen } from "./GameOverScreen";
 export { GameRules } from "./GameRules";
 export { GameStats } from "./GameStats";
 export { GameTitle } from "./GameTitle";
 export { Leaderboard } from "./Leaderboard";
 export { RollButton } from "./RollButton";
+export { SoundToggle } from "./SoundToggle";
 export { StartScreen } from "./StartScreen";

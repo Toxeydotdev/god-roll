@@ -89,18 +89,18 @@ const originalGetContext = HTMLCanvasElement.prototype.getContext;
 
 // Setup function to be called before tests
 export function setupWebGLMock() {
-  HTMLCanvasElement.prototype.getContext = function (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (HTMLCanvasElement.prototype as any).getContext = function (
     contextId: string,
-    options?: unknown
-  ) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ...args: any[]
+  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  any {
     if (contextId === "webgl" || contextId === "webgl2") {
-      return new MockWebGLRenderingContext() as unknown as RenderingContext;
+      return new MockWebGLRenderingContext();
     }
-    return originalGetContext.call(
-      this,
-      contextId,
-      options as CanvasRenderingContext2DSettings
-    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (originalGetContext as any).apply(this, [contextId, ...args]);
   };
 }
 
