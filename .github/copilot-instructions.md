@@ -48,7 +48,7 @@ god-roll/
 
 ## Coding Standards & Conventions
 
-**📖 Full documentation**: See [`AGENTS.md`](../AGENTS.md) for comprehensive coding standards, testing practices, and conventions.
+**📖 Full documentation**: See [AGENTS.md](/AGENTS.md) for comprehensive coding standards, testing practices, and conventions.
 
 ### Key Conventions
 
