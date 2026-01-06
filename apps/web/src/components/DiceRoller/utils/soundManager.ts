@@ -13,11 +13,22 @@ interface SoundOptions {
   duration?: number;
 }
 
+interface AudioSample {
+  buffer: AudioBuffer;
+  name: string;
+}
+
+interface PlaySampleOptions {
+  volume?: number;
+  playbackRate?: number;
+}
+
 class SoundManager {
   private audioContext: AudioContext | null = null;
   private masterGain: GainNode | null = null;
   private enabled: boolean = true;
   private masterVolume: number = 0.5;
+  private samples: Map<string, AudioSample> = new Map();
 
   /**
    * Initialize the audio context (must be called after user interaction)
@@ -71,7 +82,7 @@ class SoundManager {
 
   /**
    * Play a dice hitting the floor/table sound
-   * Simulates the thud of a die landing on felt
+   * Simulates the thud of a die landing on felt with more realistic frequencies
    */
   playDiceHit(options: SoundOptions = {}): void {
     if (!this.isReady()) return;
@@ -85,21 +96,30 @@ class SoundManager {
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const data = buffer.getChannelData(0);
 
-    // Generate noise with exponential decay
+    // Generate noise with slower exponential decay for more body
     for (let i = 0; i < bufferSize; i++) {
       const t = i / bufferSize;
-      const envelope = Math.exp(-t * 15); // Fast decay
+      const envelope = Math.exp(-t * 8); // Slower decay for warmer sound
       data[i] = (Math.random() * 2 - 1) * envelope;
     }
 
     const source = ctx.createBufferSource();
     source.buffer = buffer;
 
-    // Low-pass filter for that "thud" quality
+    // Lower low-pass filter for realistic thud (80-200Hz range)
     const filter = ctx.createBiquadFilter();
     filter.type = "lowpass";
-    filter.frequency.value = 400 * pitch;
+    filter.frequency.value = 180 * pitch; // Lowered from 400Hz
     filter.Q.value = 1;
+
+    // Add low-frequency body layer for tactile feel
+    const bodyOsc = ctx.createOscillator();
+    bodyOsc.type = "sine"; // Sine wave for warmth
+    bodyOsc.frequency.value = 100 * pitch; // Low thud frequency
+
+    const bodyGain = ctx.createGain();
+    bodyGain.gain.setValueAtTime(volume * 0.3, now);
+    bodyGain.gain.exponentialRampToValueAtTime(0.001, now + duration * 1.5);
 
     // Gain for this specific sound
     const gain = ctx.createGain();
@@ -107,15 +127,19 @@ class SoundManager {
 
     source.connect(filter);
     filter.connect(gain);
+    bodyOsc.connect(bodyGain);
     gain.connect(this.masterGain!);
+    bodyGain.connect(this.masterGain!);
 
     source.start(now);
     source.stop(now + duration);
+    bodyOsc.start(now);
+    bodyOsc.stop(now + duration * 1.5);
   }
 
   /**
    * Play a dice hitting wall/rail sound
-   * Higher pitched "clack" sound
+   * Higher pitched "clack" sound with sine wave for warmth
    */
   playWallHit(options: SoundOptions = {}): void {
     if (!this.isReady()) return;
@@ -124,13 +148,13 @@ class SoundManager {
     const ctx = this.audioContext!;
     const now = ctx.currentTime;
 
-    // Create oscillator for the "clack"
+    // Create oscillator for the "clack" using sine for warmer tone
     const osc = ctx.createOscillator();
-    osc.type = "square";
-    osc.frequency.value = 180 * pitch;
+    osc.type = "sine"; // Changed from square for warmer sound
+    osc.frequency.value = 120 * pitch; // Lowered from 180Hz
 
     // Quick pitch drop for impact feel
-    osc.frequency.exponentialRampToValueAtTime(80 * pitch, now + duration);
+    osc.frequency.exponentialRampToValueAtTime(60 * pitch, now + duration); // Adjusted range
 
     // Envelope
     const gain = ctx.createGain();
@@ -174,7 +198,7 @@ class SoundManager {
 
   /**
    * Play dice rolling/tumbling sound
-   * Series of small clicks and rattles
+   * Series of small clicks and rattles with warmer sine waves
    */
   playDiceRoll(options: SoundOptions = {}): void {
     if (!this.isReady()) return;
@@ -192,8 +216,8 @@ class SoundManager {
         volume * (0.3 + Math.random() * 0.7) * (1 - i / numTicks);
 
       const osc = ctx.createOscillator();
-      osc.type = "triangle";
-      osc.frequency.value = 800 + Math.random() * 400;
+      osc.type = "sine"; // Changed from triangle for warmer tone
+      osc.frequency.value = 250 + Math.random() * 200; // Lowered from 800-1200Hz
 
       const tickGain = ctx.createGain();
       tickGain.gain.setValueAtTime(tickVolume, tickTime);
@@ -293,9 +317,81 @@ class SoundManager {
   }
 
   /**
+   * Load an audio sample from a URL
+   * @param name - Unique identifier for this sample
+   * @param url - URL to the audio file (MP3, WAV, etc.)
+   * @returns Promise that resolves when sample is loaded
+   */
+  async loadSample(name: string, url: string): Promise<void> {
+    if (!this.audioContext) {
+      throw new Error("AudioContext not initialized. Call init() first.");
+    }
+
+    try {
+      const response = await fetch(url);
+      const arrayBuffer = await response.arrayBuffer();
+      const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+      
+      this.samples.set(name, { buffer: audioBuffer, name });
+    } catch (error) {
+      console.error(`Failed to load audio sample "${name}":`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Play a loaded audio sample
+   * @param name - Name of the sample to play (must be loaded first)
+   * @param options - Playback options (volume, playback rate)
+   */
+  playSample(name: string, options: PlaySampleOptions = {}): void {
+    if (!this.isReady()) return;
+
+    const sample = this.samples.get(name);
+    if (!sample) {
+      console.warn(`Audio sample "${name}" not found. Load it first with loadSample().`);
+      return;
+    }
+
+    const { volume = 1, playbackRate = 1 } = options;
+    const ctx = this.audioContext!;
+    const now = ctx.currentTime;
+
+    const source = ctx.createBufferSource();
+    source.buffer = sample.buffer;
+    source.playbackRate.value = playbackRate;
+
+    const gain = ctx.createGain();
+    gain.gain.value = volume;
+
+    source.connect(gain);
+    gain.connect(this.masterGain!);
+
+    source.start(now);
+  }
+
+  /**
+   * Check if a sample is loaded
+   * @param name - Name of the sample to check
+   * @returns true if the sample is loaded
+   */
+  hasSample(name: string): boolean {
+    return this.samples.has(name);
+  }
+
+  /**
+   * Unload a sample from memory
+   * @param name - Name of the sample to unload
+   */
+  unloadSample(name: string): void {
+    this.samples.delete(name);
+  }
+
+  /**
    * Clean up audio context
    */
   dispose(): void {
+    this.samples.clear();
     if (this.audioContext) {
       this.audioContext.close();
       this.audioContext = null;
