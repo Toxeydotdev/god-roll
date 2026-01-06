@@ -48,8 +48,8 @@ export function SoundProvider({
     musicManager.isEnabled()
   );
 
-  const toggleMusic = useCallback(() => {
-    const newState = musicManager.toggle();
+  const toggleMusic = useCallback(async () => {
+    const newState = await musicManager.toggle();
     setMusicEnabled(newState);
   }, []);
 

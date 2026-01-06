@@ -164,7 +164,7 @@ class MusicManager {
     }
   }
 
-  start(): void {
+  async start(): Promise<void> {
     if (this.isPlaying) return;
 
     this.initAudioContext();
@@ -173,7 +173,7 @@ class MusicManager {
 
     // Resume context if suspended
     if (this.audioContext.state === "suspended") {
-      this.audioContext.resume();
+      await this.audioContext.resume();
     }
 
     this.isPlaying = true;
@@ -209,11 +209,11 @@ class MusicManager {
     this.saveSettings();
   }
 
-  toggle(): boolean {
+  async toggle(): Promise<boolean> {
     if (this.isPlaying) {
       this.stop();
     } else {
-      this.start();
+      await this.start();
     }
     return this.isPlaying;
   }
