@@ -513,4 +513,36 @@ npm run test -- --watch
 
 ---
 
+## Running Lint
+
+The project uses [oxlint](https://oxc.rs/docs/guide/usage/linter.html) for fast, reliable linting.
+
+```bash
+# Run lint check
+npm run lint
+
+# Lint specific files or directories
+npx oxlint src/
+
+# Auto-fix issues (when possible)
+npx oxlint --fix
+```
+
+**Configured Rules (oxlint.json):**
+
+- `no-console`: warn - Avoid console statements in production code
+- `no-debugger`: error - Remove debugger statements
+- `no-unused-vars`: warn - Clean up unused variables
+- `eqeqeq`: error - Use strict equality (===) instead of loose (==)
+
+**Before Committing:**
+
+Always run lint to catch issues early:
+
+```bash
+npm run lint && npm run test
+```
+
+---
+
 _Last updated: January 2026_

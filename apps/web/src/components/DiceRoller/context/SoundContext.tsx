@@ -5,7 +5,14 @@
  */
 
 import { useSound as useSoundState } from "@/components/DiceRoller/hooks";
-import React, { createContext, ReactNode, useContext } from "react";
+import { musicManager } from "@/components/DiceRoller/utils/musicManager";
+import React, {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useState,
+} from "react";
 
 // ============================================================================
 // TYPES
@@ -15,6 +22,8 @@ interface SoundContextValue {
   soundEnabled: boolean;
   toggleSound: () => void;
   playDiceHit: (velocity: number) => void;
+  musicEnabled: boolean;
+  toggleMusic: () => void;
 }
 
 // ============================================================================
@@ -35,9 +44,19 @@ export function SoundProvider({
   children,
 }: SoundProviderProps): React.ReactElement {
   const soundState = useSoundState();
+  const [musicEnabled, setMusicEnabled] = useState(() =>
+    musicManager.isEnabled()
+  );
+
+  const toggleMusic = useCallback(() => {
+    const newState = musicManager.toggle();
+    setMusicEnabled(newState);
+  }, []);
 
   return (
-    <SoundContext.Provider value={soundState}>{children}</SoundContext.Provider>
+    <SoundContext.Provider value={{ ...soundState, musicEnabled, toggleMusic }}>
+      {children}
+    </SoundContext.Provider>
   );
 }
 

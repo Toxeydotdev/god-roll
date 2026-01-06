@@ -7,7 +7,7 @@ interface ControlButtonsProps {
 
 function ControlButtons({ isOpen }: ControlButtonsProps) {
   const { openModal } = useModal();
-  const { soundEnabled, toggleSound } = useSound();
+  const { soundEnabled, toggleSound, musicEnabled, toggleMusic } = useSound();
   const { theme } = useTheme();
 
   const soundIcon = soundEnabled ? (
@@ -49,6 +49,11 @@ function ControlButtons({ isOpen }: ControlButtonsProps) {
       icon: soundIcon,
       label: soundEnabled ? "Mute sound" : "Unmute sound",
       onClick: toggleSound,
+    },
+    {
+      icon: musicEnabled ? "🎵" : "🔇",
+      label: musicEnabled ? "Stop music" : "Play music",
+      onClick: toggleMusic,
     },
     {
       icon: "🎨",
