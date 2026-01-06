@@ -47,33 +47,55 @@ export function GameOverScreen({
           {/* Game Over Info */}
           <div className="text-center flex-shrink-0">
             <h2
-              className="text-3xl md:text-4xl font-black mb-2"
-              style={{ color: "#c44" }}
+              className="text-3xl md:text-4xl mb-2"
+              style={{ 
+                color: "#c44",
+                fontFamily: 'var(--font-display)',
+                textShadow: '3px 3px 0px rgba(0,0,0,0.15)',
+                letterSpacing: '0.05em',
+              }}
             >
               GAME OVER!
             </h2>
-            <p className="text-lg mb-1" style={{ color: theme.textPrimary }}>
+            <p 
+              className="text-lg mb-1" 
+              style={{ 
+                color: theme.textPrimary,
+                fontWeight: 600,
+              }}
+            >
               You rolled {lastRollTotal} (divisible by 7)
             </p>
             <p
-              className="text-xl md:text-2xl font-bold mb-2"
-              style={{ color: theme.textPrimary }}
+              className="text-xl md:text-2xl mb-2"
+              style={{ 
+                color: theme.textPrimary,
+                fontFamily: 'var(--font-display)',
+                letterSpacing: '0.05em',
+              }}
             >
               Final Score: {totalScore}
             </p>
             <p
               className="text-base mb-4"
-              style={{ color: theme.textSecondary }}
+              style={{ 
+                color: theme.textSecondary,
+                fontWeight: 600,
+              }}
             >
               You survived {roundsSurvived} round
               {roundsSurvived !== 1 ? "s" : ""}!
             </p>
             <button
               onClick={onPlayAgain}
-              className="text-xl md:text-2xl font-black px-6 md:px-8 py-2 md:py-3 rounded-full transition-all hover:scale-105 active:scale-95"
+              className="text-xl md:text-2xl px-6 md:px-8 py-2 md:py-3 rounded-full transition-all hover:scale-105 active:scale-95"
               style={{
                 backgroundColor: theme.textPrimary,
                 color: theme.backgroundCss,
+                fontFamily: 'var(--font-display)',
+                textShadow: '2px 2px 0px rgba(0,0,0,0.3)',
+                boxShadow: '0 4px 0 rgba(0,0,0,0.2)',
+                letterSpacing: '0.05em',
               }}
             >
               PLAY AGAIN

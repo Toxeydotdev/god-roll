@@ -25,14 +25,22 @@ export function RollButton({
       {results.length > 0 && !isRolling && (
         <div className="flex flex-col items-center gap-1 mb-2">
           <span
-            className="text-lg font-bold tracking-wide"
-            style={{ color: theme.textPrimary }}
+            className="text-lg tracking-wide"
+            style={{ 
+              color: theme.textPrimary,
+              fontFamily: 'var(--font-display)',
+              textShadow: '2px 2px 0px rgba(0,0,0,0.15)',
+              fontWeight: 600,
+            }}
           >
             ROLL: {lastRollTotal} {lastRollTotal % 7 === 0 ? "💀" : "✓"}
           </span>
           <span
             className="text-sm tracking-wider"
-            style={{ color: theme.textTertiary }}
+            style={{ 
+              color: theme.textTertiary,
+              fontWeight: 600,
+            }}
           >
             [{results.join(" + ")}]
           </span>
@@ -41,8 +49,14 @@ export function RollButton({
       <button
         onClick={onRoll}
         disabled={isRolling}
-        className="text-4xl font-black tracking-wider px-8 py-2 rounded-full transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
-        style={{ color: theme.textPrimary }}
+        className="text-4xl tracking-wider px-8 py-2 rounded-full transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+        style={{ 
+          color: theme.textPrimary,
+          fontFamily: 'var(--font-display)',
+          textShadow: '3px 3px 0px rgba(0,0,0,0.2)',
+          boxShadow: '0 4px 0 rgba(0,0,0,0.2)',
+          letterSpacing: '0.1em',
+        }}
       >
         ROLL
       </button>
