@@ -92,7 +92,7 @@ export function createFaceTexture(
       y,
       dotRadius
     );
-    dotGradient.addColorStop(0, lightenColor(dotColor, 20));
+    dotGradient.addColorStop(0, shadeColor(dotColor, 20));
     dotGradient.addColorStop(1, dotColor);
     ctx.fillStyle = dotGradient;
     ctx.beginPath();
@@ -111,7 +111,7 @@ export function createFaceTexture(
   return texture;
 }
 
-// Helper function to darken/lighten colors
+// Helper function to darken/lighten colors (positive percent lightens, negative darkens)
 function shadeColor(color: string, percent: number): string {
   const num = parseInt(color.replace("#", ""), 16);
   const amt = Math.round(2.55 * percent);
@@ -119,11 +119,6 @@ function shadeColor(color: string, percent: number): string {
   const G = Math.max(0, Math.min(255, ((num >> 8) & 0x00ff) + amt));
   const B = Math.max(0, Math.min(255, (num & 0x0000ff) + amt));
   return "#" + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
-}
-
-// Helper function to lighten colors
-function lightenColor(color: string, percent: number): string {
-  return shadeColor(color, percent);
 }
 
 export function createDiceMesh(skinId?: string): THREE.Mesh {
