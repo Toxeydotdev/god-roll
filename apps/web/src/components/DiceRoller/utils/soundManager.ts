@@ -29,6 +29,10 @@ class SoundManager {
   private enabled: boolean = true;
   private masterVolume: number = 0.5;
   private samples: Map<string, AudioSample> = new Map();
+  private lastImpactTime: number = 0;
+  private minImpactInterval: number = 0.05; // Minimum 50ms between impact sounds
+  private activeSounds: number = 0;
+  private maxConcurrentSounds: number = 3; // Limit to 3 concurrent impact sounds
 
   /**
    * Initialize the audio context (must be called after user interaction)
@@ -300,11 +304,29 @@ class SoundManager {
   /**
    * Play a sound based on impact velocity
    * Higher velocity = louder and higher pitched
+   * Implements throttling to prevent audio clutter with multiple dice
    */
   playImpact(velocity: number, type: "floor" | "wall" = "floor"): void {
+    if (!this.isReady()) return;
+
     const normalizedVelocity = Math.min(Math.abs(velocity) / 10, 1);
 
-    if (normalizedVelocity < 0.05) return; // Too quiet to bother
+    // Filter out very quiet impacts
+    if (normalizedVelocity < 0.05) return;
+
+    const now = this.audioContext!.currentTime;
+
+    // Throttle impact sounds to prevent clutter
+    // Only play if enough time has passed AND we're under the concurrent limit
+    if (
+      now - this.lastImpactTime < this.minImpactInterval ||
+      this.activeSounds >= this.maxConcurrentSounds
+    ) {
+      return;
+    }
+
+    this.lastImpactTime = now;
+    this.activeSounds++;
 
     const volume = 0.2 + normalizedVelocity * 0.6;
     const pitch = 0.8 + normalizedVelocity * 0.4;
@@ -314,6 +336,12 @@ class SoundManager {
     } else {
       this.playWallHit({ volume, pitch });
     }
+
+    // Decrement active sounds after the sound duration
+    const soundDuration = type === "floor" ? 0.15 : 0.08;
+    setTimeout(() => {
+      this.activeSounds = Math.max(0, this.activeSounds - 1);
+    }, soundDuration * 1000);
   }
 
   /**
