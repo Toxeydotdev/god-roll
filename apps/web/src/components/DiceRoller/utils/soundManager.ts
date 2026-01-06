@@ -33,6 +33,10 @@ class SoundManager {
   private minImpactInterval: number = 0.05; // Minimum interval between impact sounds (seconds)
   private maxConcurrentSounds: number = 3; // Limit to 3 concurrent impact sounds
   private soundEndTimes: number[] = []; // Track when active sounds will end
+  
+  // Sound durations in seconds
+  private readonly floorHitDuration: number = 0.15;
+  private readonly wallHitDuration: number = 0.08;
 
   /**
    * Initialize the audio context (must be called after user interaction)
@@ -91,7 +95,7 @@ class SoundManager {
   playDiceHit(options: SoundOptions = {}): void {
     if (!this.isReady()) return;
 
-    const { volume = 0.6, pitch = 1, duration = 0.15 } = options;
+    const { volume = 0.6, pitch = 1, duration = this.floorHitDuration } = options;
     const ctx = this.audioContext!;
     const now = ctx.currentTime;
 
@@ -148,7 +152,7 @@ class SoundManager {
   playWallHit(options: SoundOptions = {}): void {
     if (!this.isReady()) return;
 
-    const { volume = 0.4, pitch = 1, duration = 0.08 } = options;
+    const { volume = 0.4, pitch = 1, duration = this.wallHitDuration } = options;
     const ctx = this.audioContext!;
     const now = ctx.currentTime;
 
@@ -329,7 +333,7 @@ class SoundManager {
     }
 
     this.lastImpactTime = now;
-    const soundDuration = type === "floor" ? 0.15 : 0.08;
+    const soundDuration = type === "floor" ? this.floorHitDuration : this.wallHitDuration;
     this.soundEndTimes.push(now + soundDuration);
 
     const volume = 0.2 + normalizedVelocity * 0.6;
