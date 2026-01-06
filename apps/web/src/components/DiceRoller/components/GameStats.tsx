@@ -5,12 +5,16 @@ interface GameStatsProps {
   totalScore: number;
   round: number;
   onReset: () => void;
+  onShowLeaderboard: () => void;
+  onShowRules: () => void;
 }
 
 export function GameStats({
   totalScore,
   round,
   onReset,
+  onShowLeaderboard,
+  onShowRules,
 }: GameStatsProps): React.ReactElement {
   const [resetProgress, setResetProgress] = useState<number>(0);
   const resetTimerRef = useRef<number | null>(null);
@@ -61,30 +65,52 @@ export function GameStats({
       <div className="text-lg" style={{ color: COLORS.textSecondary }}>
         Round {round}
       </div>
-      <button
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-        onTouchCancel={handleTouchEnd}
-        className="mt-2 text-sm font-bold px-4 py-1 rounded-full transition-all relative overflow-hidden touch-none"
-        style={{
-          backgroundColor: COLORS.textPrimary,
-          color: COLORS.backgroundCss,
-        }}
-      >
-        <span
-          className="absolute inset-0 bg-red-500 transition-none"
+      <div className="flex gap-2 mt-2 justify-end">
+        <button
+          onClick={onShowRules}
+          className="text-sm font-bold px-3 py-1 rounded-full transition-all hover:scale-105 active:scale-95"
           style={{
-            width: `${resetProgress * 100}%`,
-            opacity: 0.6,
+            backgroundColor: COLORS.textSecondary,
+            color: COLORS.backgroundCss,
           }}
-        />
-        <span className="relative">
-          {resetProgress > 0 ? "HOLD..." : "RESET"}
-        </span>
-      </button>
+        >
+          ❓
+        </button>
+        <button
+          onClick={onShowLeaderboard}
+          className="text-sm font-bold px-3 py-1 rounded-full transition-all hover:scale-105 active:scale-95"
+          style={{
+            backgroundColor: COLORS.textSecondary,
+            color: COLORS.backgroundCss,
+          }}
+        >
+          🏆
+        </button>
+        <button
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={handleTouchEnd}
+          className="text-sm font-bold px-4 py-1 rounded-full transition-all relative overflow-hidden touch-none"
+          style={{
+            backgroundColor: COLORS.textPrimary,
+            color: COLORS.backgroundCss,
+          }}
+        >
+          <span
+            className="absolute inset-0 bg-red-500 transition-none"
+            style={{
+              width: `${resetProgress * 100}%`,
+              opacity: 0.6,
+            }}
+          />
+          <span className="relative">
+            {resetProgress > 0 ? "HOLD..." : "RESET"}
+          </span>
+        </button>
+      </div>
     </div>
   );
 }

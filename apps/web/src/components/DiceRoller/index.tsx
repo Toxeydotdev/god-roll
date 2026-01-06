@@ -1,15 +1,27 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   GameOverScreen,
+  GameRules,
   GameStats,
   GameTitle,
+  Leaderboard,
   RollButton,
   StartScreen,
 } from "./components";
 import { COLORS } from "./constants";
 import { useDicePhysics, useGameState, useThreeScene } from "./hooks";
+import { addLeaderboardEntry } from "./leaderboard";
 
 export function DiceRoller(): React.ReactElement {
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showRules, setShowRules] = useState(false);
+  const [highlightIndex, setHighlightIndex] = useState<number | undefined>(
+    undefined
+  );
+  const [leaderboardEntries, setLeaderboardEntries] = useState<
+    { score: number; rounds: number; date: string }[]
+  >([]);
+
   const {
     containerRef,
     sceneRef,
@@ -57,7 +69,26 @@ export function DiceRoller(): React.ReactElement {
     clearAllDice();
     resetCamera();
     baseStartNewGame();
+    setHighlightIndex(undefined);
   }, [clearAllDice, baseStartNewGame, resetCamera]);
+
+  // Save score to leaderboard when game ends
+  useEffect(() => {
+    if (gameOver && totalScore > 0) {
+      const newEntries = addLeaderboardEntry({
+        score: totalScore,
+        rounds: round - 1,
+        date: new Date().toISOString(),
+      });
+      // Find the index of the newly added entry
+      const idx = newEntries.findIndex(
+        (e) => e.score === totalScore && e.rounds === round - 1
+      );
+      setHighlightIndex(idx >= 0 ? idx : undefined);
+      setLeaderboardEntries(newEntries);
+      // Don't auto-show, let user see game over screen first
+    }
+  }, [gameOver, totalScore, round]);
 
   return (
     <div
@@ -71,6 +102,11 @@ export function DiceRoller(): React.ReactElement {
           totalScore={totalScore}
           round={round}
           onReset={startNewGame}
+          onShowLeaderboard={() => {
+            setHighlightIndex(undefined);
+            setShowLeaderboard(true);
+          }}
+          onShowRules={() => setShowRules(true)}
         />
       )}
 
@@ -84,6 +120,9 @@ export function DiceRoller(): React.ReactElement {
           totalScore={totalScore}
           round={round}
           onPlayAgain={startNewGame}
+          highlightIndex={highlightIndex}
+          leaderboardEntries={leaderboardEntries}
+          onLeaderboardChange={setLeaderboardEntries}
         />
       )}
 
@@ -95,6 +134,34 @@ export function DiceRoller(): React.ReactElement {
           onRoll={handleRoll}
         />
       )}
+
+      {/* Leaderboard button */}
+      {!gameStarted && (
+        <button
+          onClick={() => {
+            setHighlightIndex(undefined);
+            setShowLeaderboard(true);
+          }}
+          className="absolute bottom-24 left-1/2 -translate-x-1/2 px-6 py-2 rounded-full font-bold text-lg transition-all hover:scale-105 active:scale-95"
+          style={{
+            backgroundColor: COLORS.textSecondary,
+            color: COLORS.backgroundCss,
+          }}
+        >
+          🏆 Leaderboard
+        </button>
+      )}
+
+      {/* Leaderboard modal */}
+      {showLeaderboard && (
+        <Leaderboard
+          onClose={() => setShowLeaderboard(false)}
+          highlightIndex={highlightIndex}
+        />
+      )}
+
+      {/* Game Rules modal */}
+      {showRules && <GameRules onClose={() => setShowRules(false)} />}
     </div>
   );
 }
