@@ -30,9 +30,10 @@ class SoundManager {
   private masterVolume: number = 0.5;
   private samples: Map<string, AudioSample> = new Map();
   private lastImpactTime: number = 0;
-  private minImpactInterval: number = 0.05; // Minimum 50ms between impact sounds
+  private minImpactInterval: number = 0.05; // Minimum interval between impact sounds (seconds)
   private activeSounds: number = 0;
   private maxConcurrentSounds: number = 3; // Limit to 3 concurrent impact sounds
+  private soundEndTimes: number[] = []; // Track when active sounds will end
 
   /**
    * Initialize the audio context (must be called after user interaction)
@@ -316,6 +317,10 @@ class SoundManager {
 
     const now = this.audioContext!.currentTime;
 
+    // Clean up expired sounds from tracking array
+    this.soundEndTimes = this.soundEndTimes.filter((endTime) => endTime > now);
+    this.activeSounds = this.soundEndTimes.length;
+
     // Throttle impact sounds to prevent clutter
     // Only play if enough time has passed AND we're under the concurrent limit
     if (
@@ -326,6 +331,8 @@ class SoundManager {
     }
 
     this.lastImpactTime = now;
+    const soundDuration = type === "floor" ? 0.15 : 0.08;
+    this.soundEndTimes.push(now + soundDuration);
     this.activeSounds++;
 
     const volume = 0.2 + normalizedVelocity * 0.6;
@@ -336,12 +343,6 @@ class SoundManager {
     } else {
       this.playWallHit({ volume, pitch });
     }
-
-    // Decrement active sounds after the sound duration
-    const soundDuration = type === "floor" ? 0.15 : 0.08;
-    setTimeout(() => {
-      this.activeSounds = Math.max(0, this.activeSounds - 1);
-    }, soundDuration * 1000);
   }
 
   /**
