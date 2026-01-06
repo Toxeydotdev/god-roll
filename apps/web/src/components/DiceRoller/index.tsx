@@ -251,6 +251,7 @@ export function DiceRoller(): React.ReactElement {
         <StartScreen
           onStartGame={startGame}
           onShowColorPicker={() => setShowColorPicker(true)}
+          onShowLeaderboard={() => setShowLeaderboard(true)}
           theme={theme}
         />
       )}
@@ -276,23 +277,6 @@ export function DiceRoller(): React.ReactElement {
           onRoll={handleRoll}
           theme={theme}
         />
-      )}
-
-      {/* Leaderboard button */}
-      {!gameStarted && (
-        <button
-          onClick={() => {
-            setHighlightIndex(undefined);
-            setShowLeaderboard(true);
-          }}
-          className="absolute bottom-24 left-1/2 -translate-x-1/2 px-6 py-2 rounded-full font-bold text-lg transition-all hover:scale-105 active:scale-95"
-          style={{
-            backgroundColor: theme.textSecondary,
-            color: theme.backgroundCss,
-          }}
-        >
-          🏆 Leaderboard
-        </button>
       )}
 
       {/* Leaderboard modal */}

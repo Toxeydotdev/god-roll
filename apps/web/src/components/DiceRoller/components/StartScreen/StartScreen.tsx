@@ -4,12 +4,14 @@ import React from "react";
 interface StartScreenProps {
   onStartGame: () => void;
   onShowColorPicker: () => void;
+  onShowLeaderboard: () => void;
   theme: ColorTheme;
 }
 
 export function StartScreen({
   onStartGame,
   onShowColorPicker,
+  onShowLeaderboard,
   theme,
 }: StartScreenProps): React.ReactElement {
   return (
@@ -47,6 +49,16 @@ export function StartScreen({
             }}
           >
             🎨 Theme
+          </button>
+          <button
+            onClick={onShowLeaderboard}
+            className="px-4 py-2 rounded-full font-bold text-base transition-all hover:scale-105 active:scale-95"
+            style={{
+              backgroundColor: theme.textSecondary,
+              color: theme.backgroundCss,
+            }}
+          >
+            🏆 Leaderboard
           </button>
         </div>
         <p className="text-sm mt-4" style={{ color: theme.textTertiary }}>
