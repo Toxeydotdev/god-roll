@@ -67,6 +67,27 @@ describe("SoundManager class", () => {
       // Expect - no error
     });
   });
+
+  describe("audio sample management without AudioContext", () => {
+    it("should track if sample is loaded", () => {
+      // Setup
+      const manager = new SoundManager();
+
+      // Expect - sample not loaded initially
+      expect(manager.hasSample("test-sample")).toBe(false);
+    });
+
+    it("should allow unloading samples", () => {
+      // Setup
+      const manager = new SoundManager();
+
+      // Invoke
+      manager.unloadSample("test-sample");
+
+      // Expect - no error, sample still not loaded
+      expect(manager.hasSample("test-sample")).toBe(false);
+    });
+  });
 });
 
 describe("localStorage helpers", () => {

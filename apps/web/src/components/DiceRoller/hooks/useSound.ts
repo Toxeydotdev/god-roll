@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   getSoundEnabled,
+  getSoundProfile,
   getSoundVolume,
   setSoundEnabled,
+  setSoundProfile,
   setSoundVolume,
   soundManager,
+  SoundProfile,
 } from "../utils/soundManager";
 
 interface UseSoundReturn {
@@ -18,6 +21,10 @@ interface UseSoundReturn {
   volume: number;
   /** Set volume (0-1) */
   setVolume: (volume: number) => void;
+  /** Current sound profile */
+  soundProfile: SoundProfile;
+  /** Set sound profile */
+  setSoundProfile: (profile: SoundProfile) => void;
   /** Play dice hitting floor/table */
   playDiceHit: (velocity?: number) => void;
   /** Play dice hitting wall */
@@ -41,6 +48,7 @@ interface UseSoundReturn {
 export function useSound(): UseSoundReturn {
   const [soundEnabled, setSoundEnabledState] = useState(getSoundEnabled);
   const [volume, setVolumeState] = useState(getSoundVolume);
+  const [soundProfile, setSoundProfileState] = useState(getSoundProfile);
   const initialized = useRef(false);
 
   // Initialize sound manager on mount
@@ -49,9 +57,10 @@ export function useSound(): UseSoundReturn {
       soundManager.init();
       soundManager.setEnabled(soundEnabled);
       soundManager.setVolume(volume);
+      soundManager.setSoundProfile(soundProfile);
       initialized.current = true;
     }
-  }, [soundEnabled, volume]);
+  }, [soundEnabled, volume, soundProfile]);
 
   // Resume audio context on user interaction
   useEffect(() => {
@@ -86,6 +95,11 @@ export function useSound(): UseSoundReturn {
     const clamped = Math.max(0, Math.min(1, newVolume));
     setVolumeState(clamped);
     setSoundVolume(clamped);
+  }, []);
+
+  const handleSetSoundProfile = useCallback((profile: SoundProfile) => {
+    setSoundProfileState(profile);
+    setSoundProfile(profile);
   }, []);
 
   const playDiceHit = useCallback((velocity?: number) => {
@@ -137,6 +151,8 @@ export function useSound(): UseSoundReturn {
     setSoundEnabled: handleSetSoundEnabled,
     volume,
     setVolume: handleSetVolume,
+    soundProfile,
+    setSoundProfile: handleSetSoundProfile,
     playDiceHit,
     playWallHit,
     playDiceRoll,
