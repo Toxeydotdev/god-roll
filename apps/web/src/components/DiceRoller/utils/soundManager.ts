@@ -1,9 +1,11 @@
 /**
  * Sound Effects System for Dice Roller
  *
- * Uses Web Audio API for low-latency, procedurally generated sounds
- * that simulate dice rolling and hitting surfaces.
+ * Uses Web Audio API with pre-recorded dice sounds for consistent
+ * quality across all devices (desktop and mobile).
  */
+
+import diceAudioUrl from "../../../assets/audio/dice-sound-40081.mp3";
 
 export type SoundType = "diceHit" | "wallHit" | "diceRoll" | "gameOver" | "win";
 
@@ -18,6 +20,9 @@ class SoundManager {
   private masterGain: GainNode | null = null;
   private enabled: boolean = true;
   private masterVolume: number = 0.5;
+  private diceHitBuffer: AudioBuffer | null = null;
+  private activeSounds: number = 0;
+  private readonly MAX_CONCURRENT_SOUNDS = 3;
 
   /**
    * Initialize the audio context (must be called after user interaction)
@@ -30,9 +35,27 @@ class SoundManager {
       this.masterGain = this.audioContext.createGain();
       this.masterGain.gain.value = this.masterVolume;
       this.masterGain.connect(this.audioContext.destination);
+
+      // Load dice hit sound
+      this.loadDiceHitSound();
     } catch (error) {
       console.warn("Web Audio API not supported:", error);
       this.enabled = false;
+    }
+  }
+
+  /**
+   * Load dice hit audio file
+   */
+  private async loadDiceHitSound(): Promise<void> {
+    if (!this.audioContext) return;
+
+    try {
+      const response = await fetch(diceAudioUrl);
+      const arrayBuffer = await response.arrayBuffer();
+      this.diceHitBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+    } catch (error) {
+      console.warn("Failed to load dice sound:", error);
     }
   }
 
@@ -71,105 +94,118 @@ class SoundManager {
 
   /**
    * Play a dice hitting the floor/table sound
-   * Simulates the thud of a die landing on felt
+   * Uses pre-loaded audio file for consistent quality across all devices
    */
   playDiceHit(options: SoundOptions = {}): void {
     if (!this.isReady()) return;
 
-    const { volume = 0.6, pitch = 1, duration = 0.15 } = options;
+    // Limit concurrent sounds to prevent audio overload
+    if (this.activeSounds >= this.MAX_CONCURRENT_SOUNDS) return;
+
+    const { volume = 0.6, pitch = 1 } = options;
     const ctx = this.audioContext!;
     const now = ctx.currentTime;
 
-    // Create a short "thud" sound using filtered noise
-    const bufferSize = ctx.sampleRate * duration;
-    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
+    // Use loaded audio file if available
+    if (this.diceHitBuffer) {
+      const source = ctx.createBufferSource();
+      source.buffer = this.diceHitBuffer;
 
-    // Generate noise with exponential decay
-    for (let i = 0; i < bufferSize; i++) {
-      const t = i / bufferSize;
-      const envelope = Math.exp(-t * 15); // Fast decay
-      data[i] = (Math.random() * 2 - 1) * envelope;
+      // Apply pitch variation
+      source.playbackRate.value = pitch;
+
+      // Apply volume
+      const gain = ctx.createGain();
+      gain.gain.value = volume;
+
+      source.connect(gain);
+      gain.connect(this.masterGain!);
+
+      // Track active sounds
+      this.activeSounds++;
+      source.onended = () => {
+        this.activeSounds--;
+      };
+
+      // Start 0.05s into the audio to skip silence, play for 0.3s
+      const offset = 0.05;
+      const duration = 0.3;
+      source.start(now, offset, duration);
+    } else {
+      // Fallback to simple procedural sound if audio file not loaded
+      const osc = ctx.createOscillator();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(120 * pitch, now);
+      osc.frequency.exponentialRampToValueAtTime(60 * pitch, now + 0.15);
+
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(volume * 0.8, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain!);
+
+      osc.start(now);
+      osc.stop(now + 0.15);
     }
-
-    const source = ctx.createBufferSource();
-    source.buffer = buffer;
-
-    // Low-pass filter for that "thud" quality
-    const filter = ctx.createBiquadFilter();
-    filter.type = "lowpass";
-    filter.frequency.value = 400 * pitch;
-    filter.Q.value = 1;
-
-    // Gain for this specific sound
-    const gain = ctx.createGain();
-    gain.gain.value = volume;
-
-    source.connect(filter);
-    filter.connect(gain);
-    gain.connect(this.masterGain!);
-
-    source.start(now);
-    source.stop(now + duration);
   }
 
   /**
    * Play a dice hitting wall/rail sound
-   * Higher pitched "clack" sound
+   * Uses the same audio file with higher pitch for variation
    */
   playWallHit(options: SoundOptions = {}): void {
     if (!this.isReady()) return;
 
-    const { volume = 0.4, pitch = 1, duration = 0.08 } = options;
+    // Limit concurrent sounds
+    if (this.activeSounds >= this.MAX_CONCURRENT_SOUNDS) return;
+
+    const { volume = 0.4, pitch = 1 } = options;
     const ctx = this.audioContext!;
     const now = ctx.currentTime;
 
-    // Create oscillator for the "clack"
-    const osc = ctx.createOscillator();
-    osc.type = "square";
-    osc.frequency.value = 180 * pitch;
+    // Use loaded audio file with higher pitch if available
+    if (this.diceHitBuffer) {
+      const source = ctx.createBufferSource();
+      source.buffer = this.diceHitBuffer;
 
-    // Quick pitch drop for impact feel
-    osc.frequency.exponentialRampToValueAtTime(80 * pitch, now + duration);
+      // Higher pitch for wall hits
+      source.playbackRate.value = pitch * 1.3;
 
-    // Envelope
-    const gain = ctx.createGain();
-    gain.gain.setValueAtTime(volume, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+      const gain = ctx.createGain();
+      gain.gain.value = volume;
 
-    // Add some noise for texture
-    const noiseBuffer = ctx.createBuffer(
-      1,
-      ctx.sampleRate * duration,
-      ctx.sampleRate
-    );
-    const noiseData = noiseBuffer.getChannelData(0);
-    for (let i = 0; i < noiseBuffer.length; i++) {
-      const t = i / noiseBuffer.length;
-      noiseData[i] = (Math.random() * 2 - 1) * Math.exp(-t * 20) * 0.3;
+      source.connect(gain);
+      gain.connect(this.masterGain!);
+
+      // Track active sounds
+      this.activeSounds++;
+      source.onended = () => {
+        this.activeSounds--;
+      };
+
+      // Start 0.05s into the audio, play for 0.2s (shorter for wall hits)
+      const offset = 0.05;
+      const duration = 0.2;
+      source.start(now, offset, duration);
+    } else {
+      // Fallback to procedural sound
+      const duration = 0.08;
+      const osc = ctx.createOscillator();
+      osc.type = "square";
+      osc.frequency.value = 180 * pitch;
+      osc.frequency.exponentialRampToValueAtTime(80 * pitch, now + duration);
+
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(volume, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain!);
+
+      osc.start(now);
+      osc.stop(now + duration);
     }
-
-    const noiseSource = ctx.createBufferSource();
-    noiseSource.buffer = noiseBuffer;
-
-    const noiseGain = ctx.createGain();
-    noiseGain.gain.value = volume * 0.5;
-
-    // High-pass filter for the "click"
-    const filter = ctx.createBiquadFilter();
-    filter.type = "highpass";
-    filter.frequency.value = 500;
-
-    osc.connect(gain);
-    noiseSource.connect(filter);
-    filter.connect(noiseGain);
-    gain.connect(this.masterGain!);
-    noiseGain.connect(this.masterGain!);
-
-    osc.start(now);
-    osc.stop(now + duration);
-    noiseSource.start(now);
-    noiseSource.stop(now + duration);
   }
 
   /**
