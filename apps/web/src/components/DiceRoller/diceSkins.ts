@@ -17,6 +17,9 @@ export interface DiceSkin {
   metalness?: number; // Material metalness (0-1)
   emissive?: string; // Emissive color for glowing effects
   emissiveIntensity?: number; // Glow intensity (0-1)
+  useFlowers?: boolean; // Whether to draw flowers instead of dots
+  petalColor?: string; // Color for flower petals
+  flowerCenterColor?: string; // Color for flower centers
 }
 
 export const DICE_SKINS: Record<string, DiceSkin> = {
@@ -99,6 +102,19 @@ export const DICE_SKINS: Record<string, DiceSkin> = {
     dotOneColor: "#00bfff",
     opacity: 0.5,
     roughness: 0.05,
+  },
+  tiana: {
+    id: "tiana",
+    name: "Tiana",
+    description: "Beautiful cream dice with delicate flower dots",
+    diceColor: "#fffacd",
+    dotColor: "#ff69b4",
+    dotOneColor: "#ffd700",
+    useFlowers: true,
+    petalColor: "#ff1493",
+    flowerCenterColor: "#ffd700",
+    roughness: 0.15,
+    metalness: 0,
   },
 };
 
