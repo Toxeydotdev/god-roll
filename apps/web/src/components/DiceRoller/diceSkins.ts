@@ -106,8 +106,8 @@ export const DICE_SKINS: Record<string, DiceSkin> = {
   tiana: {
     id: "tiana",
     name: "Tiana",
-    description: "Beautiful cream dice with delicate flower dots",
-    diceColor: "#fffacd",
+    description: "Beautiful pink dice with delicate flower dots",
+    diceColor: "#ff91a4",
     dotColor: "#ff69b4",
     dotOneColor: "#ffd700",
     useFlowers: true,

@@ -8,6 +8,8 @@ export interface ColorTheme {
   textPrimary: string;
   textSecondary: string;
   textTertiary: string;
+  accentColor: string;
+  accentHover: string;
 }
 
 export const COLOR_THEMES: ColorTheme[] = [
@@ -19,6 +21,8 @@ export const COLOR_THEMES: ColorTheme[] = [
     textPrimary: "#1a5a1a",
     textSecondary: "#2a7a2a",
     textTertiary: "#4a9a4a",
+    accentColor: "#FFD700",
+    accentHover: "#FFC000",
   },
   {
     id: "blue",
@@ -28,6 +32,8 @@ export const COLOR_THEMES: ColorTheme[] = [
     textPrimary: "#1a4a6a",
     textSecondary: "#2a5a7a",
     textTertiary: "#4a7a9a",
+    accentColor: "#FF6B35",
+    accentHover: "#FF5722",
   },
   {
     id: "purple",
@@ -37,6 +43,8 @@ export const COLOR_THEMES: ColorTheme[] = [
     textPrimary: "#4a2a5a",
     textSecondary: "#5a3a6a",
     textTertiary: "#7a5a8a",
+    accentColor: "#00CED1",
+    accentHover: "#00B4B4",
   },
   {
     id: "orange",
@@ -46,6 +54,8 @@ export const COLOR_THEMES: ColorTheme[] = [
     textPrimary: "#6a3a1a",
     textSecondary: "#8a4a2a",
     textTertiary: "#aa6a4a",
+    accentColor: "#E91E63",
+    accentHover: "#C2185B",
   },
   {
     id: "pink",
@@ -55,6 +65,8 @@ export const COLOR_THEMES: ColorTheme[] = [
     textPrimary: "#6a2a3a",
     textSecondary: "#8a3a4a",
     textTertiary: "#aa5a6a",
+    accentColor: "#4CAF50",
+    accentHover: "#388E3C",
   },
   {
     id: "gray",
@@ -64,6 +76,8 @@ export const COLOR_THEMES: ColorTheme[] = [
     textPrimary: "#2a2a2a",
     textSecondary: "#4a4a4a",
     textTertiary: "#6a6a6a",
+    accentColor: "#FF5722",
+    accentHover: "#E64A19",
   },
 ];
 

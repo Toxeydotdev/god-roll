@@ -26,10 +26,10 @@ export function RollButton({
         <div className="flex flex-col items-center gap-1 mb-2">
           <span
             className="text-lg tracking-wide"
-            style={{ 
+            style={{
               color: theme.textPrimary,
-              fontFamily: 'var(--font-display)',
-              textShadow: '2px 2px 0px rgba(0,0,0,0.15)',
+              fontFamily: "var(--font-display)",
+              textShadow: "2px 2px 0px rgba(0,0,0,0.15)",
               fontWeight: 600,
             }}
           >
@@ -37,7 +37,7 @@ export function RollButton({
           </span>
           <span
             className="text-sm tracking-wider"
-            style={{ 
+            style={{
               color: theme.textTertiary,
               fontWeight: 600,
             }}
@@ -50,13 +50,16 @@ export function RollButton({
         onClick={onRoll}
         disabled={isRolling}
         data-testid="roll-button"
-        className="text-4xl tracking-wider px-8 py-2 rounded-full transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
-        style={{ 
-          color: theme.textPrimary,
-          fontFamily: 'var(--font-display)',
-          textShadow: '3px 3px 0px rgba(0,0,0,0.2)',
-          boxShadow: '0 4px 0 rgba(0,0,0,0.2)',
-          letterSpacing: '0.1em',
+        className="text-4xl tracking-wider px-10 py-3 rounded-full transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+        style={{
+          color: theme.backgroundCss,
+          backgroundColor: theme.textPrimary,
+          fontFamily: "var(--font-display)",
+          textShadow: "1px 1px 2px rgba(0,0,0,0.3)",
+          boxShadow: `0 6px 0 ${theme.textSecondary}, 0 8px 16px rgba(0,0,0,0.25), inset 0 2px 0 rgba(255,255,255,0.2)`,
+          letterSpacing: "0.12em",
+          border: `3px solid ${theme.textSecondary}`,
+          fontWeight: 700,
         }}
       >
         ROLL
