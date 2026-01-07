@@ -204,6 +204,7 @@ function DiceRollerContent(): React.ReactElement {
         <div className="absolute top-4 right-4 z-0 text-right">
           <div
             className="text-2xl"
+            data-testid="score-display"
             style={{ 
               color: theme.textPrimary,
               fontFamily: 'var(--font-display)',
@@ -214,7 +215,8 @@ function DiceRollerContent(): React.ReactElement {
             SCORE: {totalScore}
           </div>
           <div 
-            className="text-lg" 
+            className="text-lg"
+            data-testid="round-display"
             style={{ 
               color: theme.textSecondary,
               fontWeight: 600,
@@ -238,6 +240,7 @@ function DiceRollerContent(): React.ReactElement {
               handleResetEnd(setResetProgress, resetTimerRef);
             }}
             className="text-sm px-3 py-1 rounded-full transition-all hover:scale-105 active:scale-95 mt-1 block mx-auto"
+            data-testid="reset-button"
             style={{
               backgroundColor: theme.textSecondary,
               color: theme.backgroundCss,
@@ -247,7 +250,7 @@ function DiceRollerContent(): React.ReactElement {
             }}
             title="Hold to reset game"
           >
-            Hold to Reset
+            {resetProgress > 0 ? "HOLD..." : "Hold to Reset"}
           </button>
         </div>
       )}

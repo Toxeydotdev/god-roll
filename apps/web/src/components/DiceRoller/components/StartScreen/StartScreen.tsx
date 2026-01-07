@@ -44,6 +44,7 @@ export function StartScreen({
         </p>
         <button
           onClick={onStartGame}
+          data-testid="start-button"
           className="text-3xl px-10 py-4 rounded-full transition-all hover:scale-105 active:scale-95"
           style={{
             backgroundColor: theme.textPrimary,
