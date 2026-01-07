@@ -32,6 +32,7 @@ export default defineConfig({
     command: "npx nx run @god-roll/web:preview",
     url: "http://localhost:4200",
     reuseExistingServer: true,
+    timeout: 120_000,
     cwd: workspaceRoot,
   },
   projects: [

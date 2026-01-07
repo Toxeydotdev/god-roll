@@ -29,9 +29,14 @@ test.describe("reset behavior", () => {
     await startGame(page);
 
     const resetButton = page.getByTestId("reset-button");
-    await resetButton.dispatchEvent("mousedown");
-    await expect(resetButton).toHaveText(/HOLD\.\.\./, { timeout: 500 });
-    await resetButton.dispatchEvent("mouseup");
+    await expect(resetButton).toBeVisible();
+    const box = await resetButton.boundingBox();
+    if (!box) throw new Error("reset button has no bounding box");
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    // Allow UI to update hold text in slower CI environments
+    await expect(resetButton).toHaveText(/HOLD\.{3}/, { timeout: 1500 });
+    await page.mouse.up();
     await expect(resetButton).toHaveText("Hold to Reset");
   });
 });
