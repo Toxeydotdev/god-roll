@@ -22,7 +22,7 @@ class SoundManager {
   private masterVolume: number = 0.5;
   private diceHitBuffer: AudioBuffer | null = null;
   private activeSounds: number = 0;
-  private readonly MAX_CONCURRENT_SOUNDS = 3;
+  private readonly MAX_CONCURRENT_SOUNDS = 1;
 
   /**
    * Initialize the audio context (must be called after user interaction)
