@@ -38,6 +38,38 @@ export async function getLeaderboard(limit = 10): Promise<LeaderboardEntry[]> {
 }
 
 /**
+ * Generate HMAC-SHA256 signature for score submission
+ */
+async function generateHmacSignature(
+  payload: string,
+  secret: string
+): Promise<string> {
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(secret);
+  const messageData = encoder.encode(payload);
+
+  // Import the secret key
+  const key = await crypto.subtle.importKey(
+    "raw",
+    keyData,
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+
+  // Sign the payload
+  const signatureBuffer = await crypto.subtle.sign("HMAC", key, messageData);
+
+  // Convert to hex string
+  const signatureArray = Array.from(new Uint8Array(signatureBuffer));
+  const signature = signatureArray
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+
+  return signature;
+}
+
+/**
  * Submit a score to the leaderboard via Edge Function (server-side validation)
  * This prevents cheating by validating the score on the server
  */
@@ -52,27 +84,54 @@ export async function submitScore(
   }
 
   try {
-    console.log("Submitting score:", {
-      playerName,
+    // Get the signing secret from environment variable
+    const signingSecret = import.meta.env.VITE_SCORE_SIGNING_SECRET;
+    if (!signingSecret) {
+      console.error("VITE_SCORE_SIGNING_SECRET not configured");
+      return { success: false, message: "Client configuration error" };
+    }
+
+    // Add timestamp for replay attack prevention
+    const timestamp = Date.now();
+
+    // Create the payload
+    const payload = {
+      player_name: playerName,
       score,
-      roundsSurvived,
-      sessionId,
-    });
+      rounds_survived: roundsSurvived,
+      session_id: sessionId,
+      timestamp,
+    };
 
-    const { data, error } = await supabase.functions.invoke("submit-score", {
-      body: {
-        player_name: playerName,
-        score,
-        rounds_survived: roundsSurvived,
-        session_id: sessionId,
-      },
-    });
+    const bodyText = JSON.stringify(payload);
 
-    if (error) {
-      console.error("Error submitting score:", error);
-      // Try to get more details from the error
-      const errorMessage = error.message || "Failed to submit score";
-      return { success: false, message: errorMessage };
+    // Generate HMAC signature
+    const signature = await generateHmacSignature(bodyText, signingSecret);
+
+    console.log("Submitting score:", payload);
+
+    // Call the Edge Function with signature
+    const response = await fetch(
+      `${supabase.supabaseUrl}/functions/v1/submit-score`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${supabase.supabaseKey}`,
+          "X-Score-Signature": signature,
+        },
+        body: bodyText,
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error("Error submitting score:", data);
+      return {
+        success: false,
+        message: data.message || "Failed to submit score",
+      };
     }
 
     console.log("Submit response:", data);

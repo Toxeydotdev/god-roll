@@ -10,7 +10,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-score-signature",
 };
 
 interface ScoreSubmission {
@@ -18,6 +18,97 @@ interface ScoreSubmission {
   score: number;
   rounds_survived: number;
   session_id: string;
+  timestamp: number;
+}
+
+// ========================================
+// RATE LIMITING
+// ========================================
+
+interface RateLimitEntry {
+  count: number;
+  resetTime: number;
+}
+
+// In-memory rate limit storage (per IP)
+const rateLimitMap = new Map<string, RateLimitEntry>();
+
+// Rate limit: 5 requests per minute per IP
+const RATE_LIMIT_REQUESTS = 5;
+const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
+
+function checkRateLimit(ip: string): { allowed: boolean; retryAfter?: number } {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+
+  if (!entry || now > entry.resetTime) {
+    // First request or window expired - create new entry
+    rateLimitMap.set(ip, {
+      count: 1,
+      resetTime: now + RATE_LIMIT_WINDOW_MS,
+    });
+    return { allowed: true };
+  }
+
+  if (entry.count >= RATE_LIMIT_REQUESTS) {
+    // Rate limit exceeded
+    const retryAfter = Math.ceil((entry.resetTime - now) / 1000);
+    return { allowed: false, retryAfter };
+  }
+
+  // Increment count
+  entry.count++;
+  return { allowed: true };
+}
+
+// Cleanup old entries periodically to prevent memory leaks
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, entry] of rateLimitMap.entries()) {
+    if (now > entry.resetTime) {
+      rateLimitMap.delete(ip);
+    }
+  }
+}, RATE_LIMIT_WINDOW_MS);
+
+// ========================================
+// HMAC SIGNATURE VERIFICATION
+// ========================================
+
+async function verifyHmacSignature(
+  payload: string,
+  signature: string,
+  secret: string
+): Promise<boolean> {
+  try {
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(secret);
+    const messageData = encoder.encode(payload);
+
+    // Import the secret key
+    const key = await crypto.subtle.importKey(
+      "raw",
+      keyData,
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+
+    // Sign the payload
+    const signatureBuffer = await crypto.subtle.sign("HMAC", key, messageData);
+
+    // Convert to hex string
+    const signatureArray = Array.from(new Uint8Array(signatureBuffer));
+    const computedSignature = signatureArray
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    // Constant-time comparison to prevent timing attacks
+    return computedSignature === signature.toLowerCase();
+  } catch (error) {
+    console.error("HMAC verification error:", error);
+    return false;
+  }
 }
 
 Deno.serve(async (req) => {
@@ -27,13 +118,139 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // ========================================
+    // RATE LIMITING
+    // ========================================
+
+    const clientIp =
+      req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+      req.headers.get("x-real-ip") ||
+      "unknown";
+
+    const rateLimitResult = checkRateLimit(clientIp);
+    if (!rateLimitResult.allowed) {
+      console.warn(
+        `Rate limit exceeded for IP: ${clientIp}, retry after ${rateLimitResult.retryAfter}s`
+      );
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: `Too many requests. Please try again in ${rateLimitResult.retryAfter} seconds.`,
+        }),
+        {
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+            "Retry-After": String(rateLimitResult.retryAfter),
+          },
+          status: 429,
+        }
+      );
+    }
+
+    // ========================================
+    // HMAC SIGNATURE VERIFICATION
+    // ========================================
+
+    const scoringSecret = Deno.env.get("SCORE_SIGNING_SECRET");
+    if (!scoringSecret) {
+      console.error("SCORE_SIGNING_SECRET environment variable not set");
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: "Server configuration error",
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 500,
+        }
+      );
+    }
+
+    const signature = req.headers.get("x-score-signature");
+    if (!signature) {
+      console.warn(`Missing signature from IP: ${clientIp}`);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: "Missing signature - request rejected",
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 401,
+        }
+      );
+    }
+
+    const bodyText = await req.text();
+    const body = JSON.parse(bodyText) as ScoreSubmission;
+
+    // Verify signature
+    const isValidSignature = await verifyHmacSignature(
+      bodyText,
+      signature,
+      scoringSecret
+    );
+
+    if (!isValidSignature) {
+      console.warn(`Invalid signature from IP: ${clientIp}`);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: "Invalid signature - request rejected",
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 401,
+        }
+      );
+    }
+
+    // ========================================
+    // TIMESTAMP VALIDATION (Replay Attack Prevention)
+    // ========================================
+
+    const { timestamp } = body;
+    if (!timestamp || typeof timestamp !== "number") {
+      console.warn(`Missing or invalid timestamp from IP: ${clientIp}`);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: "Missing or invalid timestamp",
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        }
+      );
+    }
+
+    const now = Date.now();
+    const timeDiff = Math.abs(now - timestamp);
+    const MAX_TIME_DIFF = 5 * 60 * 1000; // 5 minutes
+
+    if (timeDiff > MAX_TIME_DIFF) {
+      console.warn(
+        `Timestamp too old from IP: ${clientIp}, diff: ${timeDiff}ms`
+      );
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: "Request timestamp expired - please try again",
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        }
+      );
+    }
+
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const { player_name, score, rounds_survived, session_id }: ScoreSubmission =
-      await req.json();
+    const { player_name, score, rounds_survived, session_id } = body;
 
     // ========================================
     // VALIDATION RULES (Anti-cheat)
