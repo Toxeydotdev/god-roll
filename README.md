@@ -21,6 +21,7 @@ A 3D dice rolling game built with Three.js and React. Roll dice with realistic p
 - **Cryptographic Randomness** - Uses Web Crypto API for truly unpredictable rolls
 - **Progressive Difficulty** - More dice each round = higher risk
 - **Clean UI** - Minimalist green theme
+- **Secure Leaderboard** - HMAC signature verification and rate limiting prevent cheating
 
 ## 🛠️ Tech Stack
 
@@ -42,6 +43,23 @@ A 3D dice rolling game built with Three.js and React. Roll dice with realistic p
 ```bash
 npm install
 ```
+
+### Environment Setup
+
+For online leaderboard features, copy the example environment file and configure:
+
+```bash
+cd apps/web
+cp .env.example .env
+# Edit .env with your Supabase credentials
+```
+
+Required environment variables:
+- `VITE_SUPABASE_URL` - Your Supabase project URL
+- `VITE_SUPABASE_ANON_KEY` - Your Supabase anonymous key
+- `VITE_SCORE_SIGNING_SECRET` - Secret key for HMAC signature (generate with `openssl rand -hex 32`)
+
+**Note**: The `SCORE_SIGNING_SECRET` must also be set in your Supabase Edge Function environment.
 
 ### Development
 
@@ -75,8 +93,23 @@ god-roll/
 │   ├── web-e2e/          # Playwright E2E tests
 │   └── api/              # Express backend (optional)
 ├── packages/             # Shared libraries
+├── supabase/             # Supabase Edge Functions
+│   └── functions/
+│       └── submit-score/ # Secure score submission endpoint
 └── netlify.toml          # Netlify deployment config
 ```
+
+## 🔒 Security Features
+
+The leaderboard system includes multiple security measures to prevent cheating:
+
+1. **HMAC Signature Verification** - All score submissions must include a valid HMAC-SHA256 signature
+2. **Rate Limiting** - IP-based rate limiting (5 requests per minute)
+3. **Timestamp Validation** - Prevents replay attacks (5-minute window)
+4. **Server-side Validation** - Score sanity checks, duplicate session detection
+5. **Session Tracking** - Prevents multiple submissions from the same game session
+
+See [TESTING_SECURITY.md](TESTING_SECURITY.md) for detailed testing guide.
 
 ## 🎯 Game Rules
 
