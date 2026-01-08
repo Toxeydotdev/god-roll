@@ -24,13 +24,12 @@ export default defineConfig({
   timeout: process.env.CI ? 60000 : 30000,
   ...nxE2EPreset(__filename, { testDir: "./src" }),
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
+  expect: { timeout: 7000 },
   use: {
     baseURL,
     // Be conservative but not extreme to keep feedback fast
     actionTimeout: process.env.CI ? 15000 : 7000,
     navigationTimeout: process.env.CI ? 30000 : 15000,
-    // Make expectations a bit more generous in CI
-    expect: { timeout: 7000 },
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",
   },

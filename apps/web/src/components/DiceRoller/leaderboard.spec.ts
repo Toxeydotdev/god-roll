@@ -87,12 +87,12 @@ describe("leaderboard - User Interactions", () => {
   });
 
   describe("when leaderboard reaches max capacity", () => {
-    it("should keep only top 10 scores", () => {
+    it("should keep only top 5 scores", () => {
       // SETUP: User is a dedicated player with many games
       const games: LeaderboardEntry[] = [];
-      for (let i = 1; i <= 15; i++) {
+      for (let i = 1; i <= 10; i++) {
         games.push({
-          score: i * 10, // Scores: 10, 20, 30, ... 150
+          score: i * 10, // Scores: 10, 20, 30, ... 100
           rounds: i,
           date: new Date().toISOString(),
         });
@@ -106,15 +106,15 @@ describe("leaderboard - User Interactions", () => {
       // FIND: Check leaderboard
       const leaderboard = getLeaderboard();
 
-      // EXPECT: Only top 10 scores kept
-      expect(leaderboard).toHaveLength(10);
-      expect(leaderboard[0].score).toBe(150); // Highest
-      expect(leaderboard[9].score).toBe(60); // 10th highest
+      // EXPECT: Only top 5 scores kept
+      expect(leaderboard).toHaveLength(5);
+      expect(leaderboard[0].score).toBe(100); // Highest
+      expect(leaderboard[4].score).toBe(60); // 5th highest
     });
 
     it("should drop lowest score when new high score added", () => {
-      // SETUP: Fill leaderboard with 10 entries
-      for (let i = 1; i <= 10; i++) {
+      // SETUP: Fill leaderboard with 5 entries
+      for (let i = 1; i <= 5; i++) {
         addLeaderboardEntry({
           score: i * 10,
           rounds: i,
@@ -133,7 +133,7 @@ describe("leaderboard - User Interactions", () => {
       const leaderboard = getLeaderboard();
 
       // EXPECT: New high score at top, lowest score dropped
-      expect(leaderboard).toHaveLength(10);
+      expect(leaderboard).toHaveLength(5);
       expect(leaderboard[0].score).toBe(500);
       expect(leaderboard.find((e) => e.score === 10)).toBeUndefined(); // Lowest dropped
     });

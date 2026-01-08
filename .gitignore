@@ -41,7 +41,18 @@ Thumbs.db
 .nx/cache
 .nx/workspace-data
 
+# Supabase
+supabase/.temp
+supabase/.branches
+
+# Environment files
+.env
+.env.*
+!.env.example
+*.local
+
 vite.config.*.timestamp*
 vitest.config.*.timestamp*
 test-output
 tsconfig.tsbuildinfo
+apps/web/.env.local

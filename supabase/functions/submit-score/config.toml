@@ -1,0 +1,2 @@
+# Allow anonymous access (no JWT required)
+verify_jwt = false

@@ -1,6 +1,6 @@
 import { useTheme } from "@/components/DiceRoller/context";
 import React from "react";
-import { DiceFaceNumber } from "../types";
+import { DiceFaceNumber } from "../../types";
 
 interface RollButtonProps {
   results: DiceFaceNumber[];
