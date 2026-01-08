@@ -9,10 +9,19 @@ This Supabase Edge Function handles secure score submissions for the God Roll le
 - The signature is sent in the `X-Score-Signature` header
 - Prevents unauthorized score submissions from outside the game client
 
+**⚠️ Security Note**: The current implementation requires the signing secret to be included in the client-side environment variables (VITE_SCORE_SIGNING_SECRET), which means it's visible in the client bundle. This provides a moderate level of protection against casual cheating but can be bypassed by determined attackers who inspect the client code.
+
+**Recommended Production Approach**: For higher security, consider:
+- Server-side session tokens generated on game start
+- Challenge-response authentication
+- Server-side game state validation
+- WebAssembly obfuscation of the signing logic
+
 ### 2. Rate Limiting
 - Limits score submissions to 5 requests per minute per IP address
 - Returns HTTP 429 (Too Many Requests) when limit is exceeded
 - Uses in-memory storage for rate limit tracking
+- **Note**: Rate limits reset on Edge Function cold starts
 
 ### 3. Timestamp Validation
 - All submissions must include a timestamp in the payload

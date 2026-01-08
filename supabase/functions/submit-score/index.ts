@@ -41,9 +41,14 @@ function checkRateLimit(ip: string): { allowed: boolean; retryAfter?: number } {
   const now = Date.now();
   
   // Cleanup old entries on-demand to prevent memory leaks
+  // Limit cleanup to max 10 entries per check for performance
+  let cleanedCount = 0;
+  const maxCleanupPerCheck = 10;
   for (const [key, entry] of rateLimitMap.entries()) {
+    if (cleanedCount >= maxCleanupPerCheck) break;
     if (now > entry.resetTime) {
       rateLimitMap.delete(key);
+      cleanedCount++;
     }
   }
   
@@ -136,10 +141,27 @@ Deno.serve(async (req) => {
     // RATE LIMITING
     // ========================================
 
-    const clientIp =
-      req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
-      req.headers.get("x-real-ip") ||
-      "unknown";
+    // Extract client IP with validation
+    const forwardedFor = req.headers.get("x-forwarded-for");
+    const realIp = req.headers.get("x-real-ip");
+    
+    let clientIp = "unknown";
+    if (forwardedFor) {
+      // Take first IP from x-forwarded-for (most trusted)
+      const ips = forwardedFor.split(",");
+      clientIp = ips[0].trim();
+    } else if (realIp) {
+      clientIp = realIp.trim();
+    }
+    
+    // Basic IP format validation (IPv4 or IPv6)
+    const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
+    const ipv6Regex = /^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$/;
+    
+    if (clientIp !== "unknown" && !ipv4Regex.test(clientIp) && !ipv6Regex.test(clientIp)) {
+      console.warn(`Invalid IP format from headers: ${clientIp}`);
+      clientIp = "unknown";
+    }
 
     const rateLimitResult = checkRateLimit(clientIp);
     if (!rateLimitResult.allowed) {
@@ -240,17 +262,18 @@ Deno.serve(async (req) => {
     }
 
     const now = Date.now();
-    const timeDiff = Math.abs(now - timestamp);
+    const timeDiff = now - timestamp;
     const MAX_TIME_DIFF = 5 * 60 * 1000; // 5 minutes
 
-    if (timeDiff > MAX_TIME_DIFF) {
+    // Reject if timestamp is too old or in the future
+    if (timeDiff < 0 || timeDiff > MAX_TIME_DIFF) {
       console.warn(
-        `Timestamp too old from IP: ${clientIp}, diff: ${timeDiff}ms`
+        `Invalid timestamp from IP: ${clientIp}, diff: ${timeDiff}ms`
       );
       return new Response(
         JSON.stringify({
           success: false,
-          message: "Request timestamp expired - please try again",
+          message: "Request timestamp expired or invalid - please try again",
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
