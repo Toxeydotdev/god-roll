@@ -99,6 +99,7 @@ export function GameOverScreen({
     return date.toLocaleDateString(undefined, {
       month: "short",
       day: "numeric",
+      year: "numeric",
     });
   };
 
@@ -357,6 +358,7 @@ export function GameOverScreen({
                           <th className="pb-1 text-left">Player</th>
                           <th className="pb-1 text-right">Score</th>
                           <th className="pb-1 text-right">Rnds</th>
+                          <th className="pb-1 text-right">Date</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -376,6 +378,12 @@ export function GameOverScreen({
                             </td>
                             <td className="py-0.5 text-right">
                               {entry.rounds_survived}
+                            </td>
+                            <td
+                              className="py-0.5 text-right text-xs"
+                              style={{ color: theme.textTertiary }}
+                            >
+                              {formatDate(entry.created_at)}
                             </td>
                           </tr>
                         ))}
