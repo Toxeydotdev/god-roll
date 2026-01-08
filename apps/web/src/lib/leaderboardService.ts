@@ -90,6 +90,15 @@ export async function submitScore(
       console.error("VITE_SCORE_SIGNING_SECRET not configured");
       return { success: false, message: "Client configuration error" };
     }
+    
+    // Get Supabase URL from environment
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseKey) {
+      console.error("Supabase configuration missing");
+      return { success: false, message: "Client configuration error" };
+    }
 
     // Add timestamp for replay attack prevention
     const timestamp = Date.now();
@@ -112,12 +121,12 @@ export async function submitScore(
 
     // Call the Edge Function with signature
     const response = await fetch(
-      `${supabase.supabaseUrl}/functions/v1/submit-score`,
+      `${supabaseUrl}/functions/v1/submit-score`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${supabase.supabaseKey}`,
+          "Authorization": `Bearer ${supabaseKey}`,
           "X-Score-Signature": signature,
         },
         body: bodyText,

@@ -39,6 +39,14 @@ const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
 
 function checkRateLimit(ip: string): { allowed: boolean; retryAfter?: number } {
   const now = Date.now();
+  
+  // Cleanup old entries on-demand to prevent memory leaks
+  for (const [key, entry] of rateLimitMap.entries()) {
+    if (now > entry.resetTime) {
+      rateLimitMap.delete(key);
+    }
+  }
+  
   const entry = rateLimitMap.get(ip);
 
   if (!entry || now > entry.resetTime) {
@@ -61,19 +69,25 @@ function checkRateLimit(ip: string): { allowed: boolean; retryAfter?: number } {
   return { allowed: true };
 }
 
-// Cleanup old entries periodically to prevent memory leaks
-setInterval(() => {
-  const now = Date.now();
-  for (const [ip, entry] of rateLimitMap.entries()) {
-    if (now > entry.resetTime) {
-      rateLimitMap.delete(ip);
-    }
-  }
-}, RATE_LIMIT_WINDOW_MS);
-
 // ========================================
 // HMAC SIGNATURE VERIFICATION
 // ========================================
+
+/**
+ * Constant-time string comparison to prevent timing attacks
+ */
+function constantTimeCompare(a: string, b: string): boolean {
+  if (a.length !== b.length) {
+    return false;
+  }
+  
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  
+  return result === 0;
+}
 
 async function verifyHmacSignature(
   payload: string,
@@ -104,7 +118,7 @@ async function verifyHmacSignature(
       .join("");
 
     // Constant-time comparison to prevent timing attacks
-    return computedSignature === signature.toLowerCase();
+    return constantTimeCompare(computedSignature, signature.toLowerCase());
   } catch (error) {
     console.error("HMAC verification error:", error);
     return false;
