@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import { DICE_SIZE } from "../constants";
-import { DiceSkin, getDiceSkin } from "../diceSkins";
+import { DiceSkin, DotStyle, getDiceSkin } from "../diceSkins";
 import { DiceFaceNumber } from "../types";
 
 // Helper function to darken/lighten colors (positive percent lightens, negative darkens)
@@ -94,6 +94,256 @@ function drawFlower(
   ctx.fill();
 }
 
+// Helper function to draw a fireball (flames licking upward)
+function drawFireball(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  flameColor: string,
+  coreColor: string,
+  size: number = 1
+): void {
+  const baseSize = 14 * size;
+
+  // Draw outer glow first
+  const glowGradient = ctx.createRadialGradient(
+    x,
+    y + 2 * size,
+    0,
+    x,
+    y,
+    baseSize * 1.8
+  );
+  glowGradient.addColorStop(0, "rgba(255, 100, 0, 0.6)");
+  glowGradient.addColorStop(0.5, "rgba(255, 50, 0, 0.3)");
+  glowGradient.addColorStop(1, "rgba(255, 0, 0, 0)");
+  ctx.fillStyle = glowGradient;
+  ctx.beginPath();
+  ctx.arc(x, y, baseSize * 1.8, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Draw multiple flame tongues rising upward
+  const flames = [
+    { offsetX: 0, height: 1.8, width: 0.7 }, // Center tall flame
+    { offsetX: -0.5, height: 1.3, width: 0.5 }, // Left flame
+    { offsetX: 0.5, height: 1.4, width: 0.5 }, // Right flame
+    { offsetX: -0.25, height: 1.5, width: 0.4 }, // Inner left
+    { offsetX: 0.3, height: 1.2, width: 0.4 }, // Inner right
+  ];
+
+  flames.forEach((flame) => {
+    const flameX = x + flame.offsetX * baseSize;
+    const flameHeight = baseSize * flame.height;
+    const flameWidth = baseSize * flame.width;
+
+    // Flame gradient (yellow core to orange to red tip)
+    const flameGradient = ctx.createLinearGradient(
+      flameX,
+      y + baseSize * 0.3,
+      flameX,
+      y - flameHeight
+    );
+    flameGradient.addColorStop(0, coreColor);
+    flameGradient.addColorStop(0.3, flameColor);
+    flameGradient.addColorStop(0.7, "#ff4500");
+    flameGradient.addColorStop(1, "rgba(255, 69, 0, 0.3)");
+
+    ctx.fillStyle = flameGradient;
+    ctx.beginPath();
+    // Start at bottom center of this flame
+    ctx.moveTo(flameX, y + baseSize * 0.4);
+    // Curve up left side
+    ctx.bezierCurveTo(
+      flameX - flameWidth,
+      y,
+      flameX - flameWidth * 0.6,
+      y - flameHeight * 0.6,
+      flameX,
+      y - flameHeight
+    );
+    // Curve down right side
+    ctx.bezierCurveTo(
+      flameX + flameWidth * 0.6,
+      y - flameHeight * 0.6,
+      flameX + flameWidth,
+      y,
+      flameX,
+      y + baseSize * 0.4
+    );
+    ctx.fill();
+  });
+
+  // Draw bright core at base
+  const coreGradient = ctx.createRadialGradient(
+    x,
+    y + baseSize * 0.2,
+    0,
+    x,
+    y + baseSize * 0.1,
+    baseSize * 0.7
+  );
+  coreGradient.addColorStop(0, "#ffffff");
+  coreGradient.addColorStop(0.4, coreColor);
+  coreGradient.addColorStop(1, "rgba(255, 200, 0, 0)");
+  ctx.fillStyle = coreGradient;
+  ctx.beginPath();
+  ctx.ellipse(
+    x,
+    y + baseSize * 0.2,
+    baseSize * 0.6,
+    baseSize * 0.4,
+    0,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+}
+
+// Helper function to draw a star
+function drawStar(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  starColor: string,
+  centerColor: string,
+  size: number = 1
+): void {
+  const outerRadius = 18 * size;
+  const innerRadius = 8 * size;
+  const numPoints = 5;
+
+  // Draw shadow
+  ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+  ctx.beginPath();
+  for (let i = 0; i < numPoints * 2; i++) {
+    const radius = i % 2 === 0 ? outerRadius : innerRadius;
+    const angle = (i / (numPoints * 2)) * Math.PI * 2 - Math.PI / 2;
+    const px = x + 2 + Math.cos(angle) * radius;
+    const py = y + 2 + Math.sin(angle) * radius;
+    if (i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+  ctx.fill();
+
+  // Draw star with gradient
+  const starGradient = ctx.createRadialGradient(
+    x - outerRadius * 0.2,
+    y - outerRadius * 0.2,
+    0,
+    x,
+    y,
+    outerRadius
+  );
+  starGradient.addColorStop(0, shadeColor(starColor, 30));
+  starGradient.addColorStop(1, starColor);
+  ctx.fillStyle = starGradient;
+  ctx.beginPath();
+  for (let i = 0; i < numPoints * 2; i++) {
+    const radius = i % 2 === 0 ? outerRadius : innerRadius;
+    const angle = (i / (numPoints * 2)) * Math.PI * 2 - Math.PI / 2;
+    const px = x + Math.cos(angle) * radius;
+    const py = y + Math.sin(angle) * radius;
+    if (i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+  ctx.fill();
+
+  // Draw center
+  const centerGradient = ctx.createRadialGradient(
+    x,
+    y,
+    0,
+    x,
+    y,
+    innerRadius * 0.8
+  );
+  centerGradient.addColorStop(0, shadeColor(centerColor, 20));
+  centerGradient.addColorStop(1, centerColor);
+  ctx.fillStyle = centerGradient;
+  ctx.beginPath();
+  ctx.arc(x, y, innerRadius * 0.6, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+// Helper function to draw a heart
+function drawHeart(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  heartColor: string,
+  highlightColor: string,
+  size: number = 1
+): void {
+  const scale = 1.2 * size;
+
+  // Draw shadow
+  ctx.save();
+  ctx.translate(x + 2, y + 2);
+  ctx.scale(scale, scale);
+  ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+  ctx.beginPath();
+  ctx.moveTo(0, -8);
+  ctx.bezierCurveTo(-12, -20, -24, -5, 0, 15);
+  ctx.bezierCurveTo(24, -5, 12, -20, 0, -8);
+  ctx.fill();
+  ctx.restore();
+
+  // Draw heart with gradient
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(scale, scale);
+
+  const heartGradient = ctx.createRadialGradient(-5, -5, 0, 0, 0, 25);
+  heartGradient.addColorStop(0, shadeColor(heartColor, 25));
+  heartGradient.addColorStop(1, heartColor);
+  ctx.fillStyle = heartGradient;
+  ctx.beginPath();
+  ctx.moveTo(0, -8);
+  ctx.bezierCurveTo(-12, -20, -24, -5, 0, 15);
+  ctx.bezierCurveTo(24, -5, 12, -20, 0, -8);
+  ctx.fill();
+
+  // Highlight
+  ctx.fillStyle = highlightColor;
+  ctx.globalAlpha = 0.4;
+  ctx.beginPath();
+  ctx.ellipse(-8, -10, 4, 3, -0.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+// Generic shape drawing function
+function drawShape(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  style: DotStyle,
+  primaryColor: string,
+  secondaryColor: string,
+  size: number = 1
+): void {
+  switch (style) {
+    case "flower":
+      drawFlower(ctx, x, y, primaryColor, secondaryColor, size);
+      break;
+    case "fireball":
+      drawFireball(ctx, x, y, primaryColor, secondaryColor, size);
+      break;
+    case "star":
+      drawStar(ctx, x, y, primaryColor, secondaryColor, size);
+      break;
+    case "heart":
+      drawHeart(ctx, x, y, primaryColor, secondaryColor, size);
+      break;
+    default:
+      // Default circle handled in main drawing code
+      break;
+  }
+}
+
 // Dot positions for each number (scaled for 256px canvas)
 const DOT_POSITIONS: Record<DiceFaceNumber, Array<[number, number]>> = {
   1: [[128, 128]],
@@ -157,18 +407,18 @@ export function createFaceTexture(
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, size, size);
 
-  // Draw dots with cartoonish style or flowers if specified
+  // Draw dots with cartoonish style or custom shapes if specified
   const dots = DOT_POSITIONS[faceNumber];
   const dotRadius = 24;
-  const useFlowers = (skin as any).useFlowers || false;
-  const petalColor = (skin as any).petalColor || skin.dotColor;
-  const flowerCenterColor =
-    (skin as any).flowerCenterColor || skin.dotOneColor || skin.dotColor;
+  const dotStyle = skin.dotStyle || "circle";
+  const shapeAccentColor = skin.shapeAccentColor || skin.dotColor;
+  const shapeCenterColor =
+    skin.shapeCenterColor || skin.dotOneColor || skin.dotColor;
 
   dots.forEach(([x, y], index) => {
-    if (useFlowers) {
-      // Draw flowers instead of dots
-      drawFlower(ctx, x, y, petalColor, flowerCenterColor, 1.2);
+    if (dotStyle !== "circle") {
+      // Draw custom shape
+      drawShape(ctx, x, y, dotStyle, shapeAccentColor, shapeCenterColor, 1.2);
     } else {
       // Use special color for center dot on face 1 if defined
       const isCenter = faceNumber === 1 && index === 0;

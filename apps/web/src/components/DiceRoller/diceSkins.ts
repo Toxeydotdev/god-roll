@@ -5,6 +5,8 @@
  * materials, and special effects.
  */
 
+export type DotStyle = "circle" | "flower" | "fireball" | "star" | "heart";
+
 export interface DiceSkin {
   id: string;
   name: string;
@@ -17,9 +19,9 @@ export interface DiceSkin {
   metalness?: number; // Material metalness (0-1)
   emissive?: string; // Emissive color for glowing effects
   emissiveIntensity?: number; // Glow intensity (0-1)
-  useFlowers?: boolean; // Whether to draw flowers instead of dots
-  petalColor?: string; // Color for flower petals
-  flowerCenterColor?: string; // Color for flower centers
+  dotStyle?: DotStyle; // Shape style for dots (default: 'circle')
+  shapeAccentColor?: string; // Secondary color for shapes (e.g., petal tips, flame core)
+  shapeCenterColor?: string; // Center color for shapes (e.g., flower center, fireball core)
 }
 
 export const DICE_SKINS: Record<string, DiceSkin> = {
@@ -110,11 +112,25 @@ export const DICE_SKINS: Record<string, DiceSkin> = {
     diceColor: "#ff91a4",
     dotColor: "#ffffff",
     dotOneColor: "#ffd700",
-    useFlowers: true,
-    petalColor: "#ffffff",
-    flowerCenterColor: "#ffd700",
+    dotStyle: "flower",
+    shapeAccentColor: "#ffffff",
+    shapeCenterColor: "#ffd700",
     roughness: 0.15,
     metalness: 0,
+  },
+  inferno: {
+    id: "inferno",
+    name: "Inferno",
+    description: "Blazing dice with fireball dots",
+    diceColor: "#1a0a00",
+    dotColor: "#ff4500",
+    dotOneColor: "#ffff00",
+    dotStyle: "fireball",
+    shapeAccentColor: "#ff6600",
+    shapeCenterColor: "#ffff00",
+    emissive: "#ff2200",
+    emissiveIntensity: 0.3,
+    roughness: 0.2,
   },
 };
 
