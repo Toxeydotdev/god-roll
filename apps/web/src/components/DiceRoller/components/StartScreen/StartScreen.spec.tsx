@@ -15,6 +15,12 @@ import {
 import { afterEach, describe, expect, it, Mock, vi } from "vitest";
 import { StartScreen } from "./StartScreen";
 
+// Mock supabase to prevent initialization errors in tests
+vi.mock("@/lib/supabase", () => ({
+  supabase: null,
+  isSupabaseConfigured: false,
+}));
+
 // ============================================================================
 // SETUP FUNCTION
 // ============================================================================
@@ -161,8 +167,8 @@ describe("StartScreen - User Interactions", () => {
   // Theme Styling
   // --------------------------------------------------------------------------
   describe("theme styling", () => {
-    it("should apply Forest theme colors to title", () => {
-      setup({ theme: mockTheme });
+    it("should apply theme colors to title", () => {
+      setup();
 
       const title = screen.getByText("GOD ROLL");
       expect(title.style.color).toBe(hexToRgb(mockTheme.textPrimary));
@@ -180,7 +186,7 @@ describe("StartScreen - User Interactions", () => {
     });
 
     it("should style instructions with secondary theme colors", () => {
-      setup({ theme: mockTheme });
+      setup();
 
       const instruction = screen.getByText("Roll dice to score points");
       expect(instruction.style.color).toBe(hexToRgb(mockTheme.textSecondary));

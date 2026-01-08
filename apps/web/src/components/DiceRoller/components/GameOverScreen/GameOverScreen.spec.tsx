@@ -3,7 +3,10 @@
  *
  * GameOverScreen User Interaction Tests following SIFERS methodology
  */
-import { ThemeProvider } from "@/components/DiceRoller/context";
+import {
+  OnlineModeProvider,
+  ThemeProvider,
+} from "@/components/DiceRoller/context";
 import { LeaderboardEntry } from "@/components/DiceRoller/leaderboard";
 import { hexToRgb, mockTheme } from "@/test-utils";
 import {
@@ -15,6 +18,21 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, Mock, vi } from "vitest";
 import { GameOverScreen } from "./GameOverScreen";
+
+// Mock the supabase module first to prevent initialization errors
+vi.mock("@/lib/supabase", () => ({
+  supabase: null,
+  isSupabaseConfigured: false,
+}));
+
+// Mock the leaderboard service to prevent actual API calls
+vi.mock("@/lib/leaderboardService", () => ({
+  getLeaderboard: vi.fn().mockResolvedValue([]),
+  submitScore: vi
+    .fn()
+    .mockResolvedValue({ success: true, rank: 1, message: "Score submitted!" }),
+  isOnlineAvailable: vi.fn().mockReturnValue(false),
+}));
 
 // ============================================================================
 // SETUP FUNCTION
@@ -28,6 +46,7 @@ interface SetupOptions {
   highlightIndex?: number;
   leaderboardEntries?: LeaderboardEntry[];
   onLeaderboardChange?: Mock;
+  sessionId?: string;
 }
 
 interface SetupResult {
@@ -47,19 +66,23 @@ function setup(options: SetupOptions = {}): SetupResult {
     highlightIndex,
     leaderboardEntries = [],
     onLeaderboardChange = vi.fn(),
+    sessionId = "test-session-id",
   } = options;
 
   const { container } = render(
     <ThemeProvider>
-      <GameOverScreen
-        lastRollTotal={lastRollTotal}
-        totalScore={totalScore}
-        round={round}
-        onPlayAgain={onPlayAgain}
-        highlightIndex={highlightIndex}
-        leaderboardEntries={leaderboardEntries}
-        onLeaderboardChange={onLeaderboardChange}
-      />
+      <OnlineModeProvider>
+        <GameOverScreen
+          lastRollTotal={lastRollTotal}
+          totalScore={totalScore}
+          round={round}
+          onPlayAgain={onPlayAgain}
+          highlightIndex={highlightIndex}
+          leaderboardEntries={leaderboardEntries}
+          onLeaderboardChange={onLeaderboardChange}
+          sessionId={sessionId}
+        />
+      </OnlineModeProvider>
     </ThemeProvider>
   );
 
@@ -182,7 +205,7 @@ describe("GameOverScreen - User Interactions", () => {
     it("should show empty state when no scores exist", () => {
       setup({ leaderboardEntries: [] });
 
-      expect(screen.getByText(/No scores yet!/)).toBeTruthy();
+      expect(screen.getByText(/No local scores yet!/)).toBeTruthy();
     });
 
     it("should show leaderboard title", () => {

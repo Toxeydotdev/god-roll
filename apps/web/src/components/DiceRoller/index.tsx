@@ -8,6 +8,7 @@ import {
 import {
   DiceSkinProvider,
   ModalProvider,
+  OnlineModeProvider,
   SoundProvider,
   ThemeProvider,
   useDiceSkin,
@@ -34,9 +35,11 @@ export function DiceRoller(): React.ReactElement {
     <ThemeProvider>
       <SoundProvider>
         <DiceSkinProvider>
-          <ModalProvider>
-            <DiceRollerContent />
-          </ModalProvider>
+          <OnlineModeProvider>
+            <ModalProvider>
+              <DiceRollerContent />
+            </ModalProvider>
+          </OnlineModeProvider>
         </DiceSkinProvider>
       </SoundProvider>
     </ThemeProvider>
@@ -52,6 +55,8 @@ function DiceRollerContent(): React.ReactElement {
   const [leaderboardEntries, setLeaderboardEntries] = useState<
     { score: number; rounds: number; date: string }[]
   >([]);
+  // Session ID for this game instance (prevents duplicate score submissions)
+  const [sessionId, setSessionId] = useState<string>(() => crypto.randomUUID());
 
   const { theme } = useTheme();
   const { playDiceHit } = useSound();
@@ -122,6 +127,7 @@ function DiceRollerContent(): React.ReactElement {
     resetCamera();
     baseStartNewGame();
     setHighlightIndex(undefined);
+    setSessionId(crypto.randomUUID()); // New session for new game
   }, [clearAllDice, baseStartNewGame, resetCamera]);
 
   // Save score to leaderboard when game ends
@@ -205,19 +211,19 @@ function DiceRollerContent(): React.ReactElement {
           <div
             className="text-2xl"
             data-testid="score-display"
-            style={{ 
+            style={{
               color: theme.textPrimary,
-              fontFamily: 'var(--font-display)',
-              textShadow: '2px 2px 0px rgba(0,0,0,0.15)',
-              letterSpacing: '0.05em',
+              fontFamily: "var(--font-display)",
+              textShadow: "2px 2px 0px rgba(0,0,0,0.15)",
+              letterSpacing: "0.05em",
             }}
           >
             SCORE: {totalScore}
           </div>
-          <div 
+          <div
             className="text-lg"
             data-testid="round-display"
-            style={{ 
+            style={{
               color: theme.textSecondary,
               fontWeight: 600,
             }}
@@ -246,7 +252,7 @@ function DiceRollerContent(): React.ReactElement {
               color: theme.backgroundCss,
               opacity: 0.7 + resetProgress * 0.3,
               fontWeight: 600,
-              boxShadow: '0 2px 0 rgba(0,0,0,0.2)',
+              boxShadow: "0 2px 0 rgba(0,0,0,0.2)",
             }}
             title="Hold to reset game"
           >
@@ -268,6 +274,7 @@ function DiceRollerContent(): React.ReactElement {
           highlightIndex={highlightIndex}
           leaderboardEntries={leaderboardEntries}
           onLeaderboardChange={setLeaderboardEntries}
+          sessionId={sessionId}
         />
       )}
 

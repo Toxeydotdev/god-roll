@@ -8,6 +8,8 @@ export const mockTheme: ColorTheme = {
   textPrimary: "#1a5a1a",
   textSecondary: "#2a7a2a",
   textTertiary: "#4a9a4a",
+  accentColor: "#FFD700",
+  accentHover: "#FFC000",
 };
 
 export const mockOceanTheme: ColorTheme = {
@@ -18,6 +20,8 @@ export const mockOceanTheme: ColorTheme = {
   textPrimary: "#1a4a6a",
   textSecondary: "#2a5a7a",
   textTertiary: "#4a7a9a",
+  accentColor: "#FFD700",
+  accentHover: "#FFC000",
 };
 
 // Helper to convert hex to rgb format for style comparisons
