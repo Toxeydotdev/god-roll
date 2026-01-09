@@ -33,16 +33,16 @@ jobs:
           npx cap sync ios
 
       - name: Select Xcode version
-        run: sudo xcode-select -s /Applications/Xcode_15.4.app
+        run: sudo xcode-select -s /Applications/Xcode_16.1.app
 
       - name: Build iOS (Simulator)
         run: |
           cd apps/web/ios/App
-          xcodebuild -workspace App.xcworkspace \
+          xcodebuild -project App.xcodeproj \
             -scheme App \
             -configuration Debug \
             -sdk iphonesimulator \
-            -destination 'platform=iOS Simulator,name=iPhone 15' \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
             build
 
   # Uncomment and configure for App Store builds
