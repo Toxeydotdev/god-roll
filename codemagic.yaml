@@ -6,7 +6,7 @@ workflows:
 
     # Configure this integration in Codemagic UI: Settings -> Integrations -> App Store Connect
     integrations:
-      app_store_connect: god-roll-app-store
+      app_store_connect: apple
 
     environment:
       ios_signing:
