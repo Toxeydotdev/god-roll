@@ -63,9 +63,42 @@ class SoundManager {
    * Resume audio context if suspended (required after user interaction)
    */
   async resume(): Promise<void> {
-    if (this.audioContext?.state === "suspended") {
-      await this.audioContext.resume();
+    if (!this.audioContext) {
+      console.warn("[SoundManager] Cannot resume: AudioContext not initialized");
+      return;
     }
+
+    const previousState = this.audioContext.state;
+    console.log(
+      `[SoundManager] Resume called - Current state: ${previousState}`
+    );
+
+    if (previousState === "suspended") {
+      try {
+        await this.audioContext.resume();
+        console.log(
+          `[SoundManager] AudioContext resumed successfully - New state: ${this.audioContext.state}`
+        );
+      } catch (error) {
+        console.error("[SoundManager] Failed to resume AudioContext:", error);
+        throw error;
+      }
+    } else {
+      console.log(
+        `[SoundManager] AudioContext already in '${previousState}' state, no resume needed`
+      );
+    }
+  }
+
+  /**
+   * Get the current state of the AudioContext
+   * Returns 'uninitialized' if AudioContext hasn't been created yet
+   */
+  getState(): AudioContextState | "uninitialized" {
+    if (!this.audioContext) {
+      return "uninitialized";
+    }
+    return this.audioContext.state;
   }
 
   /**

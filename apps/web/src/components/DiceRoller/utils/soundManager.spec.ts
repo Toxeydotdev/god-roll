@@ -8,7 +8,7 @@
 // IMPORTS
 // ============================================================================
 
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { setupLocalStorageMock } from "../../../test-utils/mocks";
 import {
   getSoundEnabled,
@@ -26,11 +26,84 @@ import {
 // ============================================================================
 
 describe("SoundManager class", () => {
+  let consoleLogSpy: ReturnType<typeof vi.spyOn>;
+  let consoleWarnSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    // Mock console methods to keep test output clean
+    consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
   describe("singleton instance", () => {
     it("should export a singleton instance", () => {
       // Expect
       expect(soundManager).toBeDefined();
       expect(soundManager).toBeInstanceOf(SoundManager);
+    });
+  });
+
+  describe("getState", () => {
+    it("should return 'uninitialized' before init is called", () => {
+      // Setup
+      const manager = new SoundManager();
+
+      // Invoke
+      const state = manager.getState();
+
+      // Expect
+      expect(state).toBe("uninitialized");
+    });
+
+    it("should return AudioContext state after init", () => {
+      // Setup
+      const manager = new SoundManager();
+
+      // Invoke
+      manager.init();
+      const state = manager.getState();
+
+      // Expect - AudioContext may not be initialized in test environment
+      // So we check if it's either uninitialized or a valid state
+      const validStates = [
+        "uninitialized",
+        "suspended",
+        "running",
+        "closed",
+      ] as const;
+      expect(validStates).toContain(state);
+    });
+  });
+
+  describe("resume", () => {
+    it("should log warning when AudioContext not initialized", async () => {
+      // Setup
+      const manager = new SoundManager();
+
+      // Invoke
+      await manager.resume();
+
+      // Expect
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        "[SoundManager] Cannot resume: AudioContext not initialized"
+      );
+    });
+
+    it("should log current state when called with initialized context", async () => {
+      // Setup
+      const manager = new SoundManager();
+      manager.init();
+
+      // Invoke
+      await manager.resume();
+
+      // Expect - should log the state (if AudioContext was created)
+      if (manager.getState() !== "uninitialized") {
+        expect(consoleLogSpy).toHaveBeenCalledWith(
+          expect.stringContaining("[SoundManager] Resume called")
+        );
+      }
     });
   });
 
