@@ -1,12 +1,12 @@
-import type { CapacitorConfig } from '@capacitor/cli';
+import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: 'com.godroll.app',
-  appName: 'God Roll',
-  webDir: 'dist',
+  appId: "com.godroll.app",
+  appName: "God Roll",
+  webDir: "dist",
   ios: {
-    contentInset: 'automatic',
-    preferredContentMode: 'mobile',
+    contentInset: "automatic",
+    preferredContentMode: "mobile",
     allowsLinkPreview: false,
   },
   server: {

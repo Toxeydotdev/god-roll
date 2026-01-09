@@ -10,31 +10,31 @@ on:
 jobs:
   build-ios:
     runs-on: macos-14
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'npm'
-          
+          node-version: "22"
+          cache: "npm"
+
       - name: Install dependencies
         run: npm ci
-        
+
       - name: Build web app
         run: npm run build:web
-        
+
       - name: Sync Capacitor iOS
         run: |
           cd apps/web
           npx cap sync ios
-          
+
       - name: Select Xcode version
         run: sudo xcode-select -s /Applications/Xcode_15.4.app
-        
+
       - name: Build iOS (Simulator)
         run: |
           cd apps/web/ios/App
@@ -44,44 +44,44 @@ jobs:
             -sdk iphonesimulator \
             -destination 'platform=iOS Simulator,name=iPhone 15' \
             build
-            
+
   # Uncomment and configure for App Store builds
   # build-ios-release:
   #   runs-on: macos-14
   #   if: github.ref == 'refs/heads/main'
-  #   
+  #
   #   steps:
   #     - name: Checkout repository
   #       uses: actions/checkout@v4
-  #       
+  #
   #     - name: Setup Node.js
   #       uses: actions/setup-node@v4
   #       with:
   #         node-version: '20'
   #         cache: 'npm'
-  #         
+  #
   #     - name: Install dependencies
   #       run: npm ci
-  #       
+  #
   #     - name: Build web app
   #       run: npm run build:web
-  #       
+  #
   #     - name: Sync Capacitor iOS
   #       run: |
   #         cd apps/web
   #         npx cap sync ios
-  #         
+  #
   #     - name: Install Apple Certificate
   #       uses: apple-actions/import-codesign-certs@v2
   #       with:
   #         p12-file-base64: ${{ secrets.APPLE_CERTIFICATE_P12 }}
   #         p12-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-  #         
+  #
   #     - name: Install Provisioning Profile
   #       run: |
   #         mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
   #         echo "${{ secrets.PROVISIONING_PROFILE }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
-  #         
+  #
   #     - name: Build and Archive
   #       run: |
   #         cd apps/web/ios/App
@@ -91,7 +91,7 @@ jobs:
   #           -sdk iphoneos \
   #           -archivePath build/App.xcarchive \
   #           archive
-  #           
+  #
   #     - name: Export IPA
   #       run: |
   #         cd apps/web/ios/App
@@ -99,7 +99,7 @@ jobs:
   #           -archivePath build/App.xcarchive \
   #           -exportPath build/output \
   #           -exportOptionsPlist exportOptions.plist
-  #           
+  #
   #     - name: Upload to TestFlight
   #       uses: apple-actions/upload-testflight-build@v1
   #       with:
