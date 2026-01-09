@@ -39,29 +39,28 @@ workflows:
           keychain add-certificates
           xcode-project use-profiles
 
-      - name: Create export options plist
-        script: |
-          rm -f /tmp/exportOptions.plist
-          defaults write /tmp/exportOptions method -string "app-store-connect"
-          defaults write /tmp/exportOptions destination -string "upload"
-          defaults write /tmp/exportOptions signingStyle -string "automatic"
-          defaults write /tmp/exportOptions uploadSymbols -bool true
-          plutil -convert xml1 /tmp/exportOptions.plist
-          cat /tmp/exportOptions.plist
-          plutil -lint /tmp/exportOptions.plist
-
-      - name: Build and Export IPA
+      - name: Build iOS archive
         script: |
           cd apps/web/ios/App
-          xcode-project build-ipa \
-            --project App.xcodeproj \
-            --scheme App \
-            --config Release \
-            --export-options-plist /tmp/exportOptions.plist
+          xcodebuild -project App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            -archivePath $HOME/build/App.xcarchive \
+            archive
+
+      - name: Create export options and export IPA
+        script: |
+          printf '%s\n' '<?xml version="1.0" encoding="UTF-8"?>' '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' '<plist version="1.0">' '<dict>' '<key>method</key>' '<string>app-store-connect</string>' '<key>destination</key>' '<string>upload</string>' '<key>signingStyle</key>' '<string>automatic</string>' '<key>uploadSymbols</key>' '<true/>' '</dict>' '</plist>' > $HOME/exportOptions.plist
+          cat $HOME/exportOptions.plist
+          plutil -lint $HOME/exportOptions.plist
+          xcodebuild -exportArchive \
+            -archivePath $HOME/build/App.xcarchive \
+            -exportPath $HOME/build/output \
+            -exportOptionsPlist $HOME/exportOptions.plist
 
     artifacts:
-      - build/ios/ipa/*.ipa
-      - apps/web/ios/App/build/ios/ipa/*.ipa
+      - $HOME/build/output/*.ipa
 
     publishing:
       app_store_connect:
