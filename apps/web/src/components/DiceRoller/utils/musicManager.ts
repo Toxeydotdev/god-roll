@@ -27,6 +27,7 @@ class MusicManager {
   private _savedEnabledState = false; // Track what was saved in localStorage
   private _isToggling = false; // Prevent rapid toggle issues
   private _pendingStart = false; // Track if we're waiting to start
+  private _savedVolume = 0.15; // Default volume - must be initialized before loadSettings
 
   // Lofi chord progression (I-V-vi-IV in C major) - transposed down one octave
   private chordProgression = [
@@ -40,11 +41,21 @@ class MusicManager {
   private bassNotes = [65.41, 98.0, 110.0, 87.31]; // C, G, A, F (two octaves lower)
 
   constructor() {
-    this.loadSettings();
+    // Defer loadSettings to ensure all properties are initialized
+    // and to handle iOS Capacitor environment properly
+    if (typeof window !== "undefined") {
+      // Use setTimeout to defer localStorage access until after DOM is ready
+      setTimeout(() => this.loadSettings(), 0);
+    }
   }
 
   private loadSettings(): void {
     try {
+      // Extra safety check for iOS/Capacitor
+      if (typeof localStorage === "undefined") {
+        return;
+      }
+
       const enabled = localStorage.getItem(STORAGE_KEY);
       const volume = localStorage.getItem(VOLUME_KEY);
 
@@ -60,11 +71,9 @@ class MusicManager {
         this._savedVolume = parseFloat(volume);
       }
     } catch {
-      // localStorage not available
+      // localStorage not available - silently ignore
     }
   }
-
-  private _savedVolume: number = 0.15;
 
   private saveSettings(): void {
     try {
