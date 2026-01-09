@@ -7,14 +7,14 @@ export function GameTitle(): React.ReactElement {
     <div className="absolute top-4 left-4 z-10">
       <h1
         className="text-3xl tracking-tight"
-        style={{ 
+        style={{
           color: theme.textPrimary,
-          fontFamily: 'var(--font-display)',
-          textShadow: '3px 3px 0px rgba(0,0,0,0.2)',
-          letterSpacing: '0.05em',
+          fontFamily: "var(--font-display)",
+          textShadow: "3px 3px 0px rgba(0,0,0,0.2)",
+          letterSpacing: "0.05em",
         }}
       >
-        GOD ROLL
+        GOD-ROLL
       </h1>
     </div>
   );
