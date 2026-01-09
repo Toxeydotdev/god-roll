@@ -79,7 +79,7 @@ workflows:
 
     environment:
       vars:
-        XCODE_WORKSPACE: "apps/web/ios/App/App.xcworkspace"
+        XCODE_PROJECT: "apps/web/ios/App/App.xcodeproj"
         XCODE_SCHEME: "App"
       node: 22
       xcode: latest
@@ -101,11 +101,11 @@ workflows:
       - name: Build for Simulator
         script: |
           cd apps/web/ios/App
-          xcodebuild -workspace App.xcworkspace \
+          xcodebuild -project App.xcodeproj \
             -scheme App \
             -configuration Debug \
             -sdk iphonesimulator \
-            -destination 'platform=iOS Simulator,name=iPhone 15' \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
             build
 
     artifacts:
