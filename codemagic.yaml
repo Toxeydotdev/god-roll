@@ -51,9 +51,34 @@ workflows:
 
       - name: Create export options and export IPA
         script: |
-          printf '%s\n' '<?xml version="1.0" encoding="UTF-8"?>' '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' '<plist version="1.0">' '<dict>' '<key>method</key>' '<string>app-store-connect</string>' '<key>destination</key>' '<string>upload</string>' '<key>signingStyle</key>' '<string>automatic</string>' '<key>uploadSymbols</key>' '<true/>' '</dict>' '</plist>' > $HOME/exportOptions.plist
+          # Get the provisioning profile UUID
+          PROFILE_UUID=$(ls ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision 2>/dev/null | head -1 | xargs -I {} /usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin < {} 2>/dev/null || echo "")
+          echo "Profile UUID: $PROFILE_UUID"
+          
+          # Create export options plist
+          cat > $HOME/exportOptions.plist << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store-connect</string>
+            <key>destination</key>
+            <string>export</string>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>com.godroll.app</key>
+              <string>$PROFILE_UUID</string>
+            </dict>
+          </dict>
+          </plist>
+          EOF
+          
           cat $HOME/exportOptions.plist
           plutil -lint $HOME/exportOptions.plist
+          
           xcodebuild -exportArchive \
             -archivePath $HOME/build/App.xcarchive \
             -exportPath $HOME/build/output \
