@@ -13,7 +13,7 @@ workflows:
         distribution_type: app_store
         bundle_identifier: com.godroll.app
       vars:
-        XCODE_WORKSPACE: "apps/web/ios/App/App.xcworkspace"
+        XCODE_PROJECT: "apps/web/ios/App/App.xcodeproj"
         XCODE_SCHEME: "App"
       node: 22
       xcode: latest
@@ -42,7 +42,7 @@ workflows:
       - name: Build iOS app
         script: |
           cd apps/web/ios/App
-          xcodebuild -workspace App.xcworkspace \
+          xcodebuild -project App.xcodeproj \
             -scheme App \
             -configuration Release \
             -sdk iphoneos \
