@@ -35,7 +35,7 @@ workflows:
       - name: Set up code signing
         script: |
           keychain initialize
-          app-store-connect fetch-signing-files "$BUNDLE_IDENTIFIER" --type IOS_APP_STORE
+          app-store-connect fetch-signing-files "com.godroll.app" --type IOS_APP_STORE
           keychain add-certificates
           xcode-project use-profiles
 
@@ -46,19 +46,19 @@ workflows:
             -scheme App \
             -configuration Release \
             -sdk iphoneos \
-            -archivePath build/App.xcarchive \
+            -archivePath $CM_BUILD_DIR/build/App.xcarchive \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
             archive
 
       - name: Export IPA
         script: |
-          cd apps/web/ios/App
-          xcodebuild -exportArchive \
-            -archivePath build/App.xcarchive \
-            -exportPath build/output \
-            -exportOptionsPlist exportOptions.plist
+          xcode-project build-ipa \
+            --archive $CM_BUILD_DIR/build/App.xcarchive \
+            --export-options-plist apps/web/ios/App/exportOptions.plist
 
     artifacts:
-      - apps/web/ios/App/build/output/**/*.ipa
+      - build/ios/ipa/*.ipa
+      - $CM_BUILD_DIR/build/*.ipa
 
     publishing:
       app_store_connect:
