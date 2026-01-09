@@ -25,6 +25,12 @@ workflows:
         script: |
           npm ci
 
+      - name: Create environment file
+        script: |
+          echo "VITE_SUPABASE_URL=$VITE_SUPABASE_URL" > apps/web/.env
+          echo "VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY" >> apps/web/.env
+          echo "Created .env file with Supabase credentials"
+
       - name: Build web app
         script: |
           npm run build:web
