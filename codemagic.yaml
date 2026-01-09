@@ -41,11 +41,13 @@ workflows:
 
       - name: Create export options plist
         script: |
-          /usr/libexec/PlistBuddy -c "Clear dict" /tmp/exportOptions.plist 2>/dev/null || true
-          /usr/libexec/PlistBuddy -c "Add :method string app-store-connect" /tmp/exportOptions.plist
-          /usr/libexec/PlistBuddy -c "Add :destination string upload" /tmp/exportOptions.plist
-          /usr/libexec/PlistBuddy -c "Add :signingStyle string automatic" /tmp/exportOptions.plist
-          /usr/libexec/PlistBuddy -c "Add :uploadSymbols bool true" /tmp/exportOptions.plist
+          rm -f /tmp/exportOptions.plist
+          defaults write /tmp/exportOptions method -string "app-store-connect"
+          defaults write /tmp/exportOptions destination -string "upload"
+          defaults write /tmp/exportOptions signingStyle -string "automatic"
+          defaults write /tmp/exportOptions uploadSymbols -bool true
+          plutil -convert xml1 /tmp/exportOptions.plist
+          cat /tmp/exportOptions.plist
           plutil -lint /tmp/exportOptions.plist
 
       - name: Build and Export IPA
