@@ -39,26 +39,18 @@ workflows:
           keychain add-certificates
           xcode-project use-profiles
 
-      - name: Build iOS app
+      - name: Build and Export IPA
         script: |
           cd apps/web/ios/App
-          xcodebuild -project App.xcodeproj \
-            -scheme App \
-            -configuration Release \
-            -sdk iphoneos \
-            -archivePath $CM_BUILD_DIR/build/App.xcarchive \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
-            archive
-
-      - name: Export IPA
-        script: |
           xcode-project build-ipa \
-            --archive $CM_BUILD_DIR/build/App.xcarchive \
-            --export-options-plist apps/web/ios/App/exportOptions.plist
+            --project App.xcodeproj \
+            --scheme App \
+            --config Release \
+            --export-options-plist exportOptions.plist
 
     artifacts:
       - build/ios/ipa/*.ipa
-      - $CM_BUILD_DIR/build/*.ipa
+      - apps/web/ios/App/build/ios/ipa/*.ipa
 
     publishing:
       app_store_connect:
