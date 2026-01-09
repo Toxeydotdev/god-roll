@@ -42,6 +42,7 @@ export function useSound(): UseSoundReturn {
   const [soundEnabled, setSoundEnabledState] = useState(getSoundEnabled);
   const [volume, setVolumeState] = useState(getSoundVolume);
   const initialized = useRef(false);
+  const isToggling = useRef(false);
 
   // Initialize sound manager on mount
   useEffect(() => {
@@ -72,10 +73,22 @@ export function useSound(): UseSoundReturn {
   }, []);
 
   const toggleSound = useCallback(() => {
-    const newValue = !soundEnabled;
-    setSoundEnabledState(newValue);
-    setSoundEnabled(newValue);
-  }, [soundEnabled]);
+    // Prevent rapid toggling
+    if (isToggling.current) return;
+
+    isToggling.current = true;
+
+    setSoundEnabledState((prev) => {
+      const newValue = !prev;
+      setSoundEnabled(newValue);
+      return newValue;
+    });
+
+    // Debounce - prevent another toggle for 100ms
+    setTimeout(() => {
+      isToggling.current = false;
+    }, 100);
+  }, []);
 
   const handleSetSoundEnabled = useCallback((enabled: boolean) => {
     setSoundEnabledState(enabled);

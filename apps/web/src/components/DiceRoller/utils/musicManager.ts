@@ -24,6 +24,9 @@ class MusicManager {
   private noteLength = 0.5;
   private currentChordIndex = 0;
   private animationFrameId: number | null = null;
+  private _savedEnabledState = false; // Track what was saved in localStorage
+  private _isToggling = false; // Prevent rapid toggle issues
+  private _pendingStart = false; // Track if we're waiting to start
 
   // Lofi chord progression (I-V-vi-IV in C major) - transposed down one octave
   private chordProgression = [
@@ -45,18 +48,23 @@ class MusicManager {
       const enabled = localStorage.getItem(STORAGE_KEY);
       const volume = localStorage.getItem(VOLUME_KEY);
 
-      if (enabled === "true") {
-        // Don't auto-start, let user explicitly start
-        setTimeout(() => this.start(), 100);
+      this._savedEnabledState = enabled === "true";
+
+      if (this._savedEnabledState) {
+        // Mark as pending start - will be started on first user interaction
+        this._pendingStart = true;
       }
 
-      if (volume && this.masterGain) {
-        this.masterGain.gain.value = parseFloat(volume);
+      if (volume) {
+        // Store volume for later when masterGain is created
+        this._savedVolume = parseFloat(volume);
       }
     } catch {
       // localStorage not available
     }
   }
+
+  private _savedVolume: number = 0.15;
 
   private saveSettings(): void {
     try {
@@ -74,7 +82,7 @@ class MusicManager {
 
     this.audioContext = new AudioContext();
     this.masterGain = this.audioContext.createGain();
-    this.masterGain.gain.value = 0.15; // Quiet background music
+    this.masterGain.gain.value = this._savedVolume; // Use saved volume
     this.masterGain.connect(this.audioContext.destination);
 
     // Resume context on user interaction (browser autoplay policy)
@@ -164,52 +172,85 @@ class MusicManager {
     }
   }
 
-  start(): void {
-    if (this.isPlaying) return;
-
-    this.initAudioContext();
-
-    if (!this.audioContext) return;
-
-    // Resume context if suspended
-    if (this.audioContext.state === "suspended") {
-      this.audioContext.resume();
+  /**
+   * Try to start music if it was previously enabled (called on user interaction)
+   */
+  tryAutoStart(): void {
+    if (this._pendingStart && !this.isPlaying) {
+      this._pendingStart = false;
+      this.start();
     }
+  }
 
-    this.isPlaying = true;
-    this.nextNoteTime = this.audioContext.currentTime + 0.05;
-    this.scheduler();
-    this.saveSettings();
+  start(): void {
+    if (this.isPlaying || this._isToggling) return;
+
+    this._isToggling = true;
+    this._pendingStart = false;
+
+    try {
+      this.initAudioContext();
+
+      if (!this.audioContext) {
+        this._isToggling = false;
+        return;
+      }
+
+      // Resume context if suspended
+      if (this.audioContext.state === "suspended") {
+        this.audioContext.resume();
+      }
+
+      this.isPlaying = true;
+      this._savedEnabledState = true;
+      this.nextNoteTime = this.audioContext.currentTime + 0.05;
+      this.scheduler();
+      this.saveSettings();
+    } finally {
+      this._isToggling = false;
+    }
   }
 
   stop(): void {
-    if (!this.isPlaying) return;
+    if (!this.isPlaying || this._isToggling) return;
 
-    this.isPlaying = false;
+    this._isToggling = true;
 
-    if (this.animationFrameId !== null) {
-      cancelAnimationFrame(this.animationFrameId);
-      this.animationFrameId = null;
+    try {
+      this.isPlaying = false;
+      this._savedEnabledState = false;
+
+      if (this.animationFrameId !== null) {
+        cancelAnimationFrame(this.animationFrameId);
+        this.animationFrameId = null;
+      }
+
+      // Fade out
+      if (this.masterGain && this.audioContext) {
+        this.masterGain.gain.linearRampToValueAtTime(
+          0,
+          this.audioContext.currentTime + 0.5
+        );
+
+        setTimeout(() => {
+          if (this.masterGain) {
+            this.masterGain.gain.value = this._savedVolume;
+          }
+        }, 500);
+      }
+
+      this.saveSettings();
+    } finally {
+      this._isToggling = false;
     }
-
-    // Fade out
-    if (this.masterGain && this.audioContext) {
-      this.masterGain.gain.linearRampToValueAtTime(
-        0,
-        this.audioContext.currentTime + 0.5
-      );
-
-      setTimeout(() => {
-        if (this.masterGain) {
-          this.masterGain.gain.value = 0.15;
-        }
-      }, 500);
-    }
-
-    this.saveSettings();
   }
 
   toggle(): boolean {
+    if (this._isToggling) {
+      // Return current state if already toggling
+      return this.isPlaying;
+    }
+
     if (this.isPlaying) {
       this.stop();
     } else {
@@ -218,13 +259,27 @@ class MusicManager {
     return this.isPlaying;
   }
 
+  /**
+   * Returns whether music is currently enabled.
+   * This returns the saved preference if music hasn't started yet,
+   * ensuring UI shows correct state on app load.
+   */
   isEnabled(): boolean {
+    return this.isPlaying || this._savedEnabledState;
+  }
+
+  /**
+   * Returns actual playing state (for internal use)
+   */
+  isActuallyPlaying(): boolean {
     return this.isPlaying;
   }
 
   setVolume(volume: number): void {
+    const clampedVolume = Math.max(0, Math.min(1, volume));
+    this._savedVolume = clampedVolume;
     if (this.masterGain) {
-      this.masterGain.gain.value = Math.max(0, Math.min(1, volume));
+      this.masterGain.gain.value = clampedVolume;
       this.saveSettings();
     }
   }

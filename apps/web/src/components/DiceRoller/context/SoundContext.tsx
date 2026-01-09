@@ -11,6 +11,8 @@ import React, {
   ReactNode,
   useCallback,
   useContext,
+  useEffect,
+  useRef,
   useState,
 } from "react";
 
@@ -47,10 +49,40 @@ export function SoundProvider({
   const [musicEnabled, setMusicEnabled] = useState(() =>
     musicManager.isEnabled()
   );
+  const isTogglingMusic = useRef(false);
+
+  // Try to auto-start music on first user interaction if it was enabled
+  useEffect(() => {
+    const handleInteraction = () => {
+      musicManager.tryAutoStart();
+      // Sync state after potential auto-start
+      setMusicEnabled(musicManager.isEnabled());
+    };
+
+    window.addEventListener("click", handleInteraction, { once: true });
+    window.addEventListener("touchstart", handleInteraction, { once: true });
+    window.addEventListener("keydown", handleInteraction, { once: true });
+
+    return () => {
+      window.removeEventListener("click", handleInteraction);
+      window.removeEventListener("touchstart", handleInteraction);
+      window.removeEventListener("keydown", handleInteraction);
+    };
+  }, []);
 
   const toggleMusic = useCallback(() => {
+    // Prevent rapid toggling
+    if (isTogglingMusic.current) return;
+
+    isTogglingMusic.current = true;
+
     const newState = musicManager.toggle();
     setMusicEnabled(newState);
+
+    // Debounce - prevent another toggle for 100ms
+    setTimeout(() => {
+      isTogglingMusic.current = false;
+    }, 100);
   }, []);
 
   return (
