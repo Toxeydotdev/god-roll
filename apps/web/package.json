@@ -3,7 +3,15 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
+  "scripts": {
+    "cap:sync": "npx cap sync ios",
+    "cap:build": "npm run build && npx cap sync ios",
+    "cap:open": "npx cap open ios"
+  },
   "dependencies": {
+    "@capacitor/cli": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/ios": "^8.0.0",
     "@supabase/supabase-js": "^2.90.0",
     "@types/three": "^0.182.0",
     "three": "^0.182.0"

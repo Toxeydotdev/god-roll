@@ -1,0 +1,145 @@
+workflows:
+  ios-capacitor:
+    name: iOS Capacitor Build
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    # Configure this integration in Codemagic UI: Settings -> Integrations -> App Store Connect
+    integrations:
+      app_store_connect: apple
+
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.godroll.app
+      vars:
+        XCODE_PROJECT: "apps/web/ios/App/App.xcodeproj"
+        XCODE_SCHEME: "App"
+      node: 22
+      xcode: latest
+
+    scripts:
+      - name: Install dependencies
+        script: |
+          npm ci
+
+      - name: Build web app
+        script: |
+          npm run build:web
+
+      - name: Sync Capacitor
+        script: |
+          cd apps/web
+          npx cap sync ios
+
+      - name: Set up code signing
+        script: |
+          keychain initialize
+          app-store-connect fetch-signing-files "com.godroll.app" --type IOS_APP_STORE
+          keychain add-certificates
+          xcode-project use-profiles
+          
+          # Debug: List profiles
+          echo "=== Provisioning Profiles ==="
+          ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ || echo "No profiles directory"
+
+      - name: Build iOS archive
+        script: |
+          cd apps/web/ios/App
+          xcodebuild -project App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            -archivePath $HOME/build/App.xcarchive \
+            archive
+
+      - name: Create export options and export IPA
+        script: |
+          # Find the provisioning profile
+          PROFILE_PATH=$(ls ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision 2>/dev/null | head -1)
+          echo "Profile path: $PROFILE_PATH"
+          
+          if [ -z "$PROFILE_PATH" ]; then
+            echo "ERROR: No provisioning profile found!"
+            exit 1
+          fi
+          
+          # Extract UUID using security command
+          PROFILE_UUID=$(security cms -D -i "$PROFILE_PATH" | plutil -extract UUID raw -)
+          echo "Profile UUID: $PROFILE_UUID"
+          
+          # Extract Profile Name
+          PROFILE_NAME=$(security cms -D -i "$PROFILE_PATH" | plutil -extract Name raw -)
+          echo "Profile Name: $PROFILE_NAME"
+
+          # Create export options plist using PlistBuddy (guaranteed valid)
+          PLIST_PATH="$HOME/exportOptions.plist"
+          /usr/libexec/PlistBuddy -c "Clear dict" "$PLIST_PATH" 2>/dev/null || /usr/libexec/PlistBuddy -c "Save" "$PLIST_PATH"
+          /usr/libexec/PlistBuddy -c "Add :method string app-store-connect" "$PLIST_PATH"
+          /usr/libexec/PlistBuddy -c "Add :destination string export" "$PLIST_PATH"
+          /usr/libexec/PlistBuddy -c "Add :signingStyle string manual" "$PLIST_PATH"
+          /usr/libexec/PlistBuddy -c "Add :provisioningProfiles dict" "$PLIST_PATH"
+          /usr/libexec/PlistBuddy -c "Add :provisioningProfiles:com.godroll.app string $PROFILE_NAME" "$PLIST_PATH"
+
+          echo "=== Export Options Plist ==="
+          cat "$PLIST_PATH"
+          plutil -lint "$PLIST_PATH"
+
+          xcodebuild -exportArchive \
+            -archivePath $HOME/build/App.xcarchive \
+            -exportPath $HOME/build/output \
+            -exportOptionsPlist "$PLIST_PATH"
+
+    artifacts:
+      - $HOME/build/output/*.ipa
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+
+  ios-simulator:
+    name: iOS Simulator Build (Testing)
+    max_build_duration: 30
+    instance_type: mac_mini_m2
+
+    triggering:
+      events:
+        - pull_request
+      branch_patterns:
+        - pattern: "*"
+          include: true
+
+    environment:
+      vars:
+        XCODE_PROJECT: "apps/web/ios/App/App.xcodeproj"
+        XCODE_SCHEME: "App"
+      node: 22
+      xcode: latest
+
+    scripts:
+      - name: Install dependencies
+        script: |
+          npm ci
+
+      - name: Build web app
+        script: |
+          npm run build:web
+
+      - name: Sync Capacitor
+        script: |
+          cd apps/web
+          npx cap sync ios
+
+      - name: Build for Simulator
+        script: |
+          cd apps/web/ios/App
+          xcodebuild -project App.xcodeproj \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 17' \
+            build
+
+    artifacts:
+      - apps/web/ios/App/build/**/*.app
