@@ -46,7 +46,7 @@ workflows:
             --project App.xcodeproj \
             --scheme App \
             --config Release \
-            --export-options-plist exportOptions.plist
+            --export-options-plist $CM_BUILD_DIR/apps/web/ios/App/exportOptions.plist
 
     artifacts:
       - build/ios/ipa/*.ipa
