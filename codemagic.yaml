@@ -38,10 +38,22 @@ workflows:
           app-store-connect fetch-signing-files "com.godroll.app" --type IOS_APP_STORE
           keychain add-certificates
           xcode-project use-profiles
-          
+
           # Debug: List profiles
           echo "=== Provisioning Profiles ==="
           ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ || echo "No profiles directory"
+
+      - name: Increment build number
+        script: |
+          cd apps/web/ios/App
+          # Use Codemagic build number (auto-increments) 
+          BUILD_NUMBER=$((${PROJECT_BUILD_NUMBER:-1} + 1))
+          echo "Setting build number to: $BUILD_NUMBER"
+          agvtool new-version -all $BUILD_NUMBER
+
+          # Verify the change
+          echo "Current build number:"
+          agvtool what-version
 
       - name: Build iOS archive
         script: |
@@ -58,16 +70,16 @@ workflows:
           # Find the provisioning profile
           PROFILE_PATH=$(ls ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision 2>/dev/null | head -1)
           echo "Profile path: $PROFILE_PATH"
-          
+
           if [ -z "$PROFILE_PATH" ]; then
             echo "ERROR: No provisioning profile found!"
             exit 1
           fi
-          
+
           # Extract UUID using security command
           PROFILE_UUID=$(security cms -D -i "$PROFILE_PATH" | plutil -extract UUID raw -)
           echo "Profile UUID: $PROFILE_UUID"
-          
+
           # Extract Profile Name
           PROFILE_NAME=$(security cms -D -i "$PROFILE_PATH" | plutil -extract Name raw -)
           echo "Profile Name: $PROFILE_NAME"
