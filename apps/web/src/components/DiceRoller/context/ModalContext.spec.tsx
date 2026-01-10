@@ -7,6 +7,7 @@ import { mockTheme } from "@/test-utils";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AchievementProvider } from "./AchievementContext";
+import { AuthProvider } from "./AuthContext";
 import { ModalProvider } from "./ModalContext";
 import { ThemeProvider } from "./ThemeContext";
 
@@ -27,7 +28,7 @@ vi.mock("@/components/DiceRoller/components", () => ({
     onSelectTheme,
   }: {
     onClose: () => void;
-    onSelectTheme: (theme: any) => void;
+    onSelectTheme: (theme: unknown) => void;
   }) => (
     <div data-testid="mock-color-picker">
       <button onClick={() => onSelectTheme(mockTheme)}>Select Theme</button>
@@ -37,6 +38,11 @@ vi.mock("@/components/DiceRoller/components", () => ({
   AchievementsModal: ({ onClose }: { onClose: () => void }) => (
     <div data-testid="mock-achievements">
       <button onClick={onClose}>Close Achievements</button>
+    </div>
+  ),
+  AuthModal: ({ onClose }: { onClose: () => void }) => (
+    <div data-testid="mock-auth">
+      <button onClick={onClose}>Close Auth</button>
     </div>
   ),
 }));
@@ -65,9 +71,11 @@ function TestComponent() {
 function renderWithProviders(ui: React.ReactElement) {
   return render(
     <ThemeProvider>
-      <AchievementProvider>
-        <ModalProvider>{ui}</ModalProvider>
-      </AchievementProvider>
+      <AuthProvider>
+        <AchievementProvider>
+          <ModalProvider>{ui}</ModalProvider>
+        </AchievementProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

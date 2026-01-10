@@ -1,5 +1,6 @@
 import {
   useAchievements,
+  useAuth,
   useModal,
   useSound,
   useTheme,
@@ -10,7 +11,8 @@ export function ControlsPanel(): React.ReactElement {
   const { openModal } = useModal();
   const { soundEnabled, toggleSound, musicEnabled, toggleMusic } = useSound();
   const { theme } = useTheme();
-  const { unlockedCount, totalAchievements } = useAchievements();
+  const { unlockedCount, totalAchievements, isSyncing } = useAchievements();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
 
   const soundIcon = soundEnabled ? (
     <svg
@@ -100,6 +102,28 @@ export function ControlsPanel(): React.ReactElement {
       icon: <span className="text-lg">📊</span>,
       label: "Scores",
       onClick: () => openModal("leaderboard"),
+    },
+    {
+      icon: (
+        <span className="text-lg relative">
+          {authLoading || isSyncing ? "⏳" : isAuthenticated ? "👤" : "🔑"}
+          {isAuthenticated && (
+            <span
+              className="absolute -top-1 -right-2 text-[8px] font-bold rounded-full px-1"
+              style={{
+                backgroundColor: "#22c55e",
+                color: "#fff",
+                minWidth: "6px",
+                lineHeight: "10px",
+              }}
+            >
+              ✓
+            </span>
+          )}
+        </span>
+      ),
+      label: isAuthenticated ? "Account" : "Login",
+      onClick: () => openModal("auth"),
     },
   ];
 

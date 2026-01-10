@@ -8,6 +8,7 @@ import {
 } from "@/components/DiceRoller/components";
 import {
   AchievementProvider,
+  AuthProvider,
   DiceSkinProvider,
   ModalProvider,
   OnlineModeProvider,
@@ -38,17 +39,19 @@ import React, {
 export function DiceRoller(): React.ReactElement {
   return (
     <ThemeProvider>
-      <SoundProvider>
-        <DiceSkinProvider>
-          <OnlineModeProvider>
-            <AchievementProvider>
-              <ModalProvider>
-                <DiceRollerContent />
-              </ModalProvider>
-            </AchievementProvider>
-          </OnlineModeProvider>
-        </DiceSkinProvider>
-      </SoundProvider>
+      <AuthProvider>
+        <SoundProvider>
+          <DiceSkinProvider>
+            <OnlineModeProvider>
+              <AchievementProvider>
+                <ModalProvider>
+                  <DiceRollerContent />
+                </ModalProvider>
+              </AchievementProvider>
+            </OnlineModeProvider>
+          </DiceSkinProvider>
+        </SoundProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

@@ -8,6 +8,7 @@
 import { ColorTheme } from "@/components/DiceRoller/colorThemes";
 import {
   AchievementsModal,
+  AuthModal,
   ColorPicker,
   DiceSkinPicker,
   GameRules,
@@ -33,7 +34,8 @@ export type ModalType =
   | "rules"
   | "colorPicker"
   | "diceSkin"
-  | "achievements";
+  | "achievements"
+  | "auth";
 
 interface LeaderboardModalProps {
   highlightIndex?: number;
@@ -137,6 +139,12 @@ export function ModalProvider({
             unlockedAchievements={unlockedAchievements}
             profile={profile}
           />
+        );
+        break;
+
+      case "auth":
+        modalElement = (
+          <AuthModal isOpen={true} onClose={closeModal} theme={theme} />
         );
         break;
     }

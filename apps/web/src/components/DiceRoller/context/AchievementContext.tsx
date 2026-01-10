@@ -6,6 +6,7 @@
  * - Achievement unlock detection
  * - Toast notifications for new achievements
  * - Local + optional cloud persistence
+ * - Cloud sync when authenticated
  */
 
 import {
@@ -17,6 +18,7 @@ import {
   getLocalAchievements,
   getLocalProfile,
   getOrCreatePlayerId,
+  PlayerAchievementProgress,
   saveLocalAchievements,
   saveLocalProfile,
   UserProfile,
@@ -32,6 +34,13 @@ import React, {
   useRef,
   useState,
 } from "react";
+import {
+  downloadFromCloud,
+  saveCloudAchievement,
+  saveCloudProfile,
+  syncWithCloud,
+} from "../utils/achievementService";
+import { useAuth } from "./AuthContext";
 
 // ============================================================================
 // TYPES
@@ -51,6 +60,10 @@ interface AchievementContextValue {
   unlockedAchievements: Set<string>;
   recentUnlocks: AchievementUnlock[];
 
+  // Sync status
+  isSyncing: boolean;
+  lastSyncError: string | null;
+
   // Actions
   checkForAchievements: (
     roll: DiceFaceNumber[],
@@ -62,6 +75,7 @@ interface AchievementContextValue {
   onGameEnd: (finalScore: number, roundsSurvived: number) => void;
   dismissRecentUnlock: (achievementId: string) => void;
   clearAllRecentUnlocks: () => void;
+  syncNow: () => Promise<void>;
 
   // Computed
   totalAchievements: number;
@@ -88,6 +102,9 @@ interface AchievementProviderProps {
 export function AchievementProvider({
   children,
 }: AchievementProviderProps): React.ReactElement {
+  // Get auth state
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+
   // Initialize player ID (persisted across sessions)
   const playerId = useMemo(() => getOrCreatePlayerId(), []);
 
@@ -105,6 +122,11 @@ export function AchievementProvider({
   // Recent unlocks for toast notifications
   const [recentUnlocks, setRecentUnlocks] = useState<AchievementUnlock[]>([]);
 
+  // Sync state
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [lastSyncError, setLastSyncError] = useState<string | null>(null);
+  const hasSyncedRef = useRef(false);
+
   // Track roll history for current game session
   const rollHistoryRef = useRef<DiceFaceNumber[][]>([]);
 
@@ -117,6 +139,108 @@ export function AchievementProvider({
   useEffect(() => {
     saveLocalAchievements(unlockedAchievements);
   }, [unlockedAchievements]);
+
+  // Sync with cloud when user authenticates
+  useEffect(() => {
+    if (authLoading || !isAuthenticated || !user || hasSyncedRef.current) {
+      return;
+    }
+
+    const doSync = async () => {
+      setIsSyncing(true);
+      setLastSyncError(null);
+      hasSyncedRef.current = true;
+
+      try {
+        // Get local achievements as progress array
+        const localAchievements: PlayerAchievementProgress[] = Array.from(
+          unlockedAchievements
+        ).map((id) => ({
+          achievementId: id,
+          unlockedAt: new Date().toISOString(),
+        }));
+
+        // Sync: merge local with cloud, save merged back
+        const result = await syncWithCloud(user.id, profile, localAchievements);
+
+        if (result.success && result.profile) {
+          // Update local state with merged data
+          setProfile(result.profile);
+          if (result.achievements) {
+            setUnlockedAchievements(
+              new Set(result.achievements.map((a) => a.achievementId))
+            );
+          }
+        } else if (result.error) {
+          setLastSyncError(result.error);
+          // Try to just download cloud data
+          const downloadResult = await downloadFromCloud(user.id);
+          if (downloadResult.success && downloadResult.profile) {
+            setProfile(downloadResult.profile);
+            if (downloadResult.achievements) {
+              setUnlockedAchievements(
+                new Set(downloadResult.achievements.map((a) => a.achievementId))
+              );
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Sync error:", error);
+        setLastSyncError(
+          error instanceof Error ? error.message : "Sync failed"
+        );
+      } finally {
+        setIsSyncing(false);
+      }
+    };
+
+    doSync();
+  }, [authLoading, isAuthenticated, user, profile, unlockedAchievements]);
+
+  // Reset sync flag when user logs out
+  useEffect(() => {
+    if (!isAuthenticated) {
+      hasSyncedRef.current = false;
+    }
+  }, [isAuthenticated]);
+
+  /**
+   * Manual sync trigger
+   */
+  const syncNow = useCallback(async () => {
+    if (!isAuthenticated || !user || isSyncing) {
+      return;
+    }
+
+    setIsSyncing(true);
+    setLastSyncError(null);
+
+    try {
+      const localAchievements: PlayerAchievementProgress[] = Array.from(
+        unlockedAchievements
+      ).map((id) => ({
+        achievementId: id,
+        unlockedAt: new Date().toISOString(),
+      }));
+
+      const result = await syncWithCloud(user.id, profile, localAchievements);
+
+      if (result.success && result.profile) {
+        setProfile(result.profile);
+        if (result.achievements) {
+          setUnlockedAchievements(
+            new Set(result.achievements.map((a) => a.achievementId))
+          );
+        }
+      } else if (result.error) {
+        setLastSyncError(result.error);
+      }
+    } catch (error) {
+      setLastSyncError(error instanceof Error ? error.message : "Sync failed");
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [isAuthenticated, user, isSyncing, profile, unlockedAchievements]);
 
   /**
    * Check for newly unlocked achievements after each roll
@@ -200,11 +324,21 @@ export function AchievementProvider({
 
           return updated;
         });
+
+        // Sync new achievements to cloud if authenticated
+        if (isAuthenticated && user) {
+          for (const id of newlyUnlocked) {
+            saveCloudAchievement(user.id, {
+              achievementId: id,
+              unlockedAt: now,
+            }).catch(console.error);
+          }
+        }
       }
 
       return newlyUnlocked;
     },
-    [profile, unlockedAchievements]
+    [profile, unlockedAchievements, isAuthenticated, user]
   );
 
   /**
@@ -234,7 +368,7 @@ export function AchievementProvider({
         }
         // Same day = no change
 
-        return {
+        const updatedProfile = {
           ...prev,
           totalScore: prev.totalScore + finalScore,
           totalGamesPlayed: prev.totalGamesPlayed + 1,
@@ -246,6 +380,13 @@ export function AchievementProvider({
           consecutiveDays,
           updatedAt: now,
         };
+
+        // Sync profile to cloud if authenticated (fire and forget)
+        if (isAuthenticated && user) {
+          saveCloudProfile(user.id, updatedProfile).catch(console.error);
+        }
+
+        return updatedProfile;
       });
 
       // Clear roll history for next game
@@ -254,7 +395,7 @@ export function AchievementProvider({
       // Check for end-of-game achievements (games_played, score_lifetime, etc.)
       // This is handled in checkForAchievements on the last roll
     },
-    []
+    [isAuthenticated, user]
   );
 
   /**
@@ -286,10 +427,13 @@ export function AchievementProvider({
       playerId,
       unlockedAchievements,
       recentUnlocks,
+      isSyncing,
+      lastSyncError,
       checkForAchievements,
       onGameEnd,
       dismissRecentUnlock,
       clearAllRecentUnlocks,
+      syncNow,
       totalAchievements,
       unlockedCount,
       progressPercentage,
@@ -299,10 +443,13 @@ export function AchievementProvider({
       playerId,
       unlockedAchievements,
       recentUnlocks,
+      isSyncing,
+      lastSyncError,
       checkForAchievements,
       onGameEnd,
       dismissRecentUnlock,
       clearAllRecentUnlocks,
+      syncNow,
       totalAchievements,
       unlockedCount,
       progressPercentage,
