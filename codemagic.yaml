@@ -9,6 +9,8 @@ workflows:
       app_store_connect: apple
 
     environment:
+      groups:
+        - supabase
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.godroll.app
@@ -123,6 +125,8 @@ workflows:
           include: true
 
     environment:
+      groups:
+        - supabase
       vars:
         XCODE_PROJECT: "apps/web/ios/App/App.xcodeproj"
         XCODE_SCHEME: "App"
