@@ -214,7 +214,10 @@ function DiceRollerContent(): React.ReactElement {
       {/* UI Layer - overlays on top of canvas */}
       <div className="absolute inset-0 pointer-events-none flex flex-col">
         {/* Header area - title and score */}
-        <header className="flex-none flex justify-between items-start p-4 pointer-events-auto">
+        <header
+          className="flex-none flex justify-between items-start p-4 pointer-events-auto"
+          style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 16px)" }}
+        >
           <GameTitle />
 
           {/* Score display during game - enhanced hierarchy */}
@@ -317,10 +320,7 @@ function DiceRollerContent(): React.ReactElement {
 
         {/* Footer - Roll button and controls */}
         {gameStarted && !gameOver && (
-          <footer
-            className="flex-none flex flex-col items-center gap-3 pointer-events-auto"
-            style={{ paddingBottom: "env(safe-area-inset-bottom, 8px)" }}
-          >
+          <footer className="flex-none flex flex-col items-center gap-3 pointer-events-auto">
             <RollButton
               results={results}
               lastRollTotal={lastRollTotal}
