@@ -14,6 +14,7 @@ const corsHeaders = {
 };
 
 interface ScoreSubmission {
+  player_id: string;
   player_name: string;
   score: number;
   rounds_survived: number;
@@ -32,17 +33,25 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const { player_name, score, rounds_survived, session_id }: ScoreSubmission =
-      await req.json();
+    const {
+      player_id,
+      player_name,
+      score,
+      rounds_survived,
+      session_id,
+    }: ScoreSubmission = await req.json();
 
     // ========================================
     // VALIDATION RULES (Anti-cheat)
     // ========================================
 
     // 1. Basic validation
-    if (!player_name || typeof score !== "number" || score < 0) {
+    if (!player_id || !player_name || typeof score !== "number" || score < 0) {
       return new Response(
-        JSON.stringify({ success: false, message: "Invalid score data" }),
+        JSON.stringify({
+          success: false,
+          message: "Invalid score data - player_id and player_name required",
+        }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 400,
@@ -50,8 +59,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 2. Player name validation (3-20 chars, alphanumeric + spaces)
-    const nameRegex = /^[a-zA-Z0-9 ]{3,20}$/;
+    // 2. Player name validation (2-20 chars, alphanumeric + spaces, dashes, underscores)
+    const nameRegex = /^[a-zA-Z0-9 _-]{2,20}$/;
     if (!nameRegex.test(player_name)) {
       return new Response(
         JSON.stringify({ success: false, message: "Invalid player name" }),
@@ -109,6 +118,7 @@ Deno.serve(async (req) => {
     const { error: insertError } = await supabaseClient
       .from("leaderboard")
       .insert({
+        player_id,
         player_name,
         score,
         rounds_survived,
@@ -118,7 +128,11 @@ Deno.serve(async (req) => {
     if (insertError) {
       console.error("Insert error:", insertError);
       return new Response(
-        JSON.stringify({ success: false, message: "Failed to save score" }),
+        JSON.stringify({
+          success: false,
+          message: "Failed to save score",
+          error: insertError.message,
+        }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 500,
