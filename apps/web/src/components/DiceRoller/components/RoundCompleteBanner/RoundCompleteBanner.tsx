@@ -51,9 +51,10 @@ export function RoundCompleteBanner({
 
   return (
     <div
-      className="absolute top-16 left-1/2 transform -translate-x-1/2 z-30 pointer-events-none"
+      className="absolute left-0 right-0 flex justify-center py-2 pointer-events-none z-10"
       style={{
         animation: "toast-pop 1s ease-out forwards",
+        top: "auto",
       }}
     >
       {/* Compact toast-style notification */}

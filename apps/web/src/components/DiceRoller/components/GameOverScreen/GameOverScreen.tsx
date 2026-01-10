@@ -55,6 +55,23 @@ export function GameOverScreen({
   const [nameInput, setNameInput] = useState(playerName);
   const [hasSubmitted, setHasSubmitted] = useState(false);
 
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    const originalStyle = document.body.style.overflow;
+    const originalPosition = document.body.style.position;
+    const originalWidth = document.body.style.width;
+
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.width = "100%";
+
+    return () => {
+      document.body.style.overflow = originalStyle;
+      document.body.style.position = originalPosition;
+      document.body.style.width = originalWidth;
+    };
+  }, []);
+
   // Load global leaderboard when tab changes to global
   useEffect(() => {
     if (activeTab === "global") {
@@ -105,16 +122,22 @@ export function GameOverScreen({
 
   return (
     <div
-      className="absolute inset-0 flex items-center justify-center z-20 bg-black/60 p-4 fade-in touch-none"
-      style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+      className="absolute inset-0 flex items-center justify-center z-20 bg-black/60 p-4 fade-in"
+      style={{
+        paddingTop: "env(safe-area-inset-top, 0px)",
+        touchAction: "none",
+      }}
+      onTouchMove={(e) => e.preventDefault()}
     >
       <div
-        className="rounded-2xl p-6 shadow-2xl max-w-[95vw] max-h-[90vh] overflow-auto slide-up touch-auto"
+        className="rounded-2xl p-6 shadow-2xl max-w-[95vw] max-h-[90vh] overflow-auto slide-up"
         onClick={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
         style={{
           background: `linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(245,245,245,0.98) 100%)`,
           boxShadow: `0 25px 50px rgba(0,0,0,0.3), 0 0 60px ${theme.buttonGlow}`,
           overscrollBehavior: "contain",
+          touchAction: "pan-y",
         }}
       >
         <div className="flex flex-col md:flex-row gap-6">

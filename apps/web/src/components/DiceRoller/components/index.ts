@@ -7,6 +7,5 @@ export { GameStats } from "./GameStats/GameStats";
 export { GameTitle } from "./GameTitle/GameTitle";
 export { Leaderboard } from "./Leaderboard/Leaderboard";
 export { RollButton } from "./RollButton/RollButton";
-export { RoundCompleteBanner } from "./RoundCompleteBanner/RoundCompleteBanner";
 export { SoundToggle } from "./SoundToggle/SoundToggle";
 export { StartScreen } from "./StartScreen/StartScreen";

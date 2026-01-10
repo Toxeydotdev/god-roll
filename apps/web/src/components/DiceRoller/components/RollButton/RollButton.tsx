@@ -1,12 +1,17 @@
 import { useTheme } from "@/components/DiceRoller/context";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { DiceFaceNumber } from "../../types";
+
+// Only show banner for exceptional rolls (>70% of max possible)
+const EXCEPTIONAL_ROLL_THRESHOLD = 0.7;
 
 interface RollButtonProps {
   results: DiceFaceNumber[];
   lastRollTotal: number;
   isRolling: boolean;
   onRoll: () => void;
+  round: number;
+  gameOver: boolean;
 }
 
 // Simple dice SVG icon
@@ -34,10 +39,14 @@ export function RollButton({
   lastRollTotal,
   isRolling,
   onRoll,
+  round,
+  gameOver,
 }: RollButtonProps): React.ReactElement {
   const { theme } = useTheme();
   const [showResult, setShowResult] = useState(false);
   const [animateResult, setAnimateResult] = useState(false);
+  const [showBanner, setShowBanner] = useState(false);
+  const wasRollingRef = useRef<boolean>(false);
   const isDanger = lastRollTotal % 7 === 0;
 
   // Trigger result animation when results change
@@ -56,6 +65,25 @@ export function RollButton({
     }
   }, [results, isRolling, lastRollTotal]);
 
+  // Show banner only for exceptional rolls (>70% of max possible score)
+  // Only trigger when transitioning from rolling to not rolling
+  useEffect(() => {
+    const justFinishedRolling = wasRollingRef.current && !isRolling;
+    wasRollingRef.current = isRolling;
+
+    if (justFinishedRolling && !gameOver && round > 1 && lastRollTotal > 0) {
+      const diceCountForCompletedRound = round - 1;
+      const maxPossibleScore = diceCountForCompletedRound * 6;
+      const scorePercentage = lastRollTotal / maxPossibleScore;
+
+      if (scorePercentage >= EXCEPTIONAL_ROLL_THRESHOLD) {
+        setShowBanner(true);
+        const timer = setTimeout(() => setShowBanner(false), 2500);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [isRolling, gameOver, round, lastRollTotal]);
+
   return (
     <div className="flex flex-col items-center gap-2">
       {/* Results display */}
@@ -66,6 +94,36 @@ export function RollButton({
             : ""
         }`}
       >
+        {/* Exceptional roll banner */}
+        {showBanner && (
+          <div
+            className="flex items-center gap-2 px-3 py-1 rounded-full mb-2"
+            style={{
+              background: `linear-gradient(90deg, ${theme.accentColor}E8 0%, ${theme.accentHover}E8 100%)`,
+              boxShadow: `0 2px 10px rgba(0,0,0,0.2), 0 0 20px ${theme.buttonGlow}`,
+              border: `2px solid rgba(255,255,255,0.3)`,
+              animation: "toast-pop 1.5s ease-out forwards",
+            }}
+          >
+            <span
+              className="text-sm font-bold"
+              style={{
+                color: "#fff",
+                textShadow: "1px 1px 0 rgba(0,0,0,0.3)",
+              }}
+            >
+              🎯 Nice Roll!
+            </span>
+            <span style={{ color: "rgba(255,255,255,0.5)" }}>•</span>
+            <span
+              className="text-sm"
+              style={{ color: "rgba(255,255,255,0.95)", fontWeight: 600 }}
+            >
+              🎲 ×{round}
+            </span>
+          </div>
+        )}
+
         {results.length > 0 && !isRolling && showResult && (
           <>
             {/* Large roll total */}
