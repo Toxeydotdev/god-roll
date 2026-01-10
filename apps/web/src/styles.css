@@ -306,6 +306,30 @@ body {
   }
 }
 
+/* Toast pop animation for side-positioned elements (with fade out like toast-pop) */
+@keyframes toast-pop-side {
+  0% {
+    transform: translateY(-20px) scale(0.8);
+    opacity: 0;
+  }
+  15% {
+    transform: translateY(0) scale(1.05);
+    opacity: 1;
+  }
+  25% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  75% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-10px) scale(0.95);
+    opacity: 0;
+  }
+}
+
 /* Subtle floating animation for idle elements */
 @keyframes float {
   0%,

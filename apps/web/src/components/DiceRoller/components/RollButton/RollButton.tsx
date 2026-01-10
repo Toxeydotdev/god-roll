@@ -4,6 +4,8 @@ import { DiceFaceNumber } from "../../types";
 
 // Only show banner for exceptional rolls (>70% of max possible)
 const EXCEPTIONAL_ROLL_THRESHOLD = 0.7;
+// Show low roll banner for rolls <=20% of max possible
+const LOW_ROLL_THRESHOLD = 0.2;
 
 interface RollButtonProps {
   results: DiceFaceNumber[];
@@ -46,6 +48,7 @@ export function RollButton({
   const [showResult, setShowResult] = useState(false);
   const [animateResult, setAnimateResult] = useState(false);
   const [showBanner, setShowBanner] = useState(false);
+  const [showLowRollBanner, setShowLowRollBanner] = useState(false);
   const wasRollingRef = useRef<boolean>(false);
   const isDanger = lastRollTotal % 7 === 0;
 
@@ -65,7 +68,7 @@ export function RollButton({
     }
   }, [results, isRolling, lastRollTotal]);
 
-  // Show banner only for exceptional rolls (>70% of max possible score)
+  // Show banners based on roll quality
   // Only trigger when transitioning from rolling to not rolling
   useEffect(() => {
     const justFinishedRolling = wasRollingRef.current && !isRolling;
@@ -79,6 +82,14 @@ export function RollButton({
       if (scorePercentage >= EXCEPTIONAL_ROLL_THRESHOLD) {
         setShowBanner(true);
         const timer = setTimeout(() => setShowBanner(false), 2500);
+        return () => clearTimeout(timer);
+      } else if (
+        scorePercentage <= LOW_ROLL_THRESHOLD &&
+        diceCountForCompletedRound >= 2
+      ) {
+        // Only show low roll banner when there are at least 2 dice
+        setShowLowRollBanner(true);
+        const timer = setTimeout(() => setShowLowRollBanner(false), 2500);
         return () => clearTimeout(timer);
       }
     }
@@ -184,6 +195,34 @@ export function RollButton({
           <DiceIcon size={32} />
         )}
       </button>
+
+      {/* Low roll banner - fixed on right side */}
+      {showLowRollBanner && (
+        <div
+          className="fixed right-4 flex items-center pointer-events-none z-50"
+          style={{ bottom: "20%" }}
+        >
+          <div
+            className="flex items-center gap-2 px-3 py-1 rounded-full"
+            style={{
+              background: `linear-gradient(90deg, ${theme.dangerColor}CC 0%, ${theme.dangerColor}E8 100%)`,
+              boxShadow: `0 2px 10px rgba(0,0,0,0.3), 0 0 20px ${theme.dangerColor}80`,
+              border: `2px solid rgba(255,255,255,0.3)`,
+              animation: "toast-pop-side 1.5s ease-out forwards",
+            }}
+          >
+            <span
+              className="text-sm font-bold"
+              style={{
+                color: "#fff",
+                textShadow: "1px 1px 0 rgba(0,0,0,0.3)",
+              }}
+            >
+              😬 Low Roll!
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
