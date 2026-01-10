@@ -4,17 +4,20 @@ import React from "react";
 export function GameTitle(): React.ReactElement {
   const { theme } = useTheme();
   return (
-    <div className="absolute top-4 left-4 z-10">
+    <div>
       <h1
         className="text-3xl tracking-tight"
         style={{
           color: theme.textPrimary,
           fontFamily: "var(--font-display)",
-          textShadow: "3px 3px 0px rgba(0,0,0,0.2)",
+          textShadow: `
+            3px 3px 0px rgba(0,0,0,0.2),
+            0 0 15px ${theme.buttonGlow}
+          `,
           letterSpacing: "0.05em",
         }}
       >
-        GOD-ROLL
+        <span className="opacity-80">🎲</span> GOD-ROLL
       </h1>
     </div>
   );

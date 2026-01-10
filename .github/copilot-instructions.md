@@ -53,22 +53,26 @@ god-roll/
 ### Key Conventions
 
 1. **Testing Methodology**: Follow SIFERS (Setup, Invoke, Find, Expect, Reset, Snapshot)
+
    - Every test file should have a centralized `setup()` function with configurable options
    - Write user-centric, behavior-driven test names (e.g., "when user clicks button, should show feedback")
    - Use `@vitest-environment jsdom` for component tests
 
 2. **Component Standards**:
+
    - Use React Context for global state (theme, sound, modals) to avoid prop drilling
    - All UI components accept a `theme` prop for consistent styling
    - Export prop interfaces for testability
    - Modal management uses Context + Portal pattern
 
 3. **Code Organization**:
+
    - Co-locate components with their test files
    - Use barrel exports (`index.ts`) for clean imports
    - Test files use shared utilities from `test-utils/`
 
 4. **TypeScript**:
+
    - Use strict mode
    - Export interfaces for component props
    - Avoid `any` type without justification
@@ -89,6 +93,15 @@ god-roll/
 - Use theme colors via style prop: `style={{ color: theme.textPrimary }}`
 - Avoid hardcoding colors or using Tailwind classes for themed elements
 - Support custom color themes defined in `colorThemes.ts`
+
+### CSS Layout Guidelines
+
+- **Prefer flexbox/grid** over absolute/fixed positioning for layouts
+- Use `flex-col` with `flex-1` spacers to distribute space naturally
+- For full-screen canvas apps: canvas is `absolute inset-0`, UI overlays with flexbox
+- Use `pointer-events-none` on overlay containers, `pointer-events-auto` on interactive children
+- Avoid magic pixel values (e.g., `bottom: "80px"`) - let flexbox handle positioning
+- Use `gap` for spacing between flex children instead of margins
 
 ## Development Workflow
 

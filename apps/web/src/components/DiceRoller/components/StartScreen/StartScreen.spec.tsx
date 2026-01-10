@@ -99,7 +99,7 @@ describe("StartScreen - User Interactions", () => {
 
       expect(screen.getByText("Roll dice to score points")).toBeTruthy();
       expect(screen.getByText("Avoid totals divisible by 7!")).toBeTruthy();
-      expect(screen.getByText("Dice increase each round")).toBeTruthy();
+      expect(screen.getByText(/Each round adds \+1 die/)).toBeTruthy();
     });
 
     it("should display a prominent start button", () => {
@@ -174,11 +174,11 @@ describe("StartScreen - User Interactions", () => {
       expect(title.style.color).toBe(hexToRgb(mockTheme.textPrimary));
     });
 
-    it("should style start button with theme colors", () => {
+    it("should style start button with accent colors", () => {
       const { getStartButton } = setup();
 
       expect(getStartButton().style.backgroundColor).toBe(
-        hexToRgb(mockTheme.textPrimary)
+        hexToRgb(mockTheme.accentColor)
       );
       expect(getStartButton().style.color).toBe(
         hexToRgb(mockTheme.backgroundCss)
