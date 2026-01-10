@@ -15,6 +15,12 @@ const config: CapacitorConfig = {
     // url: 'http://localhost:4200',
     cleartext: true,
   },
+  plugins: {
+    CapacitorHttp: {
+      // Enable native HTTP handling to bypass WKWebView CORS restrictions
+      enabled: true,
+    },
+  },
 };
 
 export default config;
