@@ -19,6 +19,7 @@ import {
   SoundCallbacks,
   useDicePhysics,
   useGameState,
+  useScreenOrientation,
   useThreeScene,
 } from "@/components/DiceRoller/hooks";
 import { addLeaderboardEntry } from "@/components/DiceRoller/leaderboard";
@@ -57,6 +58,9 @@ function DiceRollerContent(): React.ReactElement {
   >([]);
   // Session ID for this game instance (prevents duplicate score submissions)
   const [sessionId, setSessionId] = useState<string>(() => crypto.randomUUID());
+
+  // Lock screen orientation on mobile devices
+  useScreenOrientation();
 
   const { theme } = useTheme();
   const { playDiceHit } = useSound();

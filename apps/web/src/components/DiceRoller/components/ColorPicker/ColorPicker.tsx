@@ -13,7 +13,7 @@ export function ColorPicker({
   onClose,
 }: ColorPickerProps): React.ReactElement {
   return (
-    <div className="absolute inset-0 flex items-center justify-center z-30 bg-black/60 p-4">
+    <div className="fixed inset-0 flex items-center justify-center z-30 bg-black/60 p-4 min-h-dvh">
       <div
         className="rounded-2xl p-6 text-center shadow-2xl max-w-md"
         style={{ backgroundColor: currentTheme.backgroundCss }}

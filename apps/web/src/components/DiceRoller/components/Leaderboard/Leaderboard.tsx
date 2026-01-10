@@ -59,7 +59,7 @@ export function Leaderboard({
   };
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center z-30 bg-black/60">
+    <div className="fixed inset-0 flex items-center justify-center z-30 bg-black/60 min-h-dvh">
       <div className="bg-white/95 rounded-2xl p-6 text-center shadow-2xl min-w-[300px] max-w-[90vw]">
         <h2
           className="text-2xl font-black mb-4"

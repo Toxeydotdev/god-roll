@@ -27,7 +27,7 @@ export function DiceSkinPicker({
   };
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center z-30 bg-black/60 p-4">
+    <div className="fixed inset-0 flex items-center justify-center z-30 bg-black/60 p-4 min-h-dvh">
       <div
         className="rounded-2xl p-6 shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col"
         style={{ backgroundColor: theme.backgroundCss }}
