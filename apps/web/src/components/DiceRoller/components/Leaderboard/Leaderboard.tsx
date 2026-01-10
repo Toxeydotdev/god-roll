@@ -59,8 +59,14 @@ export function Leaderboard({
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-30 bg-black/60 min-h-dvh">
-      <div className="bg-white/95 rounded-2xl p-6 text-center shadow-2xl min-w-[300px] max-w-[90vw]">
+    <div
+      className="fixed inset-0 flex items-center justify-center z-30 bg-black/60 min-h-dvh touch-none"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white/95 rounded-2xl p-6 text-center shadow-2xl min-w-[300px] max-w-[90vw]"
+        onClick={(e) => e.stopPropagation()}
+      >
         <h2
           className="text-2xl font-black mb-4"
           style={{ color: theme.textPrimary }}

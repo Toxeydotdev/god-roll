@@ -13,10 +13,14 @@ export function ColorPicker({
   onClose,
 }: ColorPickerProps): React.ReactElement {
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-30 bg-black/60 p-4 min-h-dvh">
+    <div
+      className="fixed inset-0 flex items-center justify-center z-30 bg-black/60 p-4 min-h-dvh touch-none"
+      onClick={onClose}
+    >
       <div
         className="rounded-2xl p-6 text-center shadow-2xl max-w-md"
         style={{ backgroundColor: currentTheme.backgroundCss }}
+        onClick={(e) => e.stopPropagation()}
       >
         <h2
           className="text-2xl font-black mb-4"

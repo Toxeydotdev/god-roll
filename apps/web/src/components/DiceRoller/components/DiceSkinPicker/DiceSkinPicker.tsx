@@ -27,10 +27,14 @@ export function DiceSkinPicker({
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-30 bg-black/60 p-4 min-h-dvh">
+    <div
+      className="fixed inset-0 flex items-center justify-center z-30 bg-black/60 p-4 min-h-dvh touch-none"
+      onClick={onClose}
+    >
       <div
         className="rounded-2xl p-6 shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col"
         style={{ backgroundColor: theme.backgroundCss }}
+        onClick={(e) => e.stopPropagation()}
       >
         <h2
           className="text-2xl font-bold mb-4"

@@ -5,7 +5,8 @@
  * quality across all devices (desktop and mobile).
  */
 
-import diceAudioUrl from "../../../assets/audio/dice-sound-40081.mp3";
+import diceAudioUrl1 from "../../../assets/audio/dice-sound-40081.mp3";
+import diceAudioUrl2 from "../../../assets/audio/dice22-81801.mp3";
 
 export type SoundType = "diceHit" | "wallHit" | "diceRoll" | "gameOver" | "win";
 
@@ -20,9 +21,11 @@ class SoundManager {
   private masterGain: GainNode | null = null;
   private enabled: boolean = true;
   private masterVolume: number = 0.5;
-  private diceHitBuffer: AudioBuffer | null = null;
+  private diceHitBuffers: AudioBuffer[] = [];
   private activeSounds: number = 0;
-  private readonly MAX_CONCURRENT_SOUNDS = 1;
+  private readonly MAX_CONCURRENT_SOUNDS = 3;
+  private lastSoundTime: number = 0;
+  private readonly MIN_SOUND_INTERVAL = 0.05; // 50ms between sounds
 
   /**
    * Initialize the audio context (must be called after user interaction)
@@ -36,8 +39,8 @@ class SoundManager {
       this.masterGain.gain.value = this.masterVolume;
       this.masterGain.connect(this.audioContext.destination);
 
-      // Load dice hit sound
-      this.loadDiceHitSound();
+      // Load multiple dice hit sounds for variety
+      this.loadDiceHitSounds();
     } catch (error) {
       console.warn("Web Audio API not supported:", error);
       this.enabled = false;
@@ -45,18 +48,32 @@ class SoundManager {
   }
 
   /**
-   * Load dice hit audio file
+   * Load multiple dice hit audio files for variety
    */
-  private async loadDiceHitSound(): Promise<void> {
+  private async loadDiceHitSounds(): Promise<void> {
     if (!this.audioContext) return;
 
-    try {
-      const response = await fetch(diceAudioUrl);
-      const arrayBuffer = await response.arrayBuffer();
-      this.diceHitBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
-    } catch (error) {
-      console.warn("Failed to load dice sound:", error);
+    const urls = [diceAudioUrl1, diceAudioUrl2];
+
+    for (const url of urls) {
+      try {
+        const response = await fetch(url);
+        const arrayBuffer = await response.arrayBuffer();
+        const buffer = await this.audioContext.decodeAudioData(arrayBuffer);
+        this.diceHitBuffers.push(buffer);
+      } catch (error) {
+        console.warn("Failed to load dice sound:", error);
+      }
     }
+  }
+
+  /**
+   * Get a random dice hit buffer
+   */
+  private getRandomBuffer(): AudioBuffer | null {
+    if (this.diceHitBuffers.length === 0) return null;
+    const index = Math.floor(Math.random() * this.diceHitBuffers.length);
+    return this.diceHitBuffers[index];
   }
 
   /**
@@ -94,29 +111,41 @@ class SoundManager {
 
   /**
    * Play a dice hitting the floor/table sound
-   * Uses pre-loaded audio file for consistent quality across all devices
+   * Uses multiple pre-loaded audio files with random selection for natural variety
    */
   playDiceHit(options: SoundOptions = {}): void {
     if (!this.isReady()) return;
 
-    // Limit concurrent sounds to prevent audio overload
-    if (this.activeSounds >= this.MAX_CONCURRENT_SOUNDS) return;
-
-    const { volume = 0.6, pitch = 1 } = options;
     const ctx = this.audioContext!;
     const now = ctx.currentTime;
 
-    // Use loaded audio file if available
-    if (this.diceHitBuffer) {
+    // Limit concurrent sounds and enforce minimum interval
+    if (this.activeSounds >= this.MAX_CONCURRENT_SOUNDS) return;
+    if (now - this.lastSoundTime < this.MIN_SOUND_INTERVAL) return;
+    this.lastSoundTime = now;
+
+    const { volume = 0.6, pitch = 1 } = options;
+
+    // Add random variation to pitch (±15%) for more natural sound
+    const pitchVariation = 0.85 + Math.random() * 0.3;
+    const finalPitch = pitch * pitchVariation;
+
+    // Reduce volume when multiple sounds are playing
+    const volumeScale = 1 - this.activeSounds * 0.2;
+    const finalVolume = volume * Math.max(0.4, volumeScale);
+
+    // Use random audio file if available
+    const buffer = this.getRandomBuffer();
+    if (buffer) {
       const source = ctx.createBufferSource();
-      source.buffer = this.diceHitBuffer;
+      source.buffer = buffer;
 
-      // Apply pitch variation
-      source.playbackRate.value = pitch;
+      // Apply pitch with variation
+      source.playbackRate.value = finalPitch;
 
-      // Apply volume
+      // Apply volume with scaling
       const gain = ctx.createGain();
-      gain.gain.value = volume;
+      gain.gain.value = finalVolume;
 
       source.connect(gain);
       gain.connect(this.masterGain!);
@@ -127,9 +156,9 @@ class SoundManager {
         this.activeSounds--;
       };
 
-      // Start 0.05s into the audio to skip silence, play for 0.3s
-      const offset = 0.05;
-      const duration = 0.3;
+      // Random offset into the audio for more variety (0.03-0.08s)
+      const offset = 0.03 + Math.random() * 0.05;
+      const duration = 0.25 + Math.random() * 0.1;
       source.start(now, offset, duration);
     } else {
       // Fallback to simple procedural sound if audio file not loaded
@@ -164,10 +193,11 @@ class SoundManager {
     const ctx = this.audioContext!;
     const now = ctx.currentTime;
 
-    // Use loaded audio file with higher pitch if available
-    if (this.diceHitBuffer) {
+    // Use random audio file with higher pitch if available
+    const buffer = this.getRandomBuffer();
+    if (buffer) {
       const source = ctx.createBufferSource();
-      source.buffer = this.diceHitBuffer;
+      source.buffer = buffer;
 
       // Higher pitch for wall hits
       source.playbackRate.value = pitch * 1.3;
