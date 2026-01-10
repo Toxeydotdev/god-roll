@@ -17,15 +17,10 @@ export function useScreenOrientation(): void {
         await ScreenOrientation.lock({ orientation: 'portrait' });
       } catch {
         // Gracefully handle - web browser or plugin not available
-        console.log('[ScreenOrientation] Not available in this environment');
+        // This is expected behavior in web environments
       }
     };
 
     lockOrientation();
-
-    // Cleanup: optionally unlock on unmount
-    return () => {
-      // We don't unlock on unmount to maintain orientation throughout the app lifecycle
-    };
   }, []);
 }
