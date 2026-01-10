@@ -103,6 +103,29 @@ god-roll/
 - Avoid magic pixel values (e.g., `bottom: "80px"`) - let flexbox handle positioning
 - Use `gap` for spacing between flex children instead of margins
 
+### React Effects Guidelines
+
+**Follow React's guidance: [You Might Not Need an Effect](https://react.dev/learn/you-might-not-need-an-effect)**
+
+- **Effects are for syncing with external systems** (APIs, subscriptions, DOM)
+- **Validation**: Do in event handlers, not effects - provides instant feedback
+- **Derived state**: Calculate during render, don't use effects
+- **Async operations**: Use effects only for the fetch, handle validation separately
+- **Complex async logic**: Extract to custom hooks (e.g., `useDisplayNameEditor`)
+
+```typescript
+// ❌ Bad - effect for validation
+useEffect(() => {
+  setIsValid(name.length >= 2);
+}, [name]);
+
+// ✅ Good - validation in event handler
+const handleNameChange = (name: string) => {
+  setName(name);
+  setError(name.length < 2 ? "Too short" : null);
+};
+```
+
 ## Development Workflow
 
 1. **Before making changes**: Run existing tests to understand baseline (`npm run test`)

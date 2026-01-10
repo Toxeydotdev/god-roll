@@ -12,6 +12,7 @@ export interface Database {
       leaderboard: {
         Row: {
           id: string;
+          player_id: string;
           player_name: string;
           score: number;
           rounds_survived: number;
@@ -20,6 +21,7 @@ export interface Database {
         };
         Insert: {
           id?: string;
+          player_id: string;
           player_name: string;
           score: number;
           rounds_survived: number;
@@ -28,6 +30,7 @@ export interface Database {
         };
         Update: {
           id?: string;
+          player_id?: string;
           player_name?: string;
           score?: number;
           rounds_survived?: number;

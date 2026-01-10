@@ -416,6 +416,113 @@ Use proper CSS layout techniques (flexbox, grid) instead of absolute/fixed posit
 - Avoid magic pixel values like `bottom: "80px"` - use flexbox to naturally position elements
 - Use `gap` instead of margins for spacing between flex children
 
+### React Effects - You Might Not Need an Effect
+
+Follow React's official guidance: [You Might Not Need an Effect](https://react.dev/learn/you-might-not-need-an-effect)
+
+Effects are for **synchronizing with external systems** (APIs, DOM, subscriptions). Most other use cases should be handled differently.
+
+#### ❌ DON'T: Use effects for derived state or validation
+
+```typescript
+// Bad - this is just derived state, no effect needed
+const [firstName, setFirstName] = useState("");
+const [lastName, setLastName] = useState("");
+const [fullName, setFullName] = useState("");
+
+useEffect(() => {
+  setFullName(firstName + " " + lastName);
+}, [firstName, lastName]);
+
+// Bad - validation in effect
+const [email, setEmail] = useState("");
+const [isValid, setIsValid] = useState(false);
+
+useEffect(() => {
+  setIsValid(email.includes("@"));
+}, [email]);
+```
+
+#### ✅ DO: Calculate during render or in event handlers
+
+```typescript
+// Good - derive during render
+const [firstName, setFirstName] = useState("");
+const [lastName, setLastName] = useState("");
+const fullName = firstName + " " + lastName; // Just calculate it!
+
+// Good - validate in event handler with instant feedback
+const [email, setEmail] = useState("");
+const [formatError, setFormatError] = useState<string | null>(null);
+
+const handleEmailChange = (value: string) => {
+  setEmail(value);
+  // Immediate validation feedback - no effect needed
+  setFormatError(value.includes("@") ? null : "Invalid email format");
+};
+```
+
+#### ✅ DO: Use effects only for external system sync
+
+```typescript
+// Good - async API call is external system sync
+useEffect(() => {
+  if (!shouldFetch) return;
+
+  const controller = new AbortController();
+
+  const timer = setTimeout(async () => {
+    const result = await checkAvailability(value);
+    if (!controller.signal.aborted) {
+      setIsAvailable(result);
+    }
+  }, 500);
+
+  return () => {
+    clearTimeout(timer);
+    controller.abort();
+  };
+}, [value, shouldFetch]);
+```
+
+#### ✅ DO: Extract complex effect logic into custom hooks
+
+```typescript
+// Good - encapsulate complex async logic in a custom hook
+function useDisplayNameEditor({ initialName, playerId }) {
+  const [displayName, setDisplayName] = useState(initialName);
+  const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
+
+  // Validation in setter (event handler pattern)
+  const updateName = (name: string) => {
+    setDisplayName(name);
+    setFormatError(validateFormat(name).error);
+    setNeedsCheck(name !== initialName);
+  };
+
+  // Effect only for the async part
+  useEffect(() => {
+    if (!needsCheck) return;
+    // ... debounced API call
+  }, [needsCheck, displayName]);
+
+  return { displayName, updateName, isAvailable };
+}
+```
+
+**When to use Effects:**
+
+| Use Case                                     | Effect Needed?                            |
+| -------------------------------------------- | ----------------------------------------- |
+| Fetching data                                | ✅ Yes                                    |
+| Subscribing to events (WebSocket, resize)    | ✅ Yes                                    |
+| Controlling non-React widgets (maps, charts) | ✅ Yes                                    |
+| Sending analytics                            | ✅ Yes                                    |
+| Calculating derived state                    | ❌ No - calculate during render           |
+| Transforming data for display                | ❌ No - calculate during render           |
+| Validating user input                        | ❌ No - do in event handler               |
+| Resetting state on prop change               | ❌ No - use key prop or update in handler |
+
 ---
 
 ## Code Organization
