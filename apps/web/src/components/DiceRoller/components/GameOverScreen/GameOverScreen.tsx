@@ -222,7 +222,9 @@ export function GameOverScreen({
               }}
             >
               🔁 Survived {roundsSurvived} round
-              {roundsSurvived !== 1 ? "s" : ""} • 🎲 Max {roundsSurvived} dice
+              {roundsSurvived !== 1 ? "s" : ""} • 🎲 Max {roundsSurvived} dice •
+              💀 {profile.totalGamesPlayed} total 7
+              {profile.totalGamesPlayed !== 1 ? "s" : ""}
             </p>
             <button
               onClick={onPlayAgain}
