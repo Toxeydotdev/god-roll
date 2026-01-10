@@ -1,3 +1,5 @@
+export { AchievementProvider, useAchievements } from "./AchievementContext";
+export type { AchievementUnlock } from "./AchievementContext";
 export { DiceSkinProvider, useDiceSkin } from "./DiceSkinContext";
 export { ModalProvider, useModal } from "./ModalContext";
 export type { ModalType } from "./ModalContext";

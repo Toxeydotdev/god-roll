@@ -7,6 +7,7 @@
 
 import { ColorTheme } from "@/components/DiceRoller/colorThemes";
 import {
+  AchievementsModal,
   ColorPicker,
   DiceSkinPicker,
   GameRules,
@@ -20,13 +21,19 @@ import React, {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
+import { useAchievements } from "./AchievementContext";
 import { useTheme } from "./ThemeContext";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
-export type ModalType = "leaderboard" | "rules" | "colorPicker" | "diceSkin";
+export type ModalType =
+  | "leaderboard"
+  | "rules"
+  | "colorPicker"
+  | "diceSkin"
+  | "achievements";
 
 interface LeaderboardModalProps {
   highlightIndex?: number;
@@ -72,6 +79,7 @@ export function ModalProvider({
 }: ModalProviderProps): React.ReactElement {
   const [activeModal, setActiveModal] = useState<ModalState | null>(null);
   const { theme, setTheme } = useTheme();
+  const { unlockedAchievements, profile } = useAchievements();
 
   const openModal = useCallback((type: ModalType, props: ModalProps = {}) => {
     setActiveModal({ type, props });
@@ -119,6 +127,17 @@ export function ModalProvider({
 
       case "diceSkin":
         modalElement = <DiceSkinPicker onClose={closeModal} theme={theme} />;
+        break;
+
+      case "achievements":
+        modalElement = (
+          <AchievementsModal
+            onClose={closeModal}
+            theme={theme}
+            unlockedAchievements={unlockedAchievements}
+            profile={profile}
+          />
+        );
         break;
     }
 

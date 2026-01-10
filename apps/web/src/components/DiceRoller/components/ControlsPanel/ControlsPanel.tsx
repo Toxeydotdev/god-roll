@@ -1,10 +1,16 @@
-import { useModal, useSound, useTheme } from "@/components/DiceRoller/context";
+import {
+  useAchievements,
+  useModal,
+  useSound,
+  useTheme,
+} from "@/components/DiceRoller/context";
 import React from "react";
 
 export function ControlsPanel(): React.ReactElement {
   const { openModal } = useModal();
   const { soundEnabled, toggleSound, musicEnabled, toggleMusic } = useSound();
   const { theme } = useTheme();
+  const { unlockedCount, totalAchievements } = useAchievements();
 
   const soundIcon = soundEnabled ? (
     <svg
@@ -64,12 +70,34 @@ export function ControlsPanel(): React.ReactElement {
       onClick: () => openModal("diceSkin"),
     },
     {
+      icon: (
+        <span className="text-lg relative">
+          🏆
+          {unlockedCount > 0 && (
+            <span
+              className="absolute -top-1 -right-2 text-[8px] font-bold rounded-full px-1"
+              style={{
+                backgroundColor: theme.accentColor,
+                color: theme.backgroundCss,
+                minWidth: "14px",
+                lineHeight: "14px",
+              }}
+            >
+              {unlockedCount}
+            </span>
+          )}
+        </span>
+      ),
+      label: `${unlockedCount}/${totalAchievements}`,
+      onClick: () => openModal("achievements"),
+    },
+    {
       icon: <span className="text-lg">❓</span>,
       label: "Rules",
       onClick: () => openModal("rules"),
     },
     {
-      icon: <span className="text-lg">🏆</span>,
+      icon: <span className="text-lg">📊</span>,
       label: "Scores",
       onClick: () => openModal("leaderboard"),
     },
