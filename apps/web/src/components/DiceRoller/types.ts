@@ -20,6 +20,10 @@ export interface DiceState {
   settleFrames: number;
   isSettling: boolean;
   targetFlatQuat: THREE.Quaternion | null;
+  /** Frames since dice started being potentially stuck (elevated without progress) */
+  stuckFrames: number;
+  /** Last Y position to detect if dice is making progress */
+  lastYPosition: number;
 }
 
 export type DiceFaceNumber = 1 | 2 | 3 | 4 | 5 | 6;

@@ -12,8 +12,17 @@ import {
   RESTITUTION,
 } from "../constants";
 import { Bounds, DiceFaceNumber, DiceState } from "../types";
-import { createDiceMesh, disposeDiceMesh, updateDiceSkin } from "../utils/diceTextures";
+import {
+  createDiceMesh,
+  disposeDiceMesh,
+  updateDiceSkin,
+} from "../utils/diceTextures";
 import { secureRandom } from "../utils/secureRandom";
+
+// Unstuck feature constants
+const STUCK_DETECTION_FRAMES = 120; // ~2 seconds at 60fps before considering dice stuck
+const NUDGE_FORCE = 3; // Force applied to separate stuck dice
+const MAX_ROLL_FRAMES = 600; // ~10 seconds max before forcing all dice to settle
 
 export interface SoundCallbacks {
   onFloorHit?: (velocity: number) => void;
@@ -138,6 +147,8 @@ export function useDicePhysics({
         settleFrames: 0,
         isSettling: false,
         targetFlatQuat: null,
+        stuckFrames: 0,
+        lastYPosition: mesh.position.y,
       });
     }
 
@@ -195,9 +206,12 @@ export function useDicePhysics({
       state.settleFrames = 0;
       state.isSettling = false;
       state.targetFlatQuat = null;
+      state.stuckFrames = 0;
+      state.lastYPosition = startY;
     });
 
     let lastTime = performance.now();
+    let totalFrames = 0; // Track total frames for max timeout
 
     const simulatePhysics = (currentTime: number): void => {
       const deltaTime = Math.min((currentTime - lastTime) / 1000, 0.033);
@@ -318,6 +332,20 @@ export function useDicePhysics({
         );
 
         const isOnFloor = physics.position.y < FLOOR_Y + DICE_HALF_SIZE + 0.05;
+        const isElevated = physics.position.y > FLOOR_Y + DICE_SIZE; // Dice is above floor level
+
+        // Stuck detection: dice is elevated, slow-moving, and not making downward progress
+        if (isElevated && velMag < 2 && angMag < 2) {
+          const yProgress = Math.abs(physics.position.y - state.lastYPosition);
+          if (yProgress < 0.01) {
+            state.stuckFrames++;
+          } else {
+            state.stuckFrames = Math.max(0, state.stuckFrames - 2); // Slowly reduce if making progress
+          }
+        } else {
+          state.stuckFrames = 0;
+        }
+        state.lastYPosition = physics.position.y;
 
         if (isOnFloor && !state.settled) {
           const currentQuat = new THREE.Quaternion().setFromEuler(
@@ -460,6 +488,52 @@ export function useDicePhysics({
             }
           }
         }
+      }
+
+      // Increment total frame counter
+      totalFrames++;
+
+      // Unstuck logic: nudge dice that have been stuck for too long
+      diceStatesRef.current.forEach((state) => {
+        if (state.settled) return;
+
+        if (state.stuckFrames >= STUCK_DETECTION_FRAMES) {
+          // Apply a random nudge force to unstick the dice
+          const nudgeAngle = secureRandom() * Math.PI * 2;
+          state.physics.velocity.x += Math.cos(nudgeAngle) * NUDGE_FORCE;
+          state.physics.velocity.z += Math.sin(nudgeAngle) * NUDGE_FORCE;
+          state.physics.velocity.y += NUDGE_FORCE * 0.5; // Small upward nudge
+
+          // Add some angular velocity to help it settle differently
+          state.physics.angularVelocity.x += (secureRandom() - 0.5) * 5;
+          state.physics.angularVelocity.z += (secureRandom() - 0.5) * 5;
+
+          // Reset stuck counter to prevent repeated nudging
+          state.stuckFrames = 0;
+        }
+      });
+
+      // Max timeout: force all dice to settle if taking too long
+      if (totalFrames >= MAX_ROLL_FRAMES) {
+        diceStatesRef.current.forEach((state) => {
+          if (!state.settled) {
+            // Force settle the dice at its current position
+            state.settled = true;
+            state.physics.velocity.x = 0;
+            state.physics.velocity.y = 0;
+            state.physics.velocity.z = 0;
+            state.physics.angularVelocity.x = 0;
+            state.physics.angularVelocity.y = 0;
+            state.physics.angularVelocity.z = 0;
+
+            // Snap to floor if elevated
+            if (state.physics.position.y > FLOOR_Y + DICE_SIZE) {
+              state.physics.position.y = FLOOR_Y + DICE_HALF_SIZE;
+              state.mesh.position.y = FLOOR_Y + DICE_HALF_SIZE;
+            }
+          }
+        });
+        allSettled = true;
       }
 
       if (allSettled) {
