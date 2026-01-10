@@ -27,9 +27,21 @@ workflows:
 
       - name: Create environment file
         script: |
-          echo "VITE_SUPABASE_URL=$VITE_SUPABASE_URL" > apps/web/.env
-          echo "VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY" >> apps/web/.env
-          echo "Created .env file with Supabase credentials"
+          # Debug: Check if env vars are set
+          echo "VITE_SUPABASE_URL length: ${#VITE_SUPABASE_URL}"
+          echo "VITE_SUPABASE_ANON_KEY length: ${#VITE_SUPABASE_ANON_KEY}"
+
+          # Only create .env if both vars are set
+          if [ -n "$VITE_SUPABASE_URL" ] && [ -n "$VITE_SUPABASE_ANON_KEY" ]; then
+            echo "VITE_SUPABASE_URL=$VITE_SUPABASE_URL" > apps/web/.env
+            echo "VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY" >> apps/web/.env
+            echo "Created .env file with Supabase credentials"
+            echo "=== .env contents (masked) ==="
+            cat apps/web/.env | sed 's/=.*/=***MASKED***/'
+          else
+            echo "Supabase env vars not set - skipping .env creation"
+            echo "Online features will be disabled"
+          fi
 
       - name: Build web app
         script: |
