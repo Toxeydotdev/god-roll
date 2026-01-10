@@ -1,6 +1,7 @@
 import {
   useAchievements,
   useAuth,
+  useGameState,
   useModal,
   useOnlineMode,
   useTheme,
@@ -20,9 +21,6 @@ import React, { useEffect, useState } from "react";
 type LeaderboardTab = "local" | "global";
 
 interface GameOverScreenProps {
-  lastRollTotal: number;
-  totalScore: number;
-  round: number;
   onPlayAgain: () => void;
   highlightIndex?: number;
   leaderboardEntries: LeaderboardEntry[];
@@ -31,9 +29,6 @@ interface GameOverScreenProps {
 }
 
 export function GameOverScreen({
-  lastRollTotal,
-  totalScore,
-  round,
   onPlayAgain,
   highlightIndex,
   leaderboardEntries,
@@ -45,6 +40,8 @@ export function GameOverScreen({
   const { isAuthenticated, user } = useAuth();
   const { profile } = useAchievements();
   const { openModal } = useModal();
+  const { lastRollTotal, totalScore, round } = useGameState();
+
   const roundsSurvived = round - 1;
   const onlineAvailable = isOnlineAvailable();
 
@@ -221,10 +218,8 @@ export function GameOverScreen({
                 fontWeight: 600,
               }}
             >
-              🔁 Survived {roundsSurvived} round
-              {roundsSurvived !== 1 ? "s" : ""} • 🎲 Max {roundsSurvived} dice •
-              💀 {profile.totalGamesPlayed} total 7
-              {profile.totalGamesPlayed !== 1 ? "s" : ""}
+              Survived {roundsSurvived} round
+              {roundsSurvived !== 1 ? "s" : ""} • 🎲 Max {roundsSurvived} dice
             </p>
             <button
               onClick={onPlayAgain}

@@ -255,6 +255,7 @@ interface ComponentProps {
 
 - Global UI state (theme, modals, notifications)
 - Cross-cutting concerns (authentication, sound settings)
+- **Game state** (score, round, rolling status, results)
 - State accessed by many components at different levels
 - Avoiding props passed through 3+ component layers
 
@@ -263,6 +264,76 @@ interface ComponentProps {
 - Local component state
 - State only used by parent-child pairs
 - Frequently changing values that cause unnecessary re-renders
+
+### Game State Context
+
+Use `GameStateContext` for all game-related state. This eliminates prop drilling for common values like `totalScore`, `round`, `isRolling`, and `results`.
+
+#### ✅ DO: Access game state via useGameState hook
+
+```typescript
+import { useGameState } from "@/components/DiceRoller/context";
+
+function RollButton({ onRoll }: { onRoll: () => void }) {
+  const { results, lastRollTotal, isRolling, round, gameOver } = useGameState();
+
+  return (
+    <button onClick={onRoll} disabled={isRolling}>
+      {isRolling ? "Rolling..." : `Roll ${round} dice`}
+    </button>
+  );
+}
+```
+
+#### ✅ DO: Use initialValues prop for testing
+
+```typescript
+// In tests, use initialValues to set up specific game states
+const { container } = render(
+  <GameStateProvider
+    initialValues={{
+      totalScore: 150,
+      round: 4,
+      gameOver: true,
+      lastRollTotal: 21,
+    }}
+  >
+    <GameOverScreen onPlayAgain={mockPlayAgain} />
+  </GameStateProvider>
+);
+```
+
+#### ❌ DON'T: Pass game state through props
+
+```typescript
+// Bad - prop drilling game state
+interface RollButtonProps {
+  results: DiceFaceNumber[];
+  lastRollTotal: number;
+  isRolling: boolean;
+  round: number;
+  gameOver: boolean;
+  onRoll: () => void;
+}
+
+// Instead, use useGameState() for state and only pass action callbacks
+interface RollButtonProps {
+  onRoll: () => void;
+}
+```
+
+**Available Context Providers:**
+
+| Provider              | Hook              | Purpose                             |
+| --------------------- | ----------------- | ----------------------------------- |
+| `ThemeProvider`       | `useTheme`        | Color theme state and changes       |
+| `SoundProvider`       | `useSound`        | Sound effects and volume            |
+| `GameStateProvider`   | `useGameState`    | Score, round, rolling, results      |
+| `AuthProvider`        | `useAuth`         | Authentication state                |
+| `AchievementProvider` | `useAchievements` | Achievement tracking and unlocks    |
+| `ModalProvider`       | `useModal`        | Modal open/close state              |
+| `OnlineModeProvider`  | `useOnlineMode`   | Online/offline mode and player name |
+| `DiceSkinProvider`    | `useDiceSkin`     | Dice appearance customization       |
 
 ### Modal Management with Context + Portal
 

@@ -6,6 +6,7 @@
 import {
   AchievementProvider,
   AuthProvider,
+  GameStateProvider,
   ModalProvider,
   OnlineModeProvider,
   ThemeProvider,
@@ -42,9 +43,11 @@ vi.mock("@/lib/leaderboardService", () => ({
 // ============================================================================
 
 interface SetupOptions {
+  // Game state (via context)
   lastRollTotal?: number;
   totalScore?: number;
   round?: number;
+  // Component props
   onPlayAgain?: Mock;
   highlightIndex?: number;
   leaderboardEntries?: LeaderboardEntry[];
@@ -62,9 +65,11 @@ interface SetupResult {
 
 function setup(options: SetupOptions = {}): SetupResult {
   const {
+    // Game state defaults (via context)
     lastRollTotal = 21,
     totalScore = 150,
     round = 4,
+    // Props defaults
     onPlayAgain = vi.fn(),
     highlightIndex,
     leaderboardEntries = [],
@@ -75,22 +80,28 @@ function setup(options: SetupOptions = {}): SetupResult {
   const { container } = render(
     <ThemeProvider>
       <AuthProvider>
-        <AchievementProvider>
-          <ModalProvider>
-            <OnlineModeProvider>
-              <GameOverScreen
-                lastRollTotal={lastRollTotal}
-                totalScore={totalScore}
-                round={round}
-                onPlayAgain={onPlayAgain}
-                highlightIndex={highlightIndex}
-                leaderboardEntries={leaderboardEntries}
-                onLeaderboardChange={onLeaderboardChange}
-                sessionId={sessionId}
-              />
-            </OnlineModeProvider>
-          </ModalProvider>
-        </AchievementProvider>
+        <GameStateProvider
+          initialValues={{
+            lastRollTotal,
+            totalScore,
+            round,
+            gameOver: true,
+          }}
+        >
+          <AchievementProvider>
+            <ModalProvider>
+              <OnlineModeProvider>
+                <GameOverScreen
+                  onPlayAgain={onPlayAgain}
+                  highlightIndex={highlightIndex}
+                  leaderboardEntries={leaderboardEntries}
+                  onLeaderboardChange={onLeaderboardChange}
+                  sessionId={sessionId}
+                />
+              </OnlineModeProvider>
+            </ModalProvider>
+          </AchievementProvider>
+        </GameStateProvider>
       </AuthProvider>
     </ThemeProvider>
   );

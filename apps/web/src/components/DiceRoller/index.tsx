@@ -10,19 +10,20 @@ import {
   AchievementProvider,
   AuthProvider,
   DiceSkinProvider,
+  GameStateProvider,
   ModalProvider,
   OnlineModeProvider,
   SoundProvider,
   ThemeProvider,
   useAchievements,
   useDiceSkin,
+  useGameState,
   useSound,
   useTheme,
 } from "@/components/DiceRoller/context";
 import {
   SoundCallbacks,
   useDicePhysics,
-  useGameState,
   useScreenOrientation,
   useThreeScene,
 } from "@/components/DiceRoller/hooks";
@@ -42,13 +43,15 @@ export function DiceRoller(): React.ReactElement {
       <AuthProvider>
         <SoundProvider>
           <DiceSkinProvider>
-            <OnlineModeProvider>
-              <AchievementProvider>
-                <ModalProvider>
-                  <DiceRollerContent />
-                </ModalProvider>
-              </AchievementProvider>
-            </OnlineModeProvider>
+            <GameStateProvider>
+              <OnlineModeProvider>
+                <AchievementProvider>
+                  <ModalProvider>
+                    <DiceRollerContent />
+                  </ModalProvider>
+                </AchievementProvider>
+              </OnlineModeProvider>
+            </GameStateProvider>
           </DiceSkinProvider>
         </SoundProvider>
       </AuthProvider>
@@ -83,6 +86,19 @@ function DiceRollerContent(): React.ReactElement {
     dismissRecentUnlock,
   } = useAchievements();
 
+  // Game state from context
+  const {
+    gameStarted,
+    totalScore,
+    round,
+    gameOver,
+    setResults,
+    handleRollStart,
+    handleRollComplete: baseHandleRollComplete,
+    startGame: baseStartGame,
+    startNewGame: baseStartNewGame,
+  } = useGameState();
+
   const {
     containerRef,
     sceneRef,
@@ -99,21 +115,6 @@ function DiceRollerContent(): React.ReactElement {
     }),
     [playDiceHit]
   );
-
-  const {
-    gameStarted,
-    totalScore,
-    round,
-    gameOver,
-    lastRollTotal,
-    isRolling,
-    results,
-    setResults,
-    handleRollStart,
-    handleRollComplete: baseHandleRollComplete,
-    startGame: baseStartGame,
-    startNewGame: baseStartNewGame,
-  } = useGameState();
 
   // Wrap handleRollComplete to check for achievements
   const handleRollComplete = useCallback(
@@ -358,14 +359,7 @@ function DiceRollerContent(): React.ReactElement {
         {/* Footer - Roll button and controls */}
         {gameStarted && !gameOver && (
           <footer className="flex-none flex flex-col items-center gap-3 pointer-events-auto">
-            <RollButton
-              results={results}
-              lastRollTotal={lastRollTotal}
-              isRolling={isRolling}
-              onRoll={handleRoll}
-              round={round}
-              gameOver={gameOver}
-            />
+            <RollButton onRoll={handleRoll} />
             <ControlsPanel />
           </footer>
         )}
@@ -377,9 +371,6 @@ function DiceRollerContent(): React.ReactElement {
       {/* Game over overlay */}
       {gameOver && (
         <GameOverScreen
-          lastRollTotal={lastRollTotal}
-          totalScore={totalScore}
-          round={round}
           onPlayAgain={startNewGame}
           highlightIndex={highlightIndex}
           leaderboardEntries={leaderboardEntries}

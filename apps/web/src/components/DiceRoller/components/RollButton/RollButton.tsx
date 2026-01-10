@@ -1,6 +1,5 @@
-import { useTheme } from "@/components/DiceRoller/context";
+import { useGameState, useTheme } from "@/components/DiceRoller/context";
 import React, { useEffect, useRef, useState } from "react";
-import { DiceFaceNumber } from "../../types";
 
 // Only show banner for exceptional rolls (>70% of max possible)
 const EXCEPTIONAL_ROLL_THRESHOLD = 0.7;
@@ -8,12 +7,7 @@ const EXCEPTIONAL_ROLL_THRESHOLD = 0.7;
 const LOW_ROLL_THRESHOLD = 0.2;
 
 interface RollButtonProps {
-  results: DiceFaceNumber[];
-  lastRollTotal: number;
-  isRolling: boolean;
   onRoll: () => void;
-  round: number;
-  gameOver: boolean;
 }
 
 // Simple dice SVG icon
@@ -36,15 +30,10 @@ function DiceIcon({ size = 28 }: { size?: number }) {
   );
 }
 
-export function RollButton({
-  results,
-  lastRollTotal,
-  isRolling,
-  onRoll,
-  round,
-  gameOver,
-}: RollButtonProps): React.ReactElement {
+export function RollButton({ onRoll }: RollButtonProps): React.ReactElement {
   const { theme } = useTheme();
+  const { results, lastRollTotal, isRolling, round, gameOver } = useGameState();
+
   const [showResult, setShowResult] = useState(false);
   const [animateResult, setAnimateResult] = useState(false);
   const [showBanner, setShowBanner] = useState(false);

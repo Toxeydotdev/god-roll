@@ -3,6 +3,8 @@ export type { AchievementUnlock } from "./AchievementContext";
 export { AuthProvider, useAuth } from "./AuthContext";
 export type { AuthContextValue, AuthState, AuthStatus } from "./AuthContext";
 export { DiceSkinProvider, useDiceSkin } from "./DiceSkinContext";
+export { GameStateProvider, useGameState } from "./GameStateContext";
+export type { GameStateInitialValues } from "./GameStateContext";
 export { ModalProvider, useModal } from "./ModalContext";
 export type { ModalType } from "./ModalContext";
 export { OnlineModeProvider, useOnlineMode } from "./OnlineModeContext";

@@ -60,10 +60,12 @@ god-roll/
 
 2. **Component Standards**:
 
-   - Use React Context for global state (theme, sound, modals) to avoid prop drilling
-   - All UI components accept a `theme` prop for consistent styling
+   - Use React Context for global state (theme, sound, game state, modals) to avoid prop drilling
+   - Use `useGameState()` hook for accessing game state (score, round, results) instead of props
+   - All UI components use `useTheme()` hook for consistent styling
    - Export prop interfaces for testability
    - Modal management uses Context + Portal pattern
+   - Only pass action callbacks (e.g., `onRoll`) as props, not state
 
 3. **Code Organization**:
 
@@ -146,3 +148,4 @@ const handleNameChange = (name: string) => {
 - WebGL/Three.js tests require special mocking (see AGENTS.md)
 - Color assertions in DOM tests must account for rgb() normalization
 - Context providers wrap the app root for global state management
+- Use `GameStateProvider` with `initialValues` prop for testing components that consume game state
