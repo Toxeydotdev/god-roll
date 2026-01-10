@@ -11,7 +11,7 @@ export function GameRules({
   theme,
 }: GameRulesProps): React.ReactElement {
   return (
-    <div className="absolute inset-0 flex items-center justify-center z-30 bg-black/60 p-4">
+    <div className="fixed inset-0 flex items-center justify-center z-30 bg-black/60 p-4 min-h-dvh">
       <div className="bg-white/95 rounded-2xl p-6 text-left shadow-2xl max-w-md max-h-[90vh] overflow-auto">
         <h2
           className="text-2xl font-black mb-4 text-center"
