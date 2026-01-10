@@ -362,6 +362,60 @@ All UI components should accept a `theme` prop for consistent styling.
 <h2 className="text-green-800">Title</h2>
 ```
 
+### CSS Layout
+
+Use proper CSS layout techniques (flexbox, grid) instead of absolute/fixed positioning. This creates more maintainable, responsive layouts.
+
+#### ✅ DO: Use flexbox for page layouts
+
+```typescript
+// Good - proper flexbox layout with UI overlaying canvas
+<div className="relative w-full h-dvh">
+  {/* Canvas fills entire screen */}
+  <div ref={containerRef} className="absolute inset-0" />
+
+  {/* UI Layer - overlays on top with flexbox */}
+  <div className="absolute inset-0 pointer-events-none flex flex-col">
+    <header className="flex-none flex justify-between p-4 pointer-events-auto">
+      {/* Header content */}
+    </header>
+
+    <div className="flex-1">
+      {/* Middle content - spacer pushes footer down */}
+    </div>
+
+    <footer className="flex-none flex flex-col items-center pointer-events-auto">
+      {/* Footer content */}
+    </footer>
+  </div>
+</div>
+```
+
+#### ❌ DON'T: Use absolute positioning with magic pixel values
+
+```typescript
+// Bad - brittle, doesn't respond to content changes
+<div className="absolute top-4 left-4">Title</div>
+<div className="absolute bottom-20 left-1/2">Button</div>
+<div style={{ bottom: "80px", position: "fixed" }}>Controls</div>
+```
+
+**When to use each approach:**
+
+| Layout Technique | Use For                                                      |
+| ---------------- | ------------------------------------------------------------ |
+| Flexbox          | Page layouts, navigation bars, centering, distributing space |
+| Grid             | Complex 2D layouts, card grids, dashboard layouts            |
+| Absolute/Fixed   | Overlays on canvas, tooltips, dropdowns, modals              |
+
+**Key principles:**
+
+- Use `flex-col` with `flex-1` spacers to push elements to edges
+- Use `pointer-events-none` on overlay containers, `pointer-events-auto` on interactive elements
+- For full-screen canvas apps: canvas is `absolute inset-0`, UI overlays with flexbox
+- Avoid magic pixel values like `bottom: "80px"` - use flexbox to naturally position elements
+- Use `gap` instead of margins for spacing between flex children
+
 ---
 
 ## Code Organization

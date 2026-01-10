@@ -3,25 +3,35 @@ import { ColorTheme } from "../components/DiceRoller/colorThemes";
 export const mockTheme: ColorTheme = {
   id: "green",
   name: "Forest",
-  background: 0x90ee90,
-  backgroundCss: "#90EE90",
+  background: 0x6ab06a,
+  backgroundCss: "#6AB06A",
+  backgroundGradient:
+    "linear-gradient(145deg, #90EE90 0%, #6AB06A 50%, #4A904A 100%)",
   textPrimary: "#1a5a1a",
   textSecondary: "#2a7a2a",
   textTertiary: "#4a9a4a",
   accentColor: "#FFD700",
   accentHover: "#FFC000",
+  buttonGlow: "rgba(255, 215, 0, 0.4)",
+  successColor: "#32CD32",
+  dangerColor: "#DC3545",
 };
 
 export const mockOceanTheme: ColorTheme = {
   id: "blue",
   name: "Ocean",
-  background: 0x87ceeb,
-  backgroundCss: "#87CEEB",
+  background: 0x5ba3c0,
+  backgroundCss: "#5BA3C0",
+  backgroundGradient:
+    "linear-gradient(145deg, #87CEEB 0%, #5BA3C0 50%, #3A8AA8 100%)",
   textPrimary: "#1a4a6a",
   textSecondary: "#2a5a7a",
   textTertiary: "#4a7a9a",
-  accentColor: "#FFD700",
-  accentHover: "#FFC000",
+  accentColor: "#FF6B35",
+  accentHover: "#FF5722",
+  buttonGlow: "rgba(255, 107, 53, 0.4)",
+  successColor: "#00CED1",
+  dangerColor: "#FF4757",
 };
 
 // Helper to convert hex to rgb format for style comparisons

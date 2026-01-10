@@ -3,6 +3,7 @@ import {
   GameOverScreen,
   GameTitle,
   RollButton,
+  RoundCompleteBanner,
   StartScreen,
 } from "@/components/DiceRoller/components";
 import {
@@ -202,73 +203,139 @@ function DiceRollerContent(): React.ReactElement {
   return (
     <div
       className="relative w-full h-dvh overflow-hidden touch-none"
-      style={{ backgroundColor: theme.backgroundCss }}
+      style={{ background: theme.backgroundGradient }}
     >
-      <GameTitle />
+      {/* Subtle texture overlay for depth */}
+      <div className="texture-overlay" />
 
-      {/* Controls panel - collapsible menu with sound, theme, rules, leaderboard */}
-      {gameStarted && <ControlsPanel />}
+      {/* 3D Canvas - fills entire screen */}
+      <div ref={containerRef} className="absolute inset-0" />
 
-      {/* Score display during game */}
-      {gameStarted && (
-        <div className="absolute top-4 right-4 z-0 text-right">
-          <div
-            className="text-2xl"
-            data-testid="score-display"
-            style={{
-              color: theme.textPrimary,
-              fontFamily: "var(--font-display)",
-              textShadow: "2px 2px 0px rgba(0,0,0,0.15)",
-              letterSpacing: "0.05em",
-            }}
-          >
-            SCORE: {totalScore}
-          </div>
-          <div
-            className="text-lg"
-            data-testid="round-display"
-            style={{
-              color: theme.textSecondary,
-              fontWeight: 600,
-            }}
-          >
-            Round {round}
-          </div>
-          {/* Reset button */}
-          <button
-            onMouseDown={() =>
-              handleResetStart(startNewGame, setResetProgress, resetTimerRef)
-            }
-            onMouseUp={() => handleResetEnd(setResetProgress, resetTimerRef)}
-            onMouseLeave={() => handleResetEnd(setResetProgress, resetTimerRef)}
-            onTouchStart={(e) => {
-              e.preventDefault();
-              handleResetStart(startNewGame, setResetProgress, resetTimerRef);
-            }}
-            onTouchEnd={(e) => {
-              e.preventDefault();
-              handleResetEnd(setResetProgress, resetTimerRef);
-            }}
-            className="text-sm px-3 py-1 rounded-full transition-all hover:scale-105 active:scale-95 mt-1 block mx-auto"
-            data-testid="reset-button"
-            style={{
-              backgroundColor: theme.textSecondary,
-              color: theme.backgroundCss,
-              opacity: 0.7 + resetProgress * 0.3,
-              fontWeight: 600,
-              boxShadow: "0 2px 0 rgba(0,0,0,0.2)",
-            }}
-            title="Hold to reset game"
-          >
-            {resetProgress > 0 ? "HOLD..." : "Hold to Reset"}
-          </button>
+      {/* UI Layer - overlays on top of canvas */}
+      <div className="absolute inset-0 pointer-events-none flex flex-col">
+        {/* Header area - title and score */}
+        <header className="flex-none flex justify-between items-start p-4 pointer-events-auto">
+          <GameTitle />
+
+          {/* Score display during game - enhanced hierarchy */}
+          {gameStarted ? (
+            <div className="text-right">
+              {/* Round is primary - larger and more prominent */}
+              <div
+                className="text-3xl mb-1"
+                data-testid="round-display"
+                style={{
+                  color: theme.textPrimary,
+                  fontFamily: "var(--font-display)",
+                  textShadow: "3px 3px 0px rgba(0,0,0,0.15)",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                ROUND {round}
+              </div>
+              {/* Score is secondary */}
+              <div
+                className="text-xl"
+                data-testid="score-display"
+                style={{
+                  color: theme.textSecondary,
+                  fontWeight: 600,
+                }}
+              >
+                <span style={{ fontSize: "0.9em", opacity: 0.8 }}>🏆</span>{" "}
+                {totalScore}
+              </div>
+              {/* Dice count indicator */}
+              <div
+                className="text-sm mt-1 px-2 py-0.5 rounded-full inline-block"
+                style={{
+                  backgroundColor: "rgba(0,0,0,0.1)",
+                  color: theme.textTertiary,
+                  fontWeight: 600,
+                }}
+              >
+                🎲 ×{round}
+              </div>
+              {/* Reset button */}
+              <button
+                onMouseDown={() =>
+                  handleResetStart(
+                    startNewGame,
+                    setResetProgress,
+                    resetTimerRef
+                  )
+                }
+                onMouseUp={() =>
+                  handleResetEnd(setResetProgress, resetTimerRef)
+                }
+                onMouseLeave={() =>
+                  handleResetEnd(setResetProgress, resetTimerRef)
+                }
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  handleResetStart(
+                    startNewGame,
+                    setResetProgress,
+                    resetTimerRef
+                  );
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  handleResetEnd(setResetProgress, resetTimerRef);
+                }}
+                className="text-sm px-3 py-1 rounded-full transition-all hover:scale-105 active:scale-95 mt-2 block ml-auto"
+                data-testid="reset-button"
+                style={{
+                  backgroundColor: theme.textSecondary,
+                  color: theme.backgroundCss,
+                  opacity: 0.7 + resetProgress * 0.3,
+                  fontWeight: 600,
+                  boxShadow: "0 2px 0 rgba(0,0,0,0.2)",
+                }}
+                title="Hold to reset game"
+              >
+                {resetProgress > 0 ? "HOLD..." : "↺ Reset"}
+              </button>
+            </div>
+          ) : (
+            <div />
+          )}
+        </header>
+
+        {/* Middle spacer - pushes footer to bottom */}
+        <div className="flex-1">
+          {/* Round complete celebration banner */}
+          {gameStarted && (
+            <RoundCompleteBanner
+              round={round}
+              lastScore={lastRollTotal}
+              isRolling={isRolling}
+              gameOver={gameOver}
+            />
+          )}
         </div>
-      )}
 
-      <div ref={containerRef} className="w-full h-full" />
+        {/* Footer - Roll button and controls */}
+        {gameStarted && !gameOver && (
+          <footer
+            className="flex-none flex flex-col items-center gap-3 pointer-events-auto"
+            style={{ paddingBottom: "env(safe-area-inset-bottom, 8px)" }}
+          >
+            <RollButton
+              results={results}
+              lastRollTotal={lastRollTotal}
+              isRolling={isRolling}
+              onRoll={handleRoll}
+            />
+            <ControlsPanel />
+          </footer>
+        )}
+      </div>
 
+      {/* Start screen overlay */}
       {!gameStarted && <StartScreen onStartGame={startGame} />}
 
+      {/* Game over overlay */}
       {gameOver && (
         <GameOverScreen
           lastRollTotal={lastRollTotal}
@@ -279,15 +346,6 @@ function DiceRollerContent(): React.ReactElement {
           leaderboardEntries={leaderboardEntries}
           onLeaderboardChange={setLeaderboardEntries}
           sessionId={sessionId}
-        />
-      )}
-
-      {gameStarted && !gameOver && (
-        <RollButton
-          results={results}
-          lastRollTotal={lastRollTotal}
-          isRolling={isRolling}
-          onRoll={handleRoll}
         />
       )}
     </div>

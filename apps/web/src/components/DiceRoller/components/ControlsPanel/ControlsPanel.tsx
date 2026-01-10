@@ -1,11 +1,7 @@
 import { useModal, useSound, useTheme } from "@/components/DiceRoller/context";
-import React, { useState } from "react";
+import React from "react";
 
-interface ControlButtonsProps {
-  isOpen: boolean;
-}
-
-function ControlButtons({ isOpen }: ControlButtonsProps) {
+export function ControlsPanel(): React.ReactElement {
   const { openModal } = useModal();
   const { soundEnabled, toggleSound, musicEnabled, toggleMusic } = useSound();
   const { theme } = useTheme();
@@ -13,8 +9,8 @@ function ControlButtons({ isOpen }: ControlButtonsProps) {
   const soundIcon = soundEnabled ? (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="16"
-      height="16"
+      width="20"
+      height="20"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -29,8 +25,8 @@ function ControlButtons({ isOpen }: ControlButtonsProps) {
   ) : (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="16"
-      height="16"
+      width="20"
+      height="20"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -47,28 +43,34 @@ function ControlButtons({ isOpen }: ControlButtonsProps) {
   const buttons = [
     {
       icon: soundIcon,
-      label: soundEnabled ? "Mute sound" : "Unmute sound",
+      label: soundEnabled ? "Sound" : "Muted",
       onClick: toggleSound,
+      active: soundEnabled,
     },
     {
-      icon: musicEnabled ? "🎵" : "🔇",
-      label: musicEnabled ? "Stop music" : "Play music",
+      icon: <span className="text-lg">{musicEnabled ? "🎵" : "🔇"}</span>,
+      label: "Music",
       onClick: toggleMusic,
+      active: musicEnabled,
     },
     {
-      icon: "🎨",
-      label: "Change theme",
+      icon: <span className="text-lg">🎨</span>,
+      label: "Theme",
       onClick: () => openModal("colorPicker"),
     },
     {
-      icon: "🎲",
-      label: "Change dice skin",
+      icon: <span className="text-lg">🎲</span>,
+      label: "Dice",
       onClick: () => openModal("diceSkin"),
     },
-    { icon: "❓", label: "Show rules", onClick: () => openModal("rules") },
     {
-      icon: "🏆",
-      label: "Show leaderboard",
+      icon: <span className="text-lg">❓</span>,
+      label: "Rules",
+      onClick: () => openModal("rules"),
+    },
+    {
+      icon: <span className="text-lg">🏆</span>,
+      label: "Scores",
       onClick: () => openModal("leaderboard"),
     },
   ];
@@ -76,137 +78,72 @@ function ControlButtons({ isOpen }: ControlButtonsProps) {
   return (
     <>
       <style>{`
-        @keyframes button-float-in {
-          0% {
-            opacity: 0;
-            transform: translateY(20px) scale(0.8);
-          }
-          100% {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-        }
-
-        @keyframes button-float-out {
-          0% {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-          100% {
-            opacity: 0;
-            transform: translateY(20px) scale(0.8);
-          }
-        }
-
-        @keyframes hover-float {
-          0%, 100% {
-            transform: translateY(0px);
-          }
-          50% {
-            transform: translateY(-6px);
-          }
-        }
-
-        .control-button {
-          animation: ${
-            isOpen
-              ? "button-float-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)"
-              : "button-float-out 0.4s ease-in"
-          } forwards;
-        }
-
-        .control-button:hover {
-          animation: ${
-            isOpen
-              ? "button-float-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, hover-float 2s ease-in-out infinite"
-              : "button-float-out 0.4s ease-in forwards"
-          };
-        }
-      `}</style>
-      <div
-        className="absolute top-12 left-1/2 transform -translate-x-1/2 flex flex-col gap-3"
-        style={{
-          opacity: isOpen ? 1 : 0,
-          pointerEvents: isOpen ? "auto" : "none",
-        }}
-      >
-        {buttons.map((button, index) => (
-          <button
-            key={index}
-            onClick={button.onClick}
-            className="control-button w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95"
-            style={{
-              backgroundColor: theme.textSecondary,
-              color: theme.backgroundCss,
-              animationDelay: isOpen ? `${index * 0.08}s` : "0s",
-              opacity: 1,
-              transform: "scale(1)",
-            }}
-            title={button.label}
-            aria-label={button.label}
-          >
-            {button.icon}
-          </button>
-        ))}
-      </div>
-    </>
-  );
-}
-
-export function ControlsPanel(): React.ReactElement {
-  const [isOpen, setIsOpen] = useState(false);
-  const { theme } = useTheme();
-
-  return (
-    <div className="fixed z-50" style={{ top: "132px", right: "1rem" }}>
-      <style>{`
-        @keyframes gear-spin {
+        @keyframes thumb-bar-slide-up {
           from {
-            transform: rotate(0deg);
+            transform: translateY(100%);
+            opacity: 0;
           }
           to {
-            transform: rotate(360deg);
+            transform: translateY(0);
+            opacity: 1;
           }
         }
 
-        .gear-button:hover {
-          animation: gear-spin 0.6s ease-in-out;
+        .thumb-bar {
+          animation: thumb-bar-slide-up 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
 
-        @keyframes pulse-glow {
-          0%, 100% {
-            box-shadow: 0 0 0 0px rgba(255, 255, 255, 0.4);
-          }
-          50% {
-            box-shadow: 0 0 0 6px rgba(255, 255, 255, 0);
-          }
+        .thumb-bar-button {
+          transition: all 0.15s ease;
         }
 
-        .gear-button.active {
-          animation: pulse-glow 2s infinite;
+        .thumb-bar-button:hover {
+          transform: translateY(-2px);
+        }
+
+        .thumb-bar-button:active {
+          transform: scale(0.95);
         }
       `}</style>
 
-      {/* Main gear button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={`gear-button w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95 relative z-10 ${
-          isOpen ? "active" : ""
-        }`}
+      {/* Bottom thumb bar - mobile first */}
+      <div
+        className="thumb-bar w-full"
         style={{
-          backgroundColor: theme.textSecondary,
-          color: theme.backgroundCss,
-          opacity: isOpen ? 1 : 0.8,
-          transform: isOpen ? "scale(1.1)" : "scale(1)",
+          background: `linear-gradient(180deg, ${theme.textSecondary}F5 0%, ${theme.textSecondary}F0 100%)`,
+          boxShadow: `0 -4px 20px rgba(0,0,0,0.2)`,
+          backdropFilter: "blur(10px)",
+          borderTop: `1px solid rgba(255,255,255,0.15)`,
+          paddingBottom: "env(safe-area-inset-bottom, 0px)",
         }}
-        title={isOpen ? "Close controls" : "Open controls"}
-        aria-label={isOpen ? "Close controls" : "Open controls"}
       >
-        ⚙️
-      </button>
-
-      {/* Control buttons container */}
-      <ControlButtons isOpen={isOpen} />
-    </div>
+        {/* Bar container - centered content */}
+        <div className="flex items-center justify-around gap-1 px-2 py-2 w-full max-w-md mx-auto">
+          {buttons.map((button, index) => (
+            <button
+              key={index}
+              onClick={button.onClick}
+              className="thumb-bar-button flex flex-col items-center justify-center py-1 px-2 rounded-xl min-w-[48px]"
+              style={{
+                color: theme.backgroundCss,
+                opacity: button.active === false ? 0.5 : 1,
+              }}
+              title={button.label}
+              aria-label={button.label}
+            >
+              <span className="flex items-center justify-center h-6">
+                {button.icon}
+              </span>
+              <span
+                className="text-[10px] font-medium mt-0.5 leading-none"
+                style={{ opacity: 0.9 }}
+              >
+                {button.label}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </>
   );
 }

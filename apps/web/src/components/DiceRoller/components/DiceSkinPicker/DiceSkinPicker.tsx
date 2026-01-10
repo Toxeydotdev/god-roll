@@ -38,7 +38,7 @@ export function DiceSkinPicker({
         >
           🎲 Choose Dice Skin
         </h2>
-        <div className="grid grid-cols-2 gap-4 overflow-y-auto flex-1">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto flex-1">
           {skins.map((skin) => (
             <button
               key={skin.id}

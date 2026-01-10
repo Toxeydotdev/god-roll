@@ -104,21 +104,27 @@ export function GameOverScreen({
   };
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center z-20 bg-black/50 p-4">
-      <div className="bg-white/95 rounded-2xl p-6 shadow-2xl max-w-[95vw] max-h-[90vh] overflow-auto">
+    <div className="absolute inset-0 flex items-center justify-center z-20 bg-black/60 p-4 fade-in">
+      <div
+        className="rounded-2xl p-6 shadow-2xl max-w-[95vw] max-h-[90vh] overflow-auto slide-up"
+        style={{
+          background: `linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(245,245,245,0.98) 100%)`,
+          boxShadow: `0 25px 50px rgba(0,0,0,0.3), 0 0 60px ${theme.buttonGlow}`,
+        }}
+      >
         <div className="flex flex-col md:flex-row gap-6">
           {/* Game Over Info */}
           <div className="text-center flex-shrink-0">
             <h2
-              className="text-3xl md:text-4xl mb-2"
+              className="text-3xl md:text-4xl mb-2 shake"
               style={{
-                color: "#c44",
+                color: theme.dangerColor,
                 fontFamily: "var(--font-display)",
-                textShadow: "3px 3px 0px rgba(0,0,0,0.15)",
+                textShadow: `3px 3px 0px rgba(0,0,0,0.15), 0 0 20px ${theme.dangerColor}40`,
                 letterSpacing: "0.05em",
               }}
             >
-              GAME OVER!
+              💀 GAME OVER!
             </h2>
             <p
               className="text-lg mb-1"
@@ -127,18 +133,42 @@ export function GameOverScreen({
                 fontWeight: 600,
               }}
             >
-              You rolled {lastRollTotal} (divisible by 7)
+              You rolled{" "}
+              <span style={{ color: theme.dangerColor, fontWeight: 700 }}>
+                {lastRollTotal}
+              </span>{" "}
+              (divisible by 7)
             </p>
-            <p
-              className="text-xl md:text-2xl mb-2"
+            <div
+              className="my-4 py-3 px-6 rounded-xl inline-block pop-in"
               style={{
-                color: theme.textPrimary,
-                fontFamily: "var(--font-display)",
-                letterSpacing: "0.05em",
+                background: `linear-gradient(145deg, ${theme.accentColor}20 0%, ${theme.accentColor}10 100%)`,
+                border: `2px solid ${theme.accentColor}40`,
               }}
             >
-              Final Score: {totalScore}
-            </p>
+              <p
+                className="text-4xl md:text-5xl mb-1"
+                style={{
+                  color: theme.textPrimary,
+                  fontFamily: "var(--font-display)",
+                  letterSpacing: "0.05em",
+                  textShadow: `2px 2px 0 rgba(0,0,0,0.1)`,
+                }}
+              >
+                {totalScore}
+              </p>
+              <p
+                className="text-sm"
+                style={{
+                  color: theme.textSecondary,
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                }}
+              >
+                Final Score
+              </p>
+            </div>
             <p
               className="text-base mb-4"
               style={{
@@ -146,19 +176,22 @@ export function GameOverScreen({
                 fontWeight: 600,
               }}
             >
-              You survived {roundsSurvived} round
-              {roundsSurvived !== 1 ? "s" : ""}!
+              🔁 Survived {roundsSurvived} round
+              {roundsSurvived !== 1 ? "s" : ""} • 🎲 Max {roundsSurvived} dice
             </p>
             <button
               onClick={onPlayAgain}
-              className="text-xl md:text-2xl px-6 md:px-8 py-2 md:py-3 rounded-full transition-all hover:scale-105 active:scale-95"
+              className="text-xl md:text-2xl px-8 md:px-10 py-3 md:py-4 rounded-full transition-all hover:scale-105 active:scale-95 roll-button-idle"
               style={{
-                backgroundColor: theme.textPrimary,
+                backgroundColor: theme.accentColor,
                 color: theme.backgroundCss,
                 fontFamily: "var(--font-display)",
                 textShadow: "2px 2px 0px rgba(0,0,0,0.3)",
-                boxShadow: "0 4px 0 rgba(0,0,0,0.2)",
-                letterSpacing: "0.05em",
+                ["--button-shadow" as string]: `0 5px 0 ${theme.accentHover}, 0 8px 20px rgba(0,0,0,0.25)`,
+                ["--glow-color" as string]: theme.buttonGlow,
+                boxShadow: `0 5px 0 ${theme.accentHover}, 0 8px 20px rgba(0,0,0,0.25), 0 0 20px ${theme.buttonGlow}`,
+                letterSpacing: "0.08em",
+                border: `3px solid ${theme.accentHover}`,
               }}
             >
               PLAY AGAIN
