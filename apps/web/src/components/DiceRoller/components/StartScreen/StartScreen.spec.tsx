@@ -3,7 +3,12 @@
  *
  * StartScreen User Interaction Tests following SIFERS methodology
  */
-import { ModalProvider, ThemeProvider } from "@/components/DiceRoller/context";
+import {
+  AchievementProvider,
+  AuthProvider,
+  ModalProvider,
+  ThemeProvider,
+} from "@/components/DiceRoller/context";
 import { hexToRgb, mockTheme } from "@/test-utils";
 import {
   cleanup,
@@ -45,9 +50,13 @@ function setup(options: SetupOptions = {}): SetupResult {
 
   const { container } = render(
     <ThemeProvider>
-      <ModalProvider>
-        <StartScreen onStartGame={onStartGame} />
-      </ModalProvider>
+      <AuthProvider>
+        <AchievementProvider>
+          <ModalProvider>
+            <StartScreen onStartGame={onStartGame} />
+          </ModalProvider>
+        </AchievementProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 

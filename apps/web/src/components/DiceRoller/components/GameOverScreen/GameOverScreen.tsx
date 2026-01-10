@@ -1,4 +1,10 @@
-import { useOnlineMode, useTheme } from "@/components/DiceRoller/context";
+import {
+  useAchievements,
+  useAuth,
+  useModal,
+  useOnlineMode,
+  useTheme,
+} from "@/components/DiceRoller/context";
 import {
   clearLeaderboard,
   LeaderboardEntry,
@@ -35,7 +41,10 @@ export function GameOverScreen({
   sessionId,
 }: GameOverScreenProps): React.ReactElement {
   const { theme } = useTheme();
-  const { isOnlineMode, playerName, setPlayerName } = useOnlineMode();
+  const { isOnlineMode, setPlayerName } = useOnlineMode();
+  const { isAuthenticated, user } = useAuth();
+  const { profile } = useAchievements();
+  const { openModal } = useModal();
   const roundsSurvived = round - 1;
   const onlineAvailable = isOnlineAvailable();
 
@@ -52,7 +61,6 @@ export function GameOverScreen({
     message: string;
     rank?: number;
   } | null>(null);
-  const [nameInput, setNameInput] = useState(playerName);
   const [hasSubmitted, setHasSubmitted] = useState(false);
 
   // Lock body scroll when modal is open
@@ -91,17 +99,18 @@ export function GameOverScreen({
   }, [activeTab]);
 
   const handleSubmitScore = async () => {
-    if (!nameInput.trim() || hasSubmitted) return;
+    if (!isAuthenticated || !user || hasSubmitted) return;
 
     setIsSubmitting(true);
-    setPlayerName(nameInput.trim());
+    setPlayerName(profile.displayName);
 
-    const result = await submitScore(
-      nameInput.trim(),
-      totalScore,
+    const result = await submitScore({
+      playerId: user.id,
+      playerName: profile.displayName,
+      score: totalScore,
       roundsSurvived,
-      sessionId
-    );
+      sessionId,
+    });
 
     setSubmitResult(result);
     setHasSubmitted(true);
@@ -350,38 +359,56 @@ export function GameOverScreen({
             {/* Global Leaderboard */}
             {activeTab === "global" && (
               <div>
-                {/* Submit Score Form */}
+                {/* Submit Score Form - Only for authenticated users */}
                 {!hasSubmitted && totalScore > 0 && (
                   <div className="mb-3 p-3 rounded-lg bg-gray-100">
-                    <p
-                      className="text-sm mb-2"
-                      style={{ color: theme.textSecondary }}
-                    >
-                      Submit your score to the global leaderboard!
-                    </p>
-                    <input
-                      type="text"
-                      placeholder="Enter your name"
-                      value={nameInput}
-                      onChange={(e) => setNameInput(e.target.value)}
-                      maxLength={20}
-                      className="w-full px-3 py-1.5 rounded-lg border text-sm mb-2"
-                      style={{
-                        borderColor: theme.textSecondary,
-                        color: theme.textPrimary,
-                      }}
-                    />
-                    <button
-                      onClick={handleSubmitScore}
-                      disabled={!nameInput.trim() || isSubmitting}
-                      className="px-4 py-1.5 rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                      style={{
-                        backgroundColor: theme.textPrimary,
-                        color: theme.backgroundCss,
-                      }}
-                    >
-                      {isSubmitting ? "Submitting..." : "Submit Score"}
-                    </button>
+                    {isAuthenticated ? (
+                      <>
+                        <p
+                          className="text-sm mb-2"
+                          style={{ color: theme.textSecondary }}
+                        >
+                          Submit as{" "}
+                          <span
+                            className="font-bold"
+                            style={{ color: theme.textPrimary }}
+                          >
+                            {profile.displayName}
+                          </span>
+                        </p>
+                        <button
+                          onClick={handleSubmitScore}
+                          disabled={isSubmitting}
+                          className="px-4 py-1.5 rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                          style={{
+                            backgroundColor: theme.textPrimary,
+                            color: theme.backgroundCss,
+                          }}
+                        >
+                          {isSubmitting ? "Submitting..." : "Submit Score"}
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <p
+                          className="text-sm mb-2"
+                          style={{ color: theme.textSecondary }}
+                        >
+                          🔒 Sign in to submit your score to the global
+                          leaderboard
+                        </p>
+                        <button
+                          onClick={() => openModal("auth")}
+                          className="px-4 py-1.5 rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95"
+                          style={{
+                            backgroundColor: theme.accentColor,
+                            color: theme.backgroundCss,
+                          }}
+                        >
+                          Sign In / Sign Up
+                        </button>
+                      </>
+                    )}
                   </div>
                 )}
 

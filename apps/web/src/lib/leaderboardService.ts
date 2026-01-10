@@ -7,6 +7,14 @@ export interface SubmitScoreResult {
   message: string;
 }
 
+export interface SubmitScoreParams {
+  playerId: string;
+  playerName: string;
+  score: number;
+  roundsSurvived: number;
+  sessionId: string;
+}
+
 /**
  * Check if online features are available
  */
@@ -39,20 +47,28 @@ export async function getLeaderboard(limit = 10): Promise<LeaderboardEntry[]> {
 
 /**
  * Submit a score to the leaderboard via Edge Function (server-side validation)
- * This prevents cheating by validating the score on the server
+ * Requires authentication - only logged-in users can submit scores
  */
 export async function submitScore(
-  playerName: string,
-  score: number,
-  roundsSurvived: number,
-  sessionId: string
+  params: SubmitScoreParams
 ): Promise<SubmitScoreResult> {
   if (!supabase) {
     return { success: false, message: "Online features not configured" };
   }
 
+  const { playerId, playerName, score, roundsSurvived, sessionId } = params;
+
+  // Validate player ID is present (must be authenticated)
+  if (!playerId) {
+    return {
+      success: false,
+      message: "You must be logged in to submit scores",
+    };
+  }
+
   try {
     console.log("Submitting score:", {
+      playerId,
       playerName,
       score,
       roundsSurvived,
@@ -61,6 +77,7 @@ export async function submitScore(
 
     const { data, error } = await supabase.functions.invoke("submit-score", {
       body: {
+        player_id: playerId,
         player_name: playerName,
         score,
         rounds_survived: roundsSurvived,
@@ -70,7 +87,6 @@ export async function submitScore(
 
     if (error) {
       console.error("Error submitting score:", error);
-      // Try to get more details from the error
       const errorMessage = error.message || "Failed to submit score";
       return { success: false, message: errorMessage };
     }

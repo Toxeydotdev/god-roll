@@ -1,4 +1,5 @@
 import {
+  AchievementToastContainer,
   ControlsPanel,
   GameOverScreen,
   GameTitle,
@@ -6,11 +7,14 @@ import {
   StartScreen,
 } from "@/components/DiceRoller/components";
 import {
+  AchievementProvider,
+  AuthProvider,
   DiceSkinProvider,
   ModalProvider,
   OnlineModeProvider,
   SoundProvider,
   ThemeProvider,
+  useAchievements,
   useDiceSkin,
   useSound,
   useTheme,
@@ -23,6 +27,7 @@ import {
   useThreeScene,
 } from "@/components/DiceRoller/hooks";
 import { addLeaderboardEntry } from "@/components/DiceRoller/leaderboard";
+import type { DiceFaceNumber } from "@/components/DiceRoller/types";
 import React, {
   useCallback,
   useEffect,
@@ -34,15 +39,19 @@ import React, {
 export function DiceRoller(): React.ReactElement {
   return (
     <ThemeProvider>
-      <SoundProvider>
-        <DiceSkinProvider>
-          <OnlineModeProvider>
-            <ModalProvider>
-              <DiceRollerContent />
-            </ModalProvider>
-          </OnlineModeProvider>
-        </DiceSkinProvider>
-      </SoundProvider>
+      <AuthProvider>
+        <SoundProvider>
+          <DiceSkinProvider>
+            <OnlineModeProvider>
+              <AchievementProvider>
+                <ModalProvider>
+                  <DiceRollerContent />
+                </ModalProvider>
+              </AchievementProvider>
+            </OnlineModeProvider>
+          </DiceSkinProvider>
+        </SoundProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }
@@ -58,6 +67,8 @@ function DiceRollerContent(): React.ReactElement {
   >([]);
   // Session ID for this game instance (prevents duplicate score submissions)
   const [sessionId, setSessionId] = useState<string>(() => crypto.randomUUID());
+  // Track if this is the first roll of the game (for achievements)
+  const isFirstRollRef = useRef<boolean>(true);
 
   // Lock screen orientation on mobile devices
   useScreenOrientation();
@@ -65,6 +76,12 @@ function DiceRollerContent(): React.ReactElement {
   const { theme } = useTheme();
   const { playDiceHit } = useSound();
   const { skinId } = useDiceSkin();
+  const {
+    checkForAchievements,
+    onGameEnd,
+    recentUnlocks,
+    dismissRecentUnlock,
+  } = useAchievements();
 
   const {
     containerRef,
@@ -93,10 +110,34 @@ function DiceRollerContent(): React.ReactElement {
     results,
     setResults,
     handleRollStart,
-    handleRollComplete,
+    handleRollComplete: baseHandleRollComplete,
     startGame: baseStartGame,
     startNewGame: baseStartNewGame,
   } = useGameState();
+
+  // Wrap handleRollComplete to check for achievements
+  const handleRollComplete = useCallback(
+    (rollTotal: number, diceResults: DiceFaceNumber[]) => {
+      // First, process the roll normally
+      baseHandleRollComplete(rollTotal, diceResults);
+
+      // Then check for achievements
+      // Note: totalScore here is the score BEFORE this roll
+      const scoreAfterRoll =
+        rollTotal % 7 === 0 ? totalScore : totalScore + rollTotal;
+      checkForAchievements(
+        diceResults,
+        rollTotal,
+        scoreAfterRoll,
+        round + 1, // round is incremented in handleRollStart before roll
+        isFirstRollRef.current
+      );
+
+      // No longer first roll after this
+      isFirstRollRef.current = false;
+    },
+    [baseHandleRollComplete, checkForAchievements, totalScore, round]
+  );
 
   const { isRollingRef, rollDice, clearAllDice, updateAllDiceSkins } =
     useDicePhysics({
@@ -124,6 +165,7 @@ function DiceRollerContent(): React.ReactElement {
     clearAllDice();
     resetCamera();
     baseStartGame();
+    isFirstRollRef.current = true; // Reset for new game
   }, [clearAllDice, baseStartGame, resetCamera]);
 
   const startNewGame = useCallback(() => {
@@ -132,11 +174,15 @@ function DiceRollerContent(): React.ReactElement {
     baseStartNewGame();
     setHighlightIndex(undefined);
     setSessionId(crypto.randomUUID()); // New session for new game
+    isFirstRollRef.current = true; // Reset for new game
   }, [clearAllDice, baseStartNewGame, resetCamera]);
 
-  // Save score to leaderboard when game ends
+  // Save score to leaderboard and update profile when game ends
   useEffect(() => {
     if (gameOver && totalScore > 0) {
+      // Update achievement profile stats
+      onGameEnd(totalScore, round - 1);
+
       const newEntries = addLeaderboardEntry({
         score: totalScore,
         rounds: round - 1,
@@ -339,6 +385,18 @@ function DiceRollerContent(): React.ReactElement {
           leaderboardEntries={leaderboardEntries}
           onLeaderboardChange={setLeaderboardEntries}
           sessionId={sessionId}
+        />
+      )}
+
+      {/* Achievement unlock toasts */}
+      {recentUnlocks.length > 0 && (
+        <AchievementToastContainer
+          achievements={recentUnlocks.map((u) => ({
+            achievement: u.achievement,
+            id: u.achievement.id,
+          }))}
+          theme={theme}
+          onDismiss={(id) => dismissRecentUnlock(id)}
         />
       )}
     </div>

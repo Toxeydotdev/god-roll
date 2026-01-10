@@ -1,3 +1,9 @@
+export { AchievementsModal } from "./AchievementsModal/AchievementsModal";
+export {
+  AchievementToast,
+  AchievementToastContainer,
+} from "./AchievementToast/AchievementToast";
+export { AuthModal } from "./AuthModal";
 export { ColorPicker } from "./ColorPicker/ColorPicker";
 export { ControlsPanel } from "./ControlsPanel/ControlsPanel";
 export { DiceSkinPicker } from "./DiceSkinPicker/DiceSkinPicker";

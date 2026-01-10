@@ -4,6 +4,9 @@
  * GameOverScreen User Interaction Tests following SIFERS methodology
  */
 import {
+  AchievementProvider,
+  AuthProvider,
+  ModalProvider,
   OnlineModeProvider,
   ThemeProvider,
 } from "@/components/DiceRoller/context";
@@ -71,18 +74,24 @@ function setup(options: SetupOptions = {}): SetupResult {
 
   const { container } = render(
     <ThemeProvider>
-      <OnlineModeProvider>
-        <GameOverScreen
-          lastRollTotal={lastRollTotal}
-          totalScore={totalScore}
-          round={round}
-          onPlayAgain={onPlayAgain}
-          highlightIndex={highlightIndex}
-          leaderboardEntries={leaderboardEntries}
-          onLeaderboardChange={onLeaderboardChange}
-          sessionId={sessionId}
-        />
-      </OnlineModeProvider>
+      <AuthProvider>
+        <AchievementProvider>
+          <ModalProvider>
+            <OnlineModeProvider>
+              <GameOverScreen
+                lastRollTotal={lastRollTotal}
+                totalScore={totalScore}
+                round={round}
+                onPlayAgain={onPlayAgain}
+                highlightIndex={highlightIndex}
+                leaderboardEntries={leaderboardEntries}
+                onLeaderboardChange={onLeaderboardChange}
+                sessionId={sessionId}
+              />
+            </OnlineModeProvider>
+          </ModalProvider>
+        </AchievementProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 
@@ -118,6 +127,8 @@ function createLeaderboardEntries(count: number): LeaderboardEntry[] {
 describe("GameOverScreen - User Interactions", () => {
   beforeEach(() => {
     localStorage.clear();
+    // Mock window.scrollTo for jsdom
+    window.scrollTo = vi.fn();
   });
 
   afterEach(() => {
