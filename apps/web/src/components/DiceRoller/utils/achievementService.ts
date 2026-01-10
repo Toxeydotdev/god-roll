@@ -42,7 +42,7 @@ export async function fetchCloudProfile(
     const { data, error } = await supabase
       .from("user_profiles")
       .select("*")
-      .eq("user_id", userId)
+      .eq("player_id", userId)
       .single();
 
     if (error || !data) {
@@ -52,10 +52,10 @@ export async function fetchCloudProfile(
     // Map database fields to UserProfile
     return {
       id: data.id,
-      playerId: data.user_id,
+      playerId: data.player_id,
       displayName: data.display_name,
       totalScore: data.total_score,
-      totalGamesPlayed: data.games_played,
+      totalGamesPlayed: data.total_games_played,
       highestScore: data.highest_score,
       highestRound: data.highest_round,
       currentStreak: data.current_streak,
@@ -89,10 +89,10 @@ export async function saveCloudProfile(
     const { error } = await supabase.from("user_profiles").upsert(
       {
         id: profile.id,
-        user_id: userId,
+        player_id: userId,
         display_name: profile.displayName,
         total_score: profile.totalScore,
-        games_played: profile.totalGamesPlayed,
+        total_games_played: profile.totalGamesPlayed,
         highest_score: profile.highestScore,
         highest_round: profile.highestRound,
         current_streak: profile.currentStreak,
@@ -104,7 +104,7 @@ export async function saveCloudProfile(
         equipped_badges: profile.equippedBadges,
         updated_at: new Date().toISOString(),
       },
-      { onConflict: "user_id" }
+      { onConflict: "player_id" }
     );
 
     if (error) {
@@ -140,7 +140,7 @@ export async function fetchCloudAchievements(
     const { data, error } = await supabase
       .from("user_achievements")
       .select("*")
-      .eq("user_id", userId);
+      .eq("player_id", userId);
 
     if (error || !data) {
       return [];
@@ -171,12 +171,12 @@ export async function saveCloudAchievement(
   try {
     const { error } = await supabase.from("user_achievements").upsert(
       {
-        user_id: userId,
+        player_id: userId,
         achievement_id: achievement.achievementId,
         unlocked_at: achievement.unlockedAt,
         progress: achievement.progress || 0,
       },
-      { onConflict: "user_id,achievement_id" }
+      { onConflict: "player_id,achievement_id" }
     );
 
     if (error) {
@@ -207,7 +207,7 @@ export async function saveAllCloudAchievements(
 
   try {
     const records = achievements.map((a) => ({
-      user_id: userId,
+      player_id: userId,
       achievement_id: a.achievementId,
       unlocked_at: a.unlockedAt,
       progress: a.progress || 0,
@@ -215,7 +215,7 @@ export async function saveAllCloudAchievements(
 
     const { error } = await supabase
       .from("user_achievements")
-      .upsert(records, { onConflict: "user_id,achievement_id" });
+      .upsert(records, { onConflict: "player_id,achievement_id" });
 
     if (error) {
       console.error("Error saving cloud achievements:", error);
