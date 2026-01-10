@@ -9,8 +9,8 @@ export function ControlsPanel(): React.ReactElement {
   const soundIcon = soundEnabled ? (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="22"
-      height="22"
+      width="18"
+      height="18"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -25,8 +25,8 @@ export function ControlsPanel(): React.ReactElement {
   ) : (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="22"
-      height="22"
+      width="18"
+      height="18"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -106,7 +106,7 @@ export function ControlsPanel(): React.ReactElement {
         }
       `}</style>
 
-      {/* Bottom thumb bar - mobile first with extra iOS safe area */}
+      {/* Bottom thumb bar - compact mobile-first design */}
       <div
         className="thumb-bar w-full"
         style={{
@@ -114,16 +114,16 @@ export function ControlsPanel(): React.ReactElement {
           boxShadow: `0 -4px 20px rgba(0,0,0,0.2)`,
           backdropFilter: "blur(10px)",
           borderTop: `1px solid rgba(255,255,255,0.15)`,
-          paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)",
+          paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 8px)",
         }}
       >
-        {/* Bar container - centered content with larger touch targets */}
-        <div className="flex items-center justify-around gap-1 px-3 py-3 w-full max-w-md mx-auto">
+        {/* Bar container - icons near top, more space at bottom */}
+        <div className="flex items-start justify-around gap-0.5 px-2 pt-1 pb-0 w-full max-w-md mx-auto">
           {buttons.map((button, index) => (
             <button
               key={index}
               onClick={button.onClick}
-              className="thumb-bar-button flex flex-col items-center justify-center py-2 px-3 rounded-xl min-w-[52px]"
+              className="thumb-bar-button flex flex-col items-center justify-center py-1 px-2 rounded-lg min-w-[44px]"
               style={{
                 color: theme.backgroundCss,
                 opacity: button.active === false ? 0.5 : 1,
@@ -131,11 +131,11 @@ export function ControlsPanel(): React.ReactElement {
               title={button.label}
               aria-label={button.label}
             >
-              <span className="flex items-center justify-center h-7 text-xl">
+              <span className="flex items-center justify-center h-5 text-base">
                 {button.icon}
               </span>
               <span
-                className="text-[11px] font-medium mt-1 leading-none"
+                className="text-[9px] font-medium mt-0.5 leading-none"
                 style={{ opacity: 0.9 }}
               >
                 {button.label}

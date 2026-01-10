@@ -104,12 +104,17 @@ export function GameOverScreen({
   };
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center z-20 bg-black/60 p-4 fade-in">
+    <div
+      className="absolute inset-0 flex items-center justify-center z-20 bg-black/60 p-4 fade-in touch-none"
+      style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+    >
       <div
-        className="rounded-2xl p-6 shadow-2xl max-w-[95vw] max-h-[90vh] overflow-auto slide-up"
+        className="rounded-2xl p-6 shadow-2xl max-w-[95vw] max-h-[90vh] overflow-auto slide-up touch-auto"
+        onClick={(e) => e.stopPropagation()}
         style={{
           background: `linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(245,245,245,0.98) 100%)`,
           boxShadow: `0 25px 50px rgba(0,0,0,0.3), 0 0 60px ${theme.buttonGlow}`,
+          overscrollBehavior: "contain",
         }}
       >
         <div className="flex flex-col md:flex-row gap-6">
