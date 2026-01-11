@@ -11,6 +11,7 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 interface ScoreSubmission {
@@ -27,11 +28,79 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  // Only allow POST
+  if (req.method !== "POST") {
+    return new Response(
+      JSON.stringify({ success: false, message: "Method not allowed" }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 405,
+      }
+    );
+  }
+
   try {
+    // ========================================
+    // AUTHENTICATION - Verify JWT manually
+    // ========================================
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ success: false, message: "Missing authorization" }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 401,
+        }
+      );
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+
+    // Create a client with the anon key to verify the user's JWT
+    const supabaseAuth = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+    );
+
+    // Verify the JWT and get the user
+    const {
+      data: { user },
+      error: authError,
+    } = await supabaseAuth.auth.getUser(token);
+
+    if (authError || !user) {
+      console.error("Auth error:", authError);
+      return new Response(
+        JSON.stringify({ success: false, message: "Invalid or expired token" }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 401,
+        }
+      );
+    }
+
+    console.log("Authenticated user:", user.id);
+
+    // Service role client for database operations
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
+
+    // Verify we have a service role key
+    if (!Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")) {
+      console.error("SUPABASE_SERVICE_ROLE_KEY not configured");
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: "Server configuration error",
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 500,
+        }
+      );
+    }
 
     const {
       player_id,
@@ -40,6 +109,18 @@ Deno.serve(async (req) => {
       rounds_survived,
       session_id,
     }: ScoreSubmission = await req.json();
+
+    // Verify the player_id matches the authenticated user
+    if (player_id !== user.id) {
+      console.error("Player ID mismatch:", { player_id, userId: user.id });
+      return new Response(
+        JSON.stringify({ success: false, message: "Player ID mismatch" }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 403,
+        }
+      );
+    }
 
     // ========================================
     // VALIDATION RULES (Anti-cheat)
