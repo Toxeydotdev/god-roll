@@ -116,11 +116,15 @@ export function AchievementsModal({
   return (
     <div
       className="fixed inset-0 flex items-end sm:items-center justify-center z-30 bg-black/60"
+      style={{ touchAction: "none" }}
       onClick={onClose}
     >
       <div
         className="bg-white/95 rounded-t-3xl sm:rounded-2xl p-6 pt-3 text-center shadow-2xl w-full sm:w-[90vw] sm:max-w-[500px] max-h-[85vh] flex flex-col"
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        style={{
+          paddingBottom: "env(safe-area-inset-bottom)",
+          overscrollBehavior: "contain",
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Drag handle */}

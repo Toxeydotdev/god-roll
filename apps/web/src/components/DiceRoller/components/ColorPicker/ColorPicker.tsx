@@ -15,6 +15,7 @@ export function ColorPicker({
   return (
     <div
       className="fixed inset-0 flex items-end sm:items-center justify-center z-30 bg-black/60"
+      style={{ touchAction: "none" }}
       onClick={onClose}
     >
       <div
@@ -22,6 +23,7 @@ export function ColorPicker({
         style={{
           backgroundColor: currentTheme.backgroundCss,
           paddingBottom: "env(safe-area-inset-bottom)",
+          overscrollBehavior: "contain",
         }}
         onClick={(e) => e.stopPropagation()}
       >
