@@ -60,28 +60,20 @@ export function GameOverScreen({
   } | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
 
-  // Lock body scroll when modal is open
+  // Prevent background scroll on mobile using overflow hidden on html/body
+  // This approach avoids the viewport jump caused by position:fixed on body
   useEffect(() => {
-    const originalStyle = document.body.style.overflow;
-    const originalPosition = document.body.style.position;
-    const originalWidth = document.body.style.width;
-    const originalTop = document.body.style.top;
-    const scrollY = window.scrollY;
+    // Store original overflow values
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+    const originalBodyOverflow = document.body.style.overflow;
 
+    // Prevent scrolling on both html and body
+    document.documentElement.style.overflow = "hidden";
     document.body.style.overflow = "hidden";
-    document.body.style.position = "fixed";
-    document.body.style.width = "100%";
-    document.body.style.top = `-${scrollY}px`;
 
     return () => {
-      document.body.style.overflow = originalStyle;
-      document.body.style.position = originalPosition;
-      document.body.style.width = originalWidth;
-      document.body.style.top = originalTop;
-      // Restore scroll position (safe for both browser and test environment)
-      if (typeof window.scrollTo === "function") {
-        window.scrollTo(0, scrollY);
-      }
+      document.documentElement.style.overflow = originalHtmlOverflow;
+      document.body.style.overflow = originalBodyOverflow;
     };
   }, []);
 
