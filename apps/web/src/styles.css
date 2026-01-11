@@ -275,6 +275,23 @@ body {
   animation: dice-unlock 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
+/* Highlight pulse animation for navigated-to items */
+@keyframes highlight-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px var(--highlight-color, #22c55e),
+      0 0 8px var(--highlight-color, #22c55e);
+  }
+  50% {
+    box-shadow: 0 0 0 4px var(--highlight-color, #22c55e),
+      0 0 16px var(--highlight-color, #22c55e);
+  }
+}
+
+.highlight-pulse {
+  animation: highlight-pulse 1.5s ease-in-out infinite;
+}
+
 /* Toast pop animation - quick in, fade out (for left:50% centered elements) */
 @keyframes toast-pop {
   0% {

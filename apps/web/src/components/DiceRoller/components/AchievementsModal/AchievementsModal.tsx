@@ -9,11 +9,12 @@ import {
   Achievement,
   AchievementCategory,
   ACHIEVEMENTS,
+  getAchievementById,
   getVisibleAchievements,
   UserProfile,
 } from "@/components/DiceRoller/achievements";
 import type { ColorTheme } from "@/components/DiceRoller/colorThemes";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 // ============================================================================
 // TYPES
@@ -24,6 +25,7 @@ export interface AchievementsModalProps {
   theme: ColorTheme;
   unlockedAchievements: Set<string>;
   profile: UserProfile;
+  highlightAchievementId?: string;
 }
 
 type CategoryFilter = AchievementCategory | "all";
@@ -53,8 +55,34 @@ export function AchievementsModal({
   theme,
   unlockedAchievements,
   profile,
+  highlightAchievementId,
 }: AchievementsModalProps): React.ReactElement {
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const highlightedCardRef = useRef<HTMLDivElement>(null);
+
+  // If there's a highlight achievement, set the category filter to show it
+  useEffect(() => {
+    if (highlightAchievementId) {
+      const achievement = getAchievementById(highlightAchievementId);
+      if (achievement) {
+        setCategoryFilter(achievement.category);
+      }
+    }
+  }, [highlightAchievementId]);
+
+  // Scroll to the highlighted achievement after filter changes
+  useEffect(() => {
+    if (highlightAchievementId && highlightedCardRef.current) {
+      // Small delay to ensure DOM has updated
+      setTimeout(() => {
+        highlightedCardRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }, 100);
+    }
+  }, [highlightAchievementId, categoryFilter]);
 
   // Get visible achievements (hide secret ones that aren't unlocked)
   const visibleAchievements = useMemo(
@@ -221,16 +249,24 @@ export function AchievementsModal({
         </div>
 
         {/* Achievement List */}
-        <div className="flex-1 overflow-y-auto min-h-0">
+        <div
+          ref={scrollContainerRef}
+          className="flex-1 overflow-y-auto min-h-0"
+        >
           <div className="space-y-2">
-            {filteredAchievements.map((achievement) => (
-              <AchievementCard
-                key={achievement.id}
-                achievement={achievement}
-                isUnlocked={unlockedAchievements.has(achievement.id)}
-                theme={theme}
-              />
-            ))}
+            {filteredAchievements.map((achievement) => {
+              const isHighlighted = achievement.id === highlightAchievementId;
+              return (
+                <AchievementCard
+                  key={achievement.id}
+                  achievement={achievement}
+                  isUnlocked={unlockedAchievements.has(achievement.id)}
+                  theme={theme}
+                  isHighlighted={isHighlighted}
+                  cardRef={isHighlighted ? highlightedCardRef : undefined}
+                />
+              );
+            })}
           </div>
 
           {filteredAchievements.length === 0 && (
@@ -255,12 +291,16 @@ interface AchievementCardProps {
   achievement: Achievement;
   isUnlocked: boolean;
   theme: ColorTheme;
+  isHighlighted?: boolean;
+  cardRef?: React.RefObject<HTMLDivElement>;
 }
 
 function AchievementCard({
   achievement,
   isUnlocked,
   theme,
+  isHighlighted,
+  cardRef,
 }: AchievementCardProps): React.ReactElement {
   const getRewardIcon = () => {
     switch (achievement.reward.type) {
@@ -281,9 +321,17 @@ function AchievementCard({
 
   return (
     <div
+      ref={cardRef}
       className={`
         flex items-center gap-3 p-3 rounded-xl text-left transition-all
-        ${isUnlocked ? "" : "opacity-60 grayscale"}
+        ${
+          isUnlocked
+            ? ""
+            : isHighlighted
+            ? "opacity-80"
+            : "opacity-60 grayscale"
+        }
+        ${isHighlighted ? "highlight-pulse" : ""}
       `}
       style={{
         backgroundColor: isUnlocked
@@ -292,6 +340,9 @@ function AchievementCard({
         border: `1px solid ${
           isUnlocked ? theme.accentColor : theme.textTertiary
         }40`,
+        ...(isHighlighted && {
+          ["--highlight-color" as string]: theme.accentColor,
+        }),
       }}
     >
       {/* Icon */}

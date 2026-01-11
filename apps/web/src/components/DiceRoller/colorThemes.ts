@@ -129,6 +129,22 @@ export const COLOR_THEMES: ColorTheme[] = [
     successColor: "#FFD700",
     dangerColor: "#E74C3C",
   },
+  {
+    id: "cyan",
+    name: "Electric Cyan",
+    background: 0x1a3a4a,
+    backgroundCss: "#1A3A4A",
+    backgroundGradient:
+      "linear-gradient(145deg, #2A5A6A 0%, #1A3A4A 50%, #0A2A3A 100%)",
+    textPrimary: "#00FFFF",
+    textSecondary: "#00CCCC",
+    textTertiary: "#009999",
+    accentColor: "#FF00FF",
+    accentHover: "#CC00CC",
+    buttonGlow: "rgba(255, 0, 255, 0.5)",
+    successColor: "#00FF00",
+    dangerColor: "#FF4444",
+  },
 ];
 
 const STORAGE_KEY = "godroll_theme_v1";

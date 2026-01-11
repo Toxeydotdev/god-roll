@@ -49,9 +49,14 @@ interface ColorPickerModalProps {
   onSelectTheme: (theme: ColorTheme) => void;
 }
 
+interface AchievementsModalProps {
+  highlightAchievementId?: string;
+}
+
 type ModalProps =
   | LeaderboardModalProps
   | ColorPickerModalProps
+  | AchievementsModalProps
   | Record<string, never>;
 
 interface ModalState {
@@ -142,6 +147,9 @@ export function ModalProvider({
             theme={theme}
             unlockedAchievements={unlockedAchievements}
             profile={profile}
+            highlightAchievementId={
+              (props as AchievementsModalProps).highlightAchievementId
+            }
           />
         );
         break;
@@ -168,6 +176,12 @@ export function ModalProvider({
                 (t: ColorTheme) => t.id === themeId
               );
               if (newTheme) setTheme(newTheme);
+            }}
+            onViewAchievement={(achievementId) => {
+              // Navigate to achievements modal with the specific achievement highlighted
+              openModal("achievements", {
+                highlightAchievementId: achievementId,
+              });
             }}
           />
         );

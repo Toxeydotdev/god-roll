@@ -72,6 +72,7 @@ export interface RewardsModalProps {
   currentThemeId: string;
   onSelectSkin: (skinId: string) => void;
   onSelectTheme: (themeId: string) => void;
+  onViewAchievement: (achievementId: string) => void;
 }
 
 // ============================================================================
@@ -87,6 +88,19 @@ function getUnlocksFromAchievements(
   ).map((a) => a.reward.value);
 }
 
+/**
+ * Find the achievement that unlocks a specific reward
+ */
+function findAchievementForReward(
+  rewardValue: string,
+  rewardType: string
+): { id: string; name: string } | null {
+  const achievement = ACHIEVEMENTS.find(
+    (a) => a.reward.value === rewardValue && a.reward.type === rewardType
+  );
+  return achievement ? { id: achievement.id, name: achievement.name } : null;
+}
+
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================
@@ -99,6 +113,7 @@ export function RewardsModal({
   currentThemeId,
   onSelectSkin,
   onSelectTheme,
+  onViewAchievement,
 }: RewardsModalProps): React.ReactElement {
   const [activeCategory, setActiveCategory] = useState<RewardCategory>("skins");
 
@@ -274,6 +289,8 @@ export function RewardsModal({
                   isSelected={currentSkinId === skin.id}
                   onSelect={() => onSelectSkin(skin.id)}
                   theme={theme}
+                  achievement={findAchievementForReward(skin.id, "dice_skin")}
+                  onViewAchievement={onViewAchievement}
                 />
               ))}
 
@@ -286,6 +303,8 @@ export function RewardsModal({
                   isSelected={currentThemeId === t.id}
                   onSelect={() => onSelectTheme(t.id)}
                   theme={theme}
+                  achievement={findAchievementForReward(t.id, "theme")}
+                  onViewAchievement={onViewAchievement}
                 />
               ))}
 
@@ -293,9 +312,12 @@ export function RewardsModal({
               sortedBadges.map(([id, badge]) => (
                 <BadgeCard
                   key={id}
+                  badgeId={id}
                   badge={badge}
                   isUnlocked={unlockedBadges.includes(id)}
                   theme={theme}
+                  achievement={findAchievementForReward(id, "badge")}
+                  onViewAchievement={onViewAchievement}
                 />
               ))}
 
@@ -303,9 +325,12 @@ export function RewardsModal({
               sortedTitles.map(([id, title]) => (
                 <TitleCard
                   key={id}
+                  titleId={id}
                   title={title}
                   isUnlocked={unlockedTitles.includes(id)}
                   theme={theme}
+                  achievement={findAchievementForReward(id, "title")}
+                  onViewAchievement={onViewAchievement}
                 />
               ))}
           </div>
@@ -325,6 +350,8 @@ interface SkinCardProps {
   isSelected: boolean;
   onSelect: () => void;
   theme: ColorTheme;
+  achievement: { id: string; name: string } | null;
+  onViewAchievement: (achievementId: string) => void;
 }
 
 function SkinCard({
@@ -333,14 +360,27 @@ function SkinCard({
   isSelected,
   onSelect,
   theme,
+  achievement,
+  onViewAchievement,
 }: SkinCardProps): React.ReactElement {
+  const handleClick = () => {
+    if (isUnlocked) {
+      onSelect();
+    } else if (achievement) {
+      onViewAchievement(achievement.id);
+    }
+  };
+
   return (
     <button
-      onClick={() => isUnlocked && onSelect()}
-      disabled={!isUnlocked}
+      onClick={handleClick}
       className={`
         w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all
-        ${isUnlocked ? "hover:scale-[1.01] active:scale-[0.99]" : "opacity-50"}
+        ${
+          isUnlocked
+            ? "hover:scale-[1.01] active:scale-[0.99]"
+            : "hover:opacity-70 active:opacity-60"
+        }
       `}
       style={{
         backgroundColor: isSelected
@@ -385,16 +425,24 @@ function SkinCard({
           )}
         </div>
         <div
-          className="text-xs truncate"
-          style={{ color: theme.textSecondary }}
+          className="text-xs truncate flex items-center gap-1"
+          style={{
+            color: isUnlocked ? theme.textSecondary : theme.accentColor,
+          }}
         >
-          {isUnlocked ? "Tap to equip" : "Unlock via achievement"}
+          {isUnlocked ? (
+            "Tap to equip"
+          ) : achievement ? (
+            <>View "{achievement.name}" →</>
+          ) : (
+            "Default skin"
+          )}
         </div>
       </div>
 
       {/* Status */}
       <div className="flex-shrink-0 text-lg">
-        {isUnlocked ? (isSelected ? "✓" : "") : "🔒"}
+        {isUnlocked ? (isSelected ? "✓" : "") : achievement ? "→" : ""}
       </div>
     </button>
   );
@@ -410,6 +458,8 @@ interface ThemeCardProps {
   isSelected: boolean;
   onSelect: () => void;
   theme: ColorTheme;
+  achievement: { id: string; name: string } | null;
+  onViewAchievement: (achievementId: string) => void;
 }
 
 function ThemeCard({
@@ -418,14 +468,27 @@ function ThemeCard({
   isSelected,
   onSelect,
   theme,
+  achievement,
+  onViewAchievement,
 }: ThemeCardProps): React.ReactElement {
+  const handleClick = () => {
+    if (isUnlocked) {
+      onSelect();
+    } else if (achievement) {
+      onViewAchievement(achievement.id);
+    }
+  };
+
   return (
     <button
-      onClick={() => isUnlocked && onSelect()}
-      disabled={!isUnlocked}
+      onClick={handleClick}
       className={`
         w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all
-        ${isUnlocked ? "hover:scale-[1.01] active:scale-[0.99]" : "opacity-50"}
+        ${
+          isUnlocked
+            ? "hover:scale-[1.01] active:scale-[0.99]"
+            : "hover:opacity-70 active:opacity-60"
+        }
       `}
       style={{
         backgroundColor: isSelected
@@ -472,16 +535,24 @@ function ThemeCard({
           )}
         </div>
         <div
-          className="text-xs truncate"
-          style={{ color: theme.textSecondary }}
+          className="text-xs truncate flex items-center gap-1"
+          style={{
+            color: isUnlocked ? theme.textSecondary : theme.accentColor,
+          }}
         >
-          {isUnlocked ? "Tap to apply" : "Unlock via achievement"}
+          {isUnlocked ? (
+            "Tap to apply"
+          ) : achievement ? (
+            <>View "{achievement.name}" →</>
+          ) : (
+            "Default theme"
+          )}
         </div>
       </div>
 
       {/* Status */}
       <div className="flex-shrink-0 text-lg">
-        {isUnlocked ? (isSelected ? "✓" : "") : "🔒"}
+        {isUnlocked ? (isSelected ? "✓" : "") : achievement ? "→" : ""}
       </div>
     </button>
   );
@@ -492,21 +563,34 @@ function ThemeCard({
 // ============================================================================
 
 interface BadgeCardProps {
+  badgeId: string;
   badge: { name: string; icon: string; description: string };
   isUnlocked: boolean;
   theme: ColorTheme;
+  achievement: { id: string; name: string } | null;
+  onViewAchievement: (achievementId: string) => void;
 }
 
 function BadgeCard({
   badge,
   isUnlocked,
   theme,
+  achievement,
+  onViewAchievement,
 }: BadgeCardProps): React.ReactElement {
+  const handleClick = () => {
+    if (!isUnlocked && achievement) {
+      onViewAchievement(achievement.id);
+    }
+  };
+
   return (
-    <div
+    <button
+      onClick={handleClick}
+      disabled={isUnlocked}
       className={`
         w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all
-        ${isUnlocked ? "" : "opacity-50"}
+        ${isUnlocked ? "" : "hover:opacity-70 active:opacity-60 cursor-pointer"}
       `}
       style={{
         backgroundColor: isUnlocked
@@ -539,12 +623,25 @@ function BadgeCard({
         </div>
         <div
           className="text-xs truncate"
-          style={{ color: theme.textSecondary }}
+          style={{
+            color: isUnlocked ? theme.textSecondary : theme.accentColor,
+          }}
         >
-          {badge.description}
+          {isUnlocked ? (
+            badge.description
+          ) : achievement ? (
+            <>View "{achievement.name}" →</>
+          ) : (
+            badge.description
+          )}
         </div>
       </div>
-    </div>
+
+      {/* Status */}
+      {!isUnlocked && achievement && (
+        <div className="flex-shrink-0 text-lg">→</div>
+      )}
+    </button>
   );
 }
 
@@ -553,21 +650,34 @@ function BadgeCard({
 // ============================================================================
 
 interface TitleCardProps {
+  titleId: string;
   title: { name: string; description: string };
   isUnlocked: boolean;
   theme: ColorTheme;
+  achievement: { id: string; name: string } | null;
+  onViewAchievement: (achievementId: string) => void;
 }
 
 function TitleCard({
   title,
   isUnlocked,
   theme,
+  achievement,
+  onViewAchievement,
 }: TitleCardProps): React.ReactElement {
+  const handleClick = () => {
+    if (!isUnlocked && achievement) {
+      onViewAchievement(achievement.id);
+    }
+  };
+
   return (
-    <div
+    <button
+      onClick={handleClick}
+      disabled={isUnlocked}
       className={`
         w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all
-        ${isUnlocked ? "" : "opacity-50"}
+        ${isUnlocked ? "" : "hover:opacity-70 active:opacity-60 cursor-pointer"}
       `}
       style={{
         backgroundColor: isUnlocked
@@ -600,12 +710,25 @@ function TitleCard({
         </div>
         <div
           className="text-xs truncate"
-          style={{ color: theme.textSecondary }}
+          style={{
+            color: isUnlocked ? theme.textSecondary : theme.accentColor,
+          }}
         >
-          {title.description}
+          {isUnlocked ? (
+            title.description
+          ) : achievement ? (
+            <>View "{achievement.name}" →</>
+          ) : (
+            title.description
+          )}
         </div>
       </div>
-    </div>
+
+      {/* Status */}
+      {!isUnlocked && achievement && (
+        <div className="flex-shrink-0 text-lg">→</div>
+      )}
+    </button>
   );
 }
 

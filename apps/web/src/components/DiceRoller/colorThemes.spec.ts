@@ -89,7 +89,7 @@ describe("colorThemes - User Interactions", () => {
         themeCycle.push(getSavedThemeId());
       }
 
-      // EXPECT: All themes should be selectable (including the new Mythic theme)
+      // EXPECT: All themes should be selectable (including the new Mythic and Cyan themes)
       expect(themeCycle).toEqual([
         "green",
         "blue",
@@ -98,6 +98,7 @@ describe("colorThemes - User Interactions", () => {
         "pink",
         "gray",
         "mythic",
+        "cyan",
       ]);
     });
   });
@@ -167,8 +168,8 @@ describe("colorThemes - User Interactions", () => {
       }
     });
 
-    it("should have exactly 7 themes available", () => {
-      expect(COLOR_THEMES).toHaveLength(7);
+    it("should have exactly 8 themes available", () => {
+      expect(COLOR_THEMES).toHaveLength(8);
     });
   });
 });
