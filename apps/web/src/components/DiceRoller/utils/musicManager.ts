@@ -15,12 +15,40 @@ class MusicManager {
   private _savedEnabledState = false;
   private _isToggling = false;
   private _pendingStart = false;
-  private _savedVolume = 0.3; // Default volume
+  private _savedVolume = 0.15; // Default volume
+  private _wasPlayingBeforeHidden = false;
 
   constructor() {
     if (typeof window !== "undefined") {
       setTimeout(() => this.loadSettings(), 0);
+      this.setupVisibilityListener();
     }
+  }
+
+  /**
+   * Setup listener for page visibility changes to pause/resume music
+   */
+  private setupVisibilityListener(): void {
+    if (typeof document === "undefined") return;
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        // App is being hidden/backgrounded
+        if (this.isPlaying && this.audio) {
+          this._wasPlayingBeforeHidden = true;
+          this.audio.pause();
+        }
+      } else {
+        // App is becoming visible again
+        if (this._wasPlayingBeforeHidden && this.audio) {
+          this._wasPlayingBeforeHidden = false;
+          this.audio.play().catch(() => {
+            // Autoplay blocked, will need user interaction
+            console.log("Music autoplay blocked after returning to tab. Click anywhere to resume music.");
+          });
+        }
+      }
+    });
   }
 
   private loadSettings(): void {
@@ -112,7 +140,8 @@ class MusicManager {
   }
 
   stop(): void {
-    if (!this.isPlaying || this._isToggling) return;
+    // Allow stopping even if not currently playing to clear saved state
+    if (this._isToggling) return;
 
     this._isToggling = true;
 
@@ -143,10 +172,13 @@ class MusicManager {
 
   async toggle(): Promise<boolean> {
     if (this._isToggling) {
-      return this.isPlaying;
+      return this.isEnabled();
     }
 
-    if (this.isPlaying) {
+    // Check actual desired state, not just playing state
+    const shouldStop = this.isPlaying || this._savedEnabledState;
+
+    if (shouldStop) {
       this.stop();
       return false;
     } else {

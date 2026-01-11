@@ -44,14 +44,15 @@ export function useSound(): UseSoundReturn {
   const initialized = useRef(false);
   const isToggling = useRef(false);
 
-  // Initialize sound manager on mount
+  // Initialize sound manager on mount and update when settings change
   useEffect(() => {
     if (!initialized.current) {
       soundManager.init();
-      soundManager.setEnabled(soundEnabled);
-      soundManager.setVolume(volume);
       initialized.current = true;
     }
+    // Sync sound manager with current settings
+    soundManager.setEnabled(soundEnabled);
+    soundManager.setVolume(volume);
   }, [soundEnabled, volume]);
 
   // Resume audio context on user interaction
