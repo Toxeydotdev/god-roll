@@ -1,4 +1,5 @@
 import type { LeaderboardEntry } from "./database.types";
+import { generateScoreSignature } from "./hmac";
 import { isSupabaseConfigured, supabase } from "./supabase";
 
 export interface SubmitScoreResult {
@@ -182,6 +183,16 @@ export async function submitScore(
       throw new Error("No active session - please sign in again");
     }
 
+    // Generate HMAC signature for anti-tampering
+    const timestamp = Date.now();
+    const signature = await generateScoreSignature({
+      playerId,
+      score,
+      roundsSurvived,
+      sessionId,
+      timestamp,
+    });
+
     const { data, error } = await supabase!.functions.invoke("submit-score", {
       body: {
         player_id: playerId,
@@ -189,6 +200,8 @@ export async function submitScore(
         score,
         rounds_survived: roundsSurvived,
         session_id: sessionId,
+        timestamp,
+        signature,
       },
       headers: {
         Authorization: `Bearer ${session.access_token}`,

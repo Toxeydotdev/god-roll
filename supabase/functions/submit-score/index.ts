@@ -14,12 +14,113 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+// ============================================
+// HMAC SIGNATURE VERIFICATION
+// ============================================
+
+// Must match client-side key exactly
+const SIGNING_KEY_PARTS = [
+  "gR0ll", // App identifier
+  "v1", // Version
+  "2026", // Year
+  "s3cr3t", // Base secret
+];
+
+/**
+ * Get the signing key for HMAC verification
+ */
+async function getSigningKey(): Promise<CryptoKey> {
+  const keyMaterial = SIGNING_KEY_PARTS.join("-");
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(keyMaterial);
+
+  return crypto.subtle.importKey(
+    "raw",
+    keyData,
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["verify"]
+  );
+}
+
+/**
+ * Convert hex string to ArrayBuffer
+ */
+function hexToBuffer(hex: string): ArrayBuffer {
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < hex.length; i += 2) {
+    bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
+  }
+  return bytes.buffer;
+}
+
+/**
+ * Create canonical string for verification (must match client-side exactly)
+ */
+function createCanonicalString(data: {
+  player_id: string;
+  score: number;
+  rounds_survived: number;
+  session_id: string;
+  timestamp: number;
+}): string {
+  return [
+    `pid:${data.player_id}`,
+    `sc:${data.score}`,
+    `rnd:${data.rounds_survived}`,
+    `sid:${data.session_id}`,
+    `ts:${data.timestamp}`,
+  ].join("|");
+}
+
+/**
+ * Verify HMAC signature
+ */
+async function verifySignature(
+  data: {
+    player_id: string;
+    score: number;
+    rounds_survived: number;
+    session_id: string;
+    timestamp: number;
+  },
+  signature: string
+): Promise<boolean> {
+  try {
+    const key = await getSigningKey();
+    const canonicalString = createCanonicalString(data);
+    const encoder = new TextEncoder();
+    const messageData = encoder.encode(canonicalString);
+    const signatureBuffer = hexToBuffer(signature);
+
+    return crypto.subtle.verify("HMAC", key, signatureBuffer, messageData);
+  } catch (error) {
+    console.error("Signature verification error:", error);
+    return false;
+  }
+}
+
+/**
+ * Check if timestamp is within acceptable range (5 minutes)
+ */
+function isTimestampValid(timestamp: number): boolean {
+  const now = Date.now();
+  const maxAge = 5 * 60 * 1000; // 5 minutes
+  return Math.abs(now - timestamp) <= maxAge;
+}
+
+// ============================================
+// TYPES
+// ============================================
+
 interface ScoreSubmission {
   player_id: string;
   player_name: string;
   score: number;
   rounds_survived: number;
   session_id: string;
+  timestamp: number;
+  signature: string;
 }
 
 Deno.serve(async (req) => {
@@ -108,7 +209,66 @@ Deno.serve(async (req) => {
       score,
       rounds_survived,
       session_id,
+      timestamp,
+      signature,
     }: ScoreSubmission = await req.json();
+
+    // ========================================
+    // HMAC SIGNATURE VERIFICATION (Anti-tampering)
+    // ========================================
+
+    // Verify timestamp is recent (prevents replay attacks)
+    if (!timestamp || !isTimestampValid(timestamp)) {
+      console.error("Invalid or expired timestamp:", timestamp);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: "Request expired - please try again",
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        }
+      );
+    }
+
+    // Verify HMAC signature
+    if (!signature) {
+      console.error("Missing signature");
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: "Invalid request signature",
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        }
+      );
+    }
+
+    const isValidSignature = await verifySignature(
+      { player_id, score, rounds_survived, session_id, timestamp },
+      signature
+    );
+
+    if (!isValidSignature) {
+      console.error("Invalid signature for submission:", {
+        player_id,
+        score,
+        timestamp,
+      });
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: "Invalid request signature",
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 403,
+        }
+      );
+    }
 
     // Verify the player_id matches the authenticated user
     if (player_id !== user.id) {
