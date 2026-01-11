@@ -115,46 +115,34 @@ export function RollButton({ onRoll }: RollButtonProps): React.ReactElement {
 
         {/* Score display - fixed width container so it doesn't shift */}
         <div
-          className={`w-32 flex flex-col items-center min-h-[80px] justify-end ${
+          className={`w-32 flex flex-col items-center min-h-[60px] justify-end ${
             results.length > 0 && !isRolling && showResult && animateResult
               ? "pop-in"
               : ""
           }`}
         >
           {results.length > 0 && !isRolling && showResult && (
-            <>
-              {/* Large roll total */}
-              <span
-                className={`text-5xl font-bold ${
-                  animateResult
-                    ? isDanger
-                      ? "danger-pulse shake"
-                      : "success-glow"
-                    : ""
-                }`}
-                style={{
-                  color: isDanger ? theme.dangerColor : theme.textPrimary,
-                  fontFamily: "var(--font-display)",
-                  textShadow: isDanger
-                    ? `0 0 20px ${theme.dangerColor}, 3px 3px 0px rgba(0,0,0,0.3)`
-                    : `0 0 20px ${theme.successColor}, 3px 3px 0px rgba(0,0,0,0.2)`,
-                  ["--success-color" as string]: theme.successColor,
-                  ["--danger-color" as string]: theme.dangerColor,
-                }}
-              >
-                {lastRollTotal}
-              </span>
-              {/* Dice breakdown - smaller */}
-              <span
-                className="text-sm mt-1"
-                style={{
-                  color: theme.textSecondary,
-                  fontWeight: 600,
-                }}
-              >
-                {results.join(" + ")}
-              </span>
-            </>
+            /* Large roll total */
+            <span
+              className={`text-5xl font-bold ${
+                animateResult
+                  ? isDanger
+                    ? "danger-pulse shake"
+                    : "success-glow"
+                  : ""
+              }`}
+              style={{
+                color: isDanger ? theme.dangerColor : theme.textPrimary,
+                fontFamily: "var(--font-display)",
+                textShadow: isDanger
+                  ? `0 0 20px ${theme.dangerColor}, 3px 3px 0px rgba(0,0,0,0.3)`
+                  : `0 0 20px ${theme.successColor}, 3px 3px 0px rgba(0,0,0,0.2)`,
+                ["--success-color" as string]: theme.successColor,
+                ["--danger-color" as string]: theme.dangerColor,
+              }}
+            >
+              {lastRollTotal}
+            </span>
           )}
         </div>
 
@@ -182,6 +170,21 @@ export function RollButton({ onRoll }: RollButtonProps): React.ReactElement {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Dice breakdown - centered, expands from center */}
+      <div className="h-5 flex justify-center">
+        {results.length > 0 && !isRolling && showResult && (
+          <span
+            className="text-sm"
+            style={{
+              color: theme.textSecondary,
+              fontWeight: 600,
+            }}
+          >
+            {results.join(" + ")}
+          </span>
+        )}
       </div>
 
       {/* Compact FAB-style roll button */}
