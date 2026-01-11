@@ -39,10 +39,8 @@ interface SetupResult {
   container: RenderResult["container"];
   onStartGame: Mock;
   getStartButton: () => HTMLElement;
-  getThemeButton: () => HTMLElement;
   getLeaderboardButton: () => HTMLElement;
   clickStart: () => void;
-  clickTheme: () => void;
   clickLeaderboard: () => void;
 }
 
@@ -65,22 +63,18 @@ function setup(options: SetupOptions = {}): SetupResult {
 
   const getStartButton = () =>
     screen.getByRole("button", { name: /start game/i });
-  const getThemeButton = () => screen.getByRole("button", { name: /theme/i });
   const getLeaderboardButton = () =>
     screen.getByRole("button", { name: /leaderboard/i });
 
   const clickStart = () => fireEvent.click(getStartButton());
-  const clickTheme = () => fireEvent.click(getThemeButton());
   const clickLeaderboard = () => fireEvent.click(getLeaderboardButton());
 
   return {
     container,
     onStartGame,
     getStartButton,
-    getThemeButton,
     getLeaderboardButton,
     clickStart,
-    clickTheme,
     clickLeaderboard,
   };
 }
@@ -120,13 +114,6 @@ describe("StartScreen - User Interactions", () => {
       expect(getStartButton()).toBeTruthy();
       expect(getStartButton().className).toContain("text-3xl");
     });
-
-    it("should show theme button", () => {
-      const { getThemeButton } = setup();
-
-      expect(getThemeButton()).toBeTruthy();
-      expect(getThemeButton().textContent).toContain("🎨");
-    });
   });
 
   // --------------------------------------------------------------------------
@@ -148,30 +135,6 @@ describe("StartScreen - User Interactions", () => {
 
       // Clicking start should only trigger start game, not open any modals
       expect(onStartGame).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  // --------------------------------------------------------------------------
-  // Theme Selection
-  // --------------------------------------------------------------------------
-  describe("when user wants to change theme", () => {
-    it("should trigger color picker on click", () => {
-      const { clickTheme } = setup();
-
-      clickTheme();
-
-      // Modal should open (ColorPicker component renders via portal)
-      // We can't easily test portal-rendered content in unit tests,
-      // but we can verify the button exists and is clickable
-      expect(true).toBe(true);
-    });
-
-    it("should not start the game when clicking theme", () => {
-      const { clickTheme, onStartGame } = setup();
-
-      clickTheme();
-
-      expect(onStartGame).not.toHaveBeenCalled();
     });
   });
 
@@ -210,10 +173,9 @@ describe("StartScreen - User Interactions", () => {
   // --------------------------------------------------------------------------
   describe("accessibility", () => {
     it("should have accessible button labels", () => {
-      const { getStartButton, getThemeButton } = setup();
+      const { getStartButton } = setup();
 
       expect(getStartButton()).toBeTruthy();
-      expect(getThemeButton()).toBeTruthy();
     });
 
     it("should use semantic heading for title", () => {
