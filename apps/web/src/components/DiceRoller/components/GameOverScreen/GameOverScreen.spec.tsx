@@ -6,6 +6,7 @@
 import {
   AchievementProvider,
   AuthProvider,
+  DiceSkinProvider,
   GameStateProvider,
   ModalProvider,
   OnlineModeProvider,
@@ -80,28 +81,30 @@ function setup(options: SetupOptions = {}): SetupResult {
   const { container } = render(
     <ThemeProvider>
       <AuthProvider>
-        <GameStateProvider
-          initialValues={{
-            lastRollTotal,
-            totalScore,
-            round,
-            gameOver: true,
-          }}
-        >
-          <AchievementProvider>
-            <ModalProvider>
-              <OnlineModeProvider>
-                <GameOverScreen
-                  onPlayAgain={onPlayAgain}
-                  highlightIndex={highlightIndex}
-                  leaderboardEntries={leaderboardEntries}
-                  onLeaderboardChange={onLeaderboardChange}
-                  sessionId={sessionId}
-                />
-              </OnlineModeProvider>
-            </ModalProvider>
-          </AchievementProvider>
-        </GameStateProvider>
+        <DiceSkinProvider>
+          <GameStateProvider
+            initialValues={{
+              lastRollTotal,
+              totalScore,
+              round,
+              gameOver: true,
+            }}
+          >
+            <AchievementProvider>
+              <ModalProvider>
+                <OnlineModeProvider>
+                  <GameOverScreen
+                    onPlayAgain={onPlayAgain}
+                    highlightIndex={highlightIndex}
+                    leaderboardEntries={leaderboardEntries}
+                    onLeaderboardChange={onLeaderboardChange}
+                    sessionId={sessionId}
+                  />
+                </OnlineModeProvider>
+              </ModalProvider>
+            </AchievementProvider>
+          </GameStateProvider>
+        </DiceSkinProvider>
       </AuthProvider>
     </ThemeProvider>
   );

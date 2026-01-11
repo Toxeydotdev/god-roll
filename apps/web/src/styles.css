@@ -62,6 +62,15 @@ body {
   font-family: var(--font-body);
 }
 
+/* Hide scrollbar for horizontal carousels while keeping scroll functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
 /* ============================================
    GAME ANIMATIONS & EFFECTS
    ============================================ */

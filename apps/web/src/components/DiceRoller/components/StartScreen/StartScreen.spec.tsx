@@ -6,6 +6,7 @@
 import {
   AchievementProvider,
   AuthProvider,
+  DiceSkinProvider,
   ModalProvider,
   ThemeProvider,
 } from "@/components/DiceRoller/context";
@@ -51,11 +52,13 @@ function setup(options: SetupOptions = {}): SetupResult {
   const { container } = render(
     <ThemeProvider>
       <AuthProvider>
-        <AchievementProvider>
-          <ModalProvider>
-            <StartScreen onStartGame={onStartGame} />
-          </ModalProvider>
-        </AchievementProvider>
+        <DiceSkinProvider>
+          <AchievementProvider>
+            <ModalProvider>
+              <StartScreen onStartGame={onStartGame} />
+            </ModalProvider>
+          </AchievementProvider>
+        </DiceSkinProvider>
       </AuthProvider>
     </ThemeProvider>
   );
