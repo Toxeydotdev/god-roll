@@ -4,6 +4,7 @@
  * Provides sound state and controls throughout the app without prop drilling.
  */
 
+import { useAppLifecycle } from "@/components/DiceRoller/hooks";
 import { useSound as useSoundState } from "@/components/DiceRoller/hooks";
 import { musicManager } from "@/components/DiceRoller/utils/musicManager";
 import React, {
@@ -50,6 +51,9 @@ export function SoundProvider({
     musicManager.isEnabled()
   );
   const isTogglingMusic = useRef(false);
+
+  // Set up iOS/Android app lifecycle listener for audio context resumption
+  useAppLifecycle();
 
   // Try to auto-start music on first user interaction if it was enabled
   useEffect(() => {
