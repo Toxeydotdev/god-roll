@@ -36,13 +36,13 @@ export function GameRules({
           </div>
 
           <div>
-            <span className="font-bold">🎲 Each Round:</span> Roll the dice.
+            <span className="font-bold">🎲 Each Round:</span> Roll all the dice.
             Your roll total is added to your score.
           </div>
 
           <div>
             <span className="font-bold">📈 Dice Increase:</span> You start with
-            1 die. Each successful round adds another die (up to 6).
+            1 die. Each successful round adds another die to your pool.
           </div>
 
           <div>
@@ -51,8 +51,9 @@ export function GameRules({
           </div>
 
           <div className="pt-2 border-t border-gray-200">
-            <span className="font-bold">💡 Tip:</span> More dice = higher
-            scores, but also more risk of hitting a multiple of 7!
+            <span className="font-bold">💡 Tip:</span> More dice means higher
+            potential scores, but also increases your risk of hitting a multiple
+            of 7!
           </div>
         </div>
 
