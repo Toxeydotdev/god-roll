@@ -116,28 +116,50 @@ function DiceRollerContent(): React.ReactElement {
     [playDiceHit]
   );
 
-  // Wrap handleRollComplete to check for achievements
+  // Wrap handleRollComplete to check for achievements and handle game over
   const handleRollComplete = useCallback(
     (rollTotal: number, diceResults: DiceFaceNumber[]) => {
       // First, process the roll normally
       baseHandleRollComplete(rollTotal, diceResults);
 
-      // Then check for achievements
-      // Note: totalScore here is the score BEFORE this roll
-      const scoreAfterRoll =
-        rollTotal % 7 === 0 ? totalScore : totalScore + rollTotal;
+      // Check if this roll ends the game (divisible by 7)
+      const isGameOver = rollTotal % 7 === 0;
+      const scoreAfterRoll = isGameOver ? totalScore : totalScore + rollTotal;
+      const roundsSurvived = round; // round was incremented in handleRollStart
+
+      // Check for achievements
       checkForAchievements(
         diceResults,
         rollTotal,
         scoreAfterRoll,
-        round + 1, // round is incremented in handleRollStart before roll
+        round + 1,
         isFirstRollRef.current
       );
 
       // No longer first roll after this
       isFirstRollRef.current = false;
+
+      // Handle game over as an event (not in an effect)
+      if (isGameOver && totalScore > 0) {
+        // Update achievement profile stats
+        onGameEnd(totalScore, roundsSurvived - 1);
+
+        // Add to local leaderboard
+        const newEntries = addLeaderboardEntry({
+          score: totalScore,
+          rounds: roundsSurvived - 1,
+          date: new Date().toISOString(),
+        });
+
+        // Find the index of the newly added entry for highlighting
+        const idx = newEntries.findIndex(
+          (e) => e.score === totalScore && e.rounds === roundsSurvived - 1
+        );
+        setHighlightIndex(idx >= 0 ? idx : undefined);
+        setLeaderboardEntries(newEntries);
+      }
     },
-    [baseHandleRollComplete, checkForAchievements, totalScore, round]
+    [baseHandleRollComplete, checkForAchievements, onGameEnd, totalScore, round]
   );
 
   const { isRollingRef, rollDice, clearAllDice, updateAllDiceSkins } =
@@ -177,27 +199,6 @@ function DiceRollerContent(): React.ReactElement {
     setSessionId(crypto.randomUUID()); // New session for new game
     isFirstRollRef.current = true; // Reset for new game
   }, [clearAllDice, baseStartNewGame, resetCamera]);
-
-  // Save score to leaderboard and update profile when game ends
-  useEffect(() => {
-    if (gameOver && totalScore > 0) {
-      // Update achievement profile stats
-      onGameEnd(totalScore, round - 1);
-
-      const newEntries = addLeaderboardEntry({
-        score: totalScore,
-        rounds: round - 1,
-        date: new Date().toISOString(),
-      });
-      // Find the index of the newly added entry
-      const idx = newEntries.findIndex(
-        (e) => e.score === totalScore && e.rounds === round - 1
-      );
-      setHighlightIndex(idx >= 0 ? idx : undefined);
-      setLeaderboardEntries(newEntries);
-      // Don't auto-show, let user see game over screen first
-    }
-  }, [gameOver, totalScore, round]);
 
   // Helper functions for reset button
   const handleResetStart = useCallback(
