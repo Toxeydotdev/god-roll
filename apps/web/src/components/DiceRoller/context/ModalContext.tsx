@@ -5,7 +5,7 @@
  * All modals are rendered at document root via createPortal to avoid z-index issues.
  */
 
-import { ColorTheme } from "@/components/DiceRoller/colorThemes";
+import { COLOR_THEMES, ColorTheme } from "@/components/DiceRoller/colorThemes";
 import {
   AchievementsModal,
   AuthModal,
@@ -13,6 +13,7 @@ import {
   DiceSkinPicker,
   GameRules,
   Leaderboard,
+  RewardsModal,
 } from "@/components/DiceRoller/components";
 import React, {
   createContext,
@@ -23,6 +24,7 @@ import React, {
 } from "react";
 import { createPortal } from "react-dom";
 import { useAchievements } from "./AchievementContext";
+import { useDiceSkin } from "./DiceSkinContext";
 import { useTheme } from "./ThemeContext";
 
 // ============================================================================
@@ -35,7 +37,8 @@ export type ModalType =
   | "colorPicker"
   | "diceSkin"
   | "achievements"
-  | "auth";
+  | "auth"
+  | "rewards";
 
 interface LeaderboardModalProps {
   highlightIndex?: number;
@@ -82,6 +85,7 @@ export function ModalProvider({
   const [activeModal, setActiveModal] = useState<ModalState | null>(null);
   const { theme, setTheme } = useTheme();
   const { unlockedAchievements, profile } = useAchievements();
+  const { skinId, setSkinId } = useDiceSkin();
 
   const openModal = useCallback((type: ModalType, props: ModalProps = {}) => {
     setActiveModal({ type, props });
@@ -145,6 +149,27 @@ export function ModalProvider({
       case "auth":
         modalElement = (
           <AuthModal isOpen={true} onClose={closeModal} theme={theme} />
+        );
+        break;
+
+      case "rewards":
+        modalElement = (
+          <RewardsModal
+            onClose={closeModal}
+            theme={theme}
+            unlockedAchievements={unlockedAchievements}
+            currentSkinId={skinId}
+            currentThemeId={theme.id}
+            onSelectSkin={(newSkinId) => {
+              setSkinId(newSkinId);
+            }}
+            onSelectTheme={(themeId) => {
+              const newTheme = COLOR_THEMES.find(
+                (t: ColorTheme) => t.id === themeId
+              );
+              if (newTheme) setTheme(newTheme);
+            }}
+          />
         );
         break;
     }

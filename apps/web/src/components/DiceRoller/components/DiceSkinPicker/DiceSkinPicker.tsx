@@ -28,20 +28,43 @@ export function DiceSkinPicker({
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center z-30 bg-black/60 p-4 min-h-dvh touch-none"
+      className="fixed inset-0 flex items-end sm:items-center justify-center z-30 bg-black/60"
       onClick={onClose}
     >
       <div
-        className="rounded-2xl p-6 shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col"
-        style={{ backgroundColor: theme.backgroundCss }}
+        className="rounded-t-3xl sm:rounded-2xl p-6 pt-3 shadow-2xl w-full sm:max-w-2xl max-h-[85vh] overflow-hidden flex flex-col"
+        style={{
+          backgroundColor: theme.backgroundCss,
+          paddingBottom: "env(safe-area-inset-bottom)",
+        }}
         onClick={(e) => e.stopPropagation()}
       >
-        <h2
-          className="text-2xl font-bold mb-4"
-          style={{ color: theme.textPrimary }}
-        >
-          🎲 Choose Dice Skin
-        </h2>
+        {/* Drag handle */}
+        <div className="flex justify-center pb-3 sm:hidden">
+          <button
+            onClick={onClose}
+            className="w-10 h-1 rounded-full bg-gray-300 hover:bg-gray-400 transition-colors"
+            aria-label="Close"
+          />
+        </div>
+
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <h2
+            className="text-2xl font-bold"
+            style={{ color: theme.textPrimary }}
+          >
+            🎲 Choose Dice Skin
+          </h2>
+          <button
+            onClick={onClose}
+            className="hidden sm:flex w-8 h-8 rounded-full items-center justify-center text-lg hover:bg-black/10 transition-colors"
+            aria-label="Close"
+          >
+            ✕
+          </button>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto flex-1">
           {skins.map((skin) => (
             <button
@@ -88,16 +111,6 @@ export function DiceSkinPicker({
             </button>
           ))}
         </div>
-        <button
-          onClick={onClose}
-          className="mt-4 px-6 py-2 rounded-full font-bold text-lg transition-all hover:scale-105 active:scale-95"
-          style={{
-            backgroundColor: theme.textPrimary,
-            color: theme.backgroundCss,
-          }}
-        >
-          Done
-        </button>
       </div>
     </div>
   );

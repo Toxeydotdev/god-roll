@@ -95,13 +95,16 @@ function AuthenticatedView({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
       style={{ backgroundColor: "rgba(0, 0, 0, 0.8)" }}
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-md rounded-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
-        style={{ backgroundColor: theme.backgroundCss }}
+        className="relative w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
+        style={{
+          backgroundColor: theme.backgroundCss,
+          paddingBottom: "env(safe-area-inset-bottom)",
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -418,13 +421,16 @@ export function AuthModal({ isOpen, onClose, theme }: AuthModalProps) {
   // Guest view - show progress that will be claimed
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
       style={{ backgroundColor: "rgba(0, 0, 0, 0.8)" }}
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-md rounded-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
-        style={{ backgroundColor: theme.backgroundCss }}
+        className="relative w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
+        style={{
+          backgroundColor: theme.backgroundCss,
+          paddingBottom: "env(safe-area-inset-bottom)",
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         <button

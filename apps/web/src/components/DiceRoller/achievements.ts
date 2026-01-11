@@ -56,6 +56,9 @@ export type AchievementRequirement =
   | { type: "games_streak"; count: number; minScore?: number } // Win N games in a row
   | { type: "consecutive_days"; days: number } // Play on N consecutive days
   | { type: "close_call"; margin: number } // Roll within N of 7 multiple
+  | { type: "low_roll"; maxTotal: number; minDice: number } // Roll very low with multiple dice
+  | { type: "yahtzee" } // All dice show same value (5+ dice)
+  | { type: "four_of_kind" } // Four dice show same value
   | { type: "custom"; checkFn: string }; // Custom check (function name)
 
 export interface PlayerAchievementProgress {
@@ -79,6 +82,8 @@ export interface UserProfile {
   unlockedSkins: string[];
   unlockedThemes: string[];
   equippedBadges: string[];
+  unlockedTitles: string[]; // Unlocked title rewards
+  equippedTitle: string | null; // Currently displayed title
   createdAt: string;
   updatedAt: string;
 }
@@ -444,6 +449,265 @@ export const ACHIEVEMENTS: Achievement[] = [
     hidden: true,
     requirement: { type: "custom", checkFn: "checkPerfectionist" },
   },
+
+  // ========== NEW ROLL ACHIEVEMENTS ==========
+  {
+    id: "four_of_a_kind",
+    name: "Four of a Kind",
+    description: "Roll four dice showing the same number",
+    category: "roll",
+    icon: "🎰",
+    reward: {
+      type: "dice_skin",
+      value: "ruby",
+      displayName: "Ruby Dice Skin",
+    },
+    requirement: { type: "four_of_kind" },
+  },
+  {
+    id: "yahtzee",
+    name: "Yahtzee!",
+    description: "Roll 5+ dice all showing the same number",
+    category: "roll",
+    icon: "🎯",
+    reward: {
+      type: "dice_skin",
+      value: "cosmic",
+      displayName: "Cosmic Dice Skin",
+    },
+    requirement: { type: "yahtzee" },
+  },
+  {
+    id: "snake_pit",
+    name: "Snake Pit",
+    description: "Roll three or more 1s",
+    category: "roll",
+    icon: "🐍",
+    reward: {
+      type: "bonus_points",
+      value: "75",
+      displayName: "+75 Bonus Points",
+    },
+    requirement: { type: "roll_exact", values: [1, 1, 1] },
+  },
+  {
+    id: "mini_straight",
+    name: "Mini Straight",
+    description: "Roll 1-2-3 or 4-5-6 in one roll",
+    category: "roll",
+    icon: "📐",
+    reward: {
+      type: "bonus_points",
+      value: "30",
+      displayName: "+30 Bonus Points",
+    },
+    requirement: { type: "roll_straight", length: 3 },
+  },
+  {
+    id: "low_roller",
+    name: "Low Roller",
+    description: "Roll 4+ dice with a total of 6 or less",
+    category: "roll",
+    icon: "⬇️",
+    reward: {
+      type: "badge",
+      value: "low_roller",
+      displayName: "Low Roller Badge",
+    },
+    requirement: { type: "low_roll", maxTotal: 6, minDice: 4 },
+  },
+  {
+    id: "all_ones",
+    name: "Snake Eyes Deluxe",
+    description: "Roll all 1s (3+ dice)",
+    category: "roll",
+    icon: "👁️",
+    reward: {
+      type: "dice_skin",
+      value: "shadow",
+      displayName: "Shadow Dice Skin",
+    },
+    requirement: { type: "roll_all_same", value: 1 },
+  },
+
+  // ========== NEW SCORE ACHIEVEMENTS ==========
+  {
+    id: "big_score",
+    name: "Big Score",
+    description: "Score 750 points in a single game",
+    category: "score",
+    icon: "💵",
+    reward: {
+      type: "theme",
+      value: "midnight",
+      displayName: "Midnight Theme",
+    },
+    requirement: { type: "score_single", score: 750 },
+  },
+  {
+    id: "legendary_game",
+    name: "Legendary Game",
+    description: "Score 1,000 points in a single game",
+    category: "score",
+    icon: "🌟",
+    reward: {
+      type: "title",
+      value: "Champion",
+      displayName: "Champion Title",
+    },
+    requirement: { type: "score_single", score: 1000 },
+  },
+  {
+    id: "fifty_grand",
+    name: "Fifty Grand",
+    description: "Score 50,000 points total across all games",
+    category: "score",
+    icon: "💎",
+    reward: {
+      type: "dice_skin",
+      value: "diamond",
+      displayName: "Diamond Dice Skin",
+    },
+    requirement: { type: "score_lifetime", score: 50000 },
+  },
+  {
+    id: "hundred_grand",
+    name: "Hundred Grand",
+    description: "Score 100,000 points total",
+    category: "score",
+    icon: "👑",
+    reward: {
+      type: "title",
+      value: "Master",
+      displayName: "Master Title",
+    },
+    requirement: { type: "score_lifetime", score: 100000 },
+  },
+
+  // ========== NEW SURVIVAL ACHIEVEMENTS ==========
+  {
+    id: "lucky_streak",
+    name: "Lucky Streak",
+    description: "Survive 7 rounds (lucky number!)",
+    category: "survival",
+    icon: "🍀",
+    reward: {
+      type: "badge",
+      value: "lucky_survivor",
+      displayName: "Lucky Survivor Badge",
+    },
+    requirement: { type: "survive_rounds", rounds: 7 },
+  },
+  {
+    id: "legendary_run",
+    name: "Legendary Run",
+    description: "Survive 25 rounds",
+    category: "survival",
+    icon: "🏆",
+    reward: {
+      type: "title",
+      value: "Legend",
+      displayName: "Legend Title",
+    },
+    requirement: { type: "survive_rounds", rounds: 25 },
+  },
+  {
+    id: "marathon",
+    name: "Marathon",
+    description: "Survive 30 rounds in a single game",
+    category: "survival",
+    icon: "🏃",
+    reward: {
+      type: "dice_skin",
+      value: "aurora",
+      displayName: "Aurora Dice Skin",
+    },
+    requirement: { type: "survive_rounds", rounds: 30 },
+  },
+
+  // ========== NEW PLAY ACHIEVEMENTS ==========
+  {
+    id: "committed",
+    name: "Committed",
+    description: "Play 25 games",
+    category: "play",
+    icon: "💪",
+    reward: {
+      type: "theme",
+      value: "dark",
+      displayName: "Dark Theme",
+    },
+    requirement: { type: "games_played", count: 25 },
+  },
+  {
+    id: "die_hard",
+    name: "Die Hard",
+    description: "Play 200 games",
+    category: "play",
+    icon: "🎬",
+    reward: {
+      type: "dice_skin",
+      value: "lava",
+      displayName: "Lava Dice Skin",
+    },
+    requirement: { type: "games_played", count: 200 },
+  },
+  {
+    id: "two_week_streak",
+    name: "Two Week Streak",
+    description: "Play on 14 consecutive days",
+    category: "play",
+    icon: "📆",
+    reward: {
+      type: "theme",
+      value: "sunset",
+      displayName: "Sunset Theme",
+    },
+    requirement: { type: "consecutive_days", days: 14 },
+  },
+
+  // ========== NEW STREAK ACHIEVEMENTS ==========
+  {
+    id: "unstoppable",
+    name: "Unstoppable",
+    description: "Score 50+ in 10 consecutive games",
+    category: "streak",
+    icon: "💫",
+    reward: {
+      type: "dice_skin",
+      value: "electric",
+      displayName: "Electric Dice Skin",
+    },
+    requirement: { type: "games_streak", count: 10, minScore: 50 },
+  },
+  {
+    id: "consistency_king",
+    name: "Consistency King",
+    description: "Score 100+ in 5 consecutive games",
+    category: "streak",
+    icon: "🎯",
+    reward: {
+      type: "badge",
+      value: "consistent",
+      displayName: "Consistency Badge",
+    },
+    requirement: { type: "games_streak", count: 5, minScore: 100 },
+  },
+
+  {
+    id: "double_trouble",
+    name: "Double Trouble",
+    description: "Roll 77 total (11 sevens!)",
+    category: "special",
+    icon: "7️⃣",
+    reward: {
+      type: "bonus_points",
+      value: "77",
+      displayName: "+77 Bonus Points",
+    },
+    hidden: true,
+    requirement: { type: "roll_total", total: 77 },
+  },
 ];
 
 // ============================================================================
@@ -556,6 +820,27 @@ export function checkCloseCall(total: number, margin: number): boolean {
 }
 
 /**
+ * Check for Yahtzee (5+ dice all showing same value)
+ */
+export function checkYahtzee(roll: DiceFaceNumber[]): boolean {
+  if (roll.length < 5) return false;
+  const first = roll[0];
+  return roll.every((v) => v === first);
+}
+
+/**
+ * Check for four of a kind (4 dice showing same value)
+ */
+export function checkFourOfAKind(roll: DiceFaceNumber[]): boolean {
+  if (roll.length < 4) return false;
+  const counts = new Map<number, number>();
+  for (const value of roll) {
+    counts.set(value, (counts.get(value) || 0) + 1);
+  }
+  return Array.from(counts.values()).some((c) => c >= 4);
+}
+
+/**
  * Check all achievements against current game state
  */
 export function checkAchievements(
@@ -626,6 +911,21 @@ export function checkAchievements(
 
       case "close_call":
         unlocked = checkCloseCall(rollTotal, req.margin);
+        break;
+
+      case "low_roll":
+        // Check if roll total is very low with minimum dice count
+        unlocked = roll.length >= req.minDice && rollTotal <= req.maxTotal;
+        break;
+
+      case "yahtzee":
+        // All dice same (5+ dice)
+        unlocked = checkYahtzee(roll);
+        break;
+
+      case "four_of_kind":
+        // Four dice same
+        unlocked = checkFourOfAKind(roll);
         break;
 
       case "custom":
@@ -716,6 +1016,10 @@ export function createDefaultProfile(playerId: string): UserProfile {
     unlockedSkins: ["cartoon", "classic"], // Default unlocked skins
     unlockedThemes: ["green"], // Default unlocked themes
     equippedBadges: [],
+    unlockedTitles: [], // Unlocked title rewards
+    equippedTitle: null, // Currently displayed title
+    totalGameOvers: 0, // Times rolled divisible by 7
+    totalCloseCallsEscaped: 0, // Times survived 6 or 8 total
     createdAt: now,
     updatedAt: now,
   };

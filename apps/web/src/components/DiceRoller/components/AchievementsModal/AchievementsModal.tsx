@@ -87,21 +87,40 @@ export function AchievementsModal({
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center z-30 bg-black/60 min-h-dvh touch-none"
+      className="fixed inset-0 flex items-end sm:items-center justify-center z-30 bg-black/60"
       onClick={onClose}
     >
       <div
-        className="bg-white/95 rounded-2xl p-6 text-center shadow-2xl w-[90vw] max-w-[500px] max-h-[85vh] flex flex-col"
+        className="bg-white/95 rounded-t-3xl sm:rounded-2xl p-6 pt-3 text-center shadow-2xl w-full sm:w-[90vw] sm:max-w-[500px] max-h-[85vh] flex flex-col"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Drag handle */}
+        <div className="flex justify-center pb-3 sm:hidden">
+          <button
+            onClick={onClose}
+            className="w-10 h-1 rounded-full bg-gray-300 hover:bg-gray-400 transition-colors"
+            aria-label="Close"
+          />
+        </div>
+
         {/* Header */}
         <div className="flex-shrink-0">
-          <h2
-            className="text-2xl font-black mb-2"
-            style={{ color: theme.textPrimary }}
-          >
-            🏆 Achievements
-          </h2>
+          <div className="flex items-center justify-between mb-2">
+            <h2
+              className="text-2xl font-black"
+              style={{ color: theme.textPrimary }}
+            >
+              🏆 Achievements
+            </h2>
+            <button
+              onClick={onClose}
+              className="hidden sm:flex w-8 h-8 rounded-full items-center justify-center text-lg hover:bg-black/10 transition-colors"
+              aria-label="Close"
+            >
+              ✕
+            </button>
+          </div>
 
           {/* Progress Bar */}
           <div className="mb-4">
@@ -222,20 +241,6 @@ export function AchievementsModal({
               No achievements in this category yet!
             </p>
           )}
-        </div>
-
-        {/* Close Button */}
-        <div className="flex-shrink-0 mt-4">
-          <button
-            onClick={onClose}
-            className="px-6 py-2 rounded-full font-bold transition-all hover:scale-105 active:scale-95"
-            style={{
-              backgroundColor: theme.textPrimary,
-              color: theme.backgroundCss,
-            }}
-          >
-            Close
-          </button>
         </div>
       </div>
     </div>

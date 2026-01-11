@@ -62,14 +62,9 @@ export function ControlsPanel(): React.ReactElement {
       active: musicEnabled,
     },
     {
-      icon: <span className="text-lg">🎨</span>,
-      label: "Theme",
-      onClick: () => openModal("colorPicker"),
-    },
-    {
-      icon: <span className="text-lg">🎲</span>,
-      label: "Dice",
-      onClick: () => openModal("diceSkin"),
+      icon: <span className="text-lg">🎁</span>,
+      label: "Rewards",
+      onClick: () => openModal("rewards"),
     },
     {
       icon: (
