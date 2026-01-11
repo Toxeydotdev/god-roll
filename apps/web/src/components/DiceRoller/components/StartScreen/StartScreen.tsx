@@ -74,18 +74,6 @@ export function StartScreen({
         {/* Secondary buttons */}
         <div className="mt-6 flex justify-center gap-3">
           <button
-            onClick={() => openModal("colorPicker")}
-            className="px-5 py-2.5 rounded-full text-base transition-all hover:scale-105 active:scale-95"
-            style={{
-              backgroundColor: theme.textSecondary,
-              color: theme.backgroundCss,
-              fontWeight: 600,
-              boxShadow: "0 4px 0 rgba(0,0,0,0.2), 0 6px 15px rgba(0,0,0,0.15)",
-            }}
-          >
-            🎨 Theme
-          </button>
-          <button
             onClick={() => openModal("leaderboard")}
             className="px-5 py-2.5 rounded-full text-base transition-all hover:scale-105 active:scale-95"
             style={{
