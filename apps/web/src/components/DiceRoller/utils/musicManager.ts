@@ -141,17 +141,18 @@ class MusicManager {
     }
   }
 
-  toggle(): boolean {
+  async toggle(): Promise<boolean> {
     if (this._isToggling) {
       return this.isPlaying;
     }
 
     if (this.isPlaying) {
       this.stop();
+      return false;
     } else {
-      this.start();
+      await this.start();
+      return this.isPlaying;
     }
-    return this.isPlaying;
   }
 
   /**

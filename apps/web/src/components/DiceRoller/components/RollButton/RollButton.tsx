@@ -86,79 +86,102 @@ export function RollButton({ onRoll }: RollButtonProps): React.ReactElement {
 
   return (
     <div className="flex flex-col items-center gap-2">
-      {/* Results display */}
-      <div
-        className={`flex flex-col items-center min-h-[80px] justify-end ${
-          results.length > 0 && !isRolling && showResult && animateResult
-            ? "pop-in"
-            : ""
-        }`}
-      >
-        {/* Exceptional roll banner */}
-        {showBanner && (
-          <div
-            className="flex items-center gap-2 px-3 py-1 rounded-full mb-2"
-            style={{
-              background: `linear-gradient(90deg, ${theme.accentColor}E8 0%, ${theme.accentHover}E8 100%)`,
-              boxShadow: `0 2px 10px rgba(0,0,0,0.2), 0 0 20px ${theme.buttonGlow}`,
-              border: `2px solid rgba(255,255,255,0.3)`,
-              animation: "toast-pop 1.5s ease-out forwards",
-            }}
-          >
-            <span
-              className="text-sm font-bold"
+      {/* Results display with optional banner */}
+      <div className="flex items-center justify-center gap-3">
+        {/* Nice roll banner - positioned to the left, content pushed right toward score */}
+        <div className="w-24 flex items-center justify-end">
+          {showBanner && (
+            <div
+              className="flex items-center gap-1 px-3 py-1 rounded-full whitespace-nowrap"
               style={{
-                color: "#fff",
-                textShadow: "1px 1px 0 rgba(0,0,0,0.3)",
+                background: `linear-gradient(90deg, ${theme.accentColor}E8 0%, ${theme.accentHover}E8 100%)`,
+                boxShadow: `0 2px 10px rgba(0,0,0,0.2), 0 0 20px ${theme.buttonGlow}`,
+                border: `2px solid rgba(255,255,255,0.3)`,
+                animation: "toast-pop-side 1.5s ease-out forwards",
               }}
             >
-              🎯 Nice Roll!
-            </span>
-            <span style={{ color: "rgba(255,255,255,0.5)" }}>•</span>
-            <span
-              className="text-sm"
-              style={{ color: "rgba(255,255,255,0.95)", fontWeight: 600 }}
-            >
-              🎲 ×{round}
-            </span>
-          </div>
-        )}
+              <span
+                className="text-sm font-bold"
+                style={{
+                  color: "#fff",
+                  textShadow: "1px 1px 0 rgba(0,0,0,0.3)",
+                }}
+              >
+                🎯 Nice Roll!
+              </span>
+            </div>
+          )}
+        </div>
 
-        {results.length > 0 && !isRolling && showResult && (
-          <>
-            {/* Large roll total */}
-            <span
-              className={`text-5xl font-bold ${
-                animateResult
-                  ? isDanger
-                    ? "danger-pulse shake"
-                    : "success-glow"
-                  : ""
-              }`}
+        {/* Score display - fixed width container so it doesn't shift */}
+        <div
+          className={`w-32 flex flex-col items-center min-h-[80px] justify-end ${
+            results.length > 0 && !isRolling && showResult && animateResult
+              ? "pop-in"
+              : ""
+          }`}
+        >
+          {results.length > 0 && !isRolling && showResult && (
+            <>
+              {/* Large roll total */}
+              <span
+                className={`text-5xl font-bold ${
+                  animateResult
+                    ? isDanger
+                      ? "danger-pulse shake"
+                      : "success-glow"
+                    : ""
+                }`}
+                style={{
+                  color: isDanger ? theme.dangerColor : theme.textPrimary,
+                  fontFamily: "var(--font-display)",
+                  textShadow: isDanger
+                    ? `0 0 20px ${theme.dangerColor}, 3px 3px 0px rgba(0,0,0,0.3)`
+                    : `0 0 20px ${theme.successColor}, 3px 3px 0px rgba(0,0,0,0.2)`,
+                  ["--success-color" as string]: theme.successColor,
+                  ["--danger-color" as string]: theme.dangerColor,
+                }}
+              >
+                {lastRollTotal}
+              </span>
+              {/* Dice breakdown - smaller */}
+              <span
+                className="text-sm mt-1"
+                style={{
+                  color: theme.textSecondary,
+                  fontWeight: 600,
+                }}
+              >
+                {results.join(" + ")}
+              </span>
+            </>
+          )}
+        </div>
+
+        {/* Low roll banner - positioned to the right, content pushed left toward score */}
+        <div className="w-24 flex items-center justify-start">
+          {showLowRollBanner && (
+            <div
+              className="flex items-center gap-1 px-3 py-1 rounded-full whitespace-nowrap"
               style={{
-                color: isDanger ? theme.dangerColor : theme.textPrimary,
-                fontFamily: "var(--font-display)",
-                textShadow: isDanger
-                  ? `0 0 20px ${theme.dangerColor}, 3px 3px 0px rgba(0,0,0,0.3)`
-                  : `0 0 20px ${theme.successColor}, 3px 3px 0px rgba(0,0,0,0.2)`,
-                ["--success-color" as string]: theme.successColor,
-                ["--danger-color" as string]: theme.dangerColor,
+                background: `linear-gradient(90deg, ${theme.dangerColor}CC 0%, ${theme.dangerColor}E8 100%)`,
+                boxShadow: `0 2px 10px rgba(0,0,0,0.3), 0 0 20px ${theme.dangerColor}80`,
+                border: `2px solid rgba(255,255,255,0.3)`,
+                animation: "toast-pop-side 1.5s ease-out forwards",
               }}
             >
-              {lastRollTotal}
-            </span>
-            {/* Dice breakdown - smaller */}
-            <span
-              className="text-sm mt-1"
-              style={{
-                color: theme.textSecondary,
-                fontWeight: 600,
-              }}
-            >
-              {results.join(" + ")}
-            </span>
-          </>
-        )}
+              <span
+                className="text-sm font-bold"
+                style={{
+                  color: "#fff",
+                  textShadow: "1px 1px 0 rgba(0,0,0,0.3)",
+                }}
+              >
+                😬 Low!
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Compact FAB-style roll button */}
@@ -184,34 +207,6 @@ export function RollButton({ onRoll }: RollButtonProps): React.ReactElement {
           <DiceIcon size={32} />
         )}
       </button>
-
-      {/* Low roll banner - fixed on right side */}
-      {showLowRollBanner && (
-        <div
-          className="fixed right-4 flex items-center pointer-events-none z-50"
-          style={{ bottom: "20%" }}
-        >
-          <div
-            className="flex items-center gap-2 px-3 py-1 rounded-full"
-            style={{
-              background: `linear-gradient(90deg, ${theme.dangerColor}CC 0%, ${theme.dangerColor}E8 100%)`,
-              boxShadow: `0 2px 10px rgba(0,0,0,0.3), 0 0 20px ${theme.dangerColor}80`,
-              border: `2px solid rgba(255,255,255,0.3)`,
-              animation: "toast-pop-side 1.5s ease-out forwards",
-            }}
-          >
-            <span
-              className="text-sm font-bold"
-              style={{
-                color: "#fff",
-                textShadow: "1px 1px 0 rgba(0,0,0,0.3)",
-              }}
-            >
-              😬 Low Roll!
-            </span>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

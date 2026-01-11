@@ -70,19 +70,21 @@ export function SoundProvider({
     };
   }, []);
 
-  const toggleMusic = useCallback(() => {
+  const toggleMusic = useCallback(async () => {
     // Prevent rapid toggling
     if (isTogglingMusic.current) return;
 
     isTogglingMusic.current = true;
 
-    const newState = musicManager.toggle();
-    setMusicEnabled(newState);
-
-    // Debounce - prevent another toggle for 100ms
-    setTimeout(() => {
-      isTogglingMusic.current = false;
-    }, 100);
+    try {
+      const newState = await musicManager.toggle();
+      setMusicEnabled(newState);
+    } finally {
+      // Debounce - prevent another toggle for 100ms
+      setTimeout(() => {
+        isTogglingMusic.current = false;
+      }, 100);
+    }
   }, []);
 
   return (
