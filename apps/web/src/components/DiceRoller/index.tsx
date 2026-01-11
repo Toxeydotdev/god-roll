@@ -271,9 +271,9 @@ function DiceRollerContent(): React.ReactElement {
             {/* Score display during game - enhanced hierarchy */}
             {gameStarted ? (
               <div className="text-right">
-                {/* Round is primary - larger and more prominent */}
+                {/* Round/Dice display - combined since they're the same */}
                 <div
-                  className="text-3xl mb-1"
+                  className="text-3xl mb-1 flex items-center justify-end gap-2"
                   data-testid="round-display"
                   style={{
                     color: theme.textPrimary,
@@ -282,7 +282,8 @@ function DiceRollerContent(): React.ReactElement {
                     letterSpacing: "0.05em",
                   }}
                 >
-                  ROUND {round}
+                  <span>🎲</span>
+                  <span>×{round}</span>
                 </div>
                 {/* Score is secondary */}
                 <div
@@ -295,17 +296,6 @@ function DiceRollerContent(): React.ReactElement {
                 >
                   <span style={{ fontSize: "0.9em", opacity: 0.8 }}>🏆</span>{" "}
                   {totalScore}
-                </div>
-                {/* Dice count indicator */}
-                <div
-                  className="text-sm mt-1 px-2 py-0.5 rounded-full inline-block"
-                  style={{
-                    backgroundColor: "rgba(0,0,0,0.1)",
-                    color: theme.textTertiary,
-                    fontWeight: 600,
-                  }}
-                >
-                  🎲 ×{round}
                 </div>
                 {/* Reset button */}
                 <button

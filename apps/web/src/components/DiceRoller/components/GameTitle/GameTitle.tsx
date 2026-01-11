@@ -17,7 +17,7 @@ export function GameTitle(): React.ReactElement {
           letterSpacing: "0.05em",
         }}
       >
-        <span className="opacity-80">🎲</span> GOD-ROLL
+        GOD-ROLL
       </h1>
     </div>
   );
