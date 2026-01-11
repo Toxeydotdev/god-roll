@@ -2,7 +2,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
   appId: "com.godroll.app",
-  appName: "God Roll",
+  appName: "God-Roll",
   webDir: "dist",
   ios: {
     contentInset: "automatic",

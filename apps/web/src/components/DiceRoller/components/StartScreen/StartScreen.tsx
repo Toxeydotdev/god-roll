@@ -26,7 +26,7 @@ export function StartScreen({
             letterSpacing: "0.08em",
           }}
         >
-          GOD ROLL
+          GOD-ROLL
         </h2>
 
         {/* Decorative dice emoji */}

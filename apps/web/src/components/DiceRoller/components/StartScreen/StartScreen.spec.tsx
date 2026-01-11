@@ -98,7 +98,7 @@ describe("StartScreen - User Interactions", () => {
     it("should display the game title prominently", () => {
       setup();
 
-      const title = screen.getByText("GOD ROLL");
+      const title = screen.getByText("GOD-ROLL");
       expect(title).toBeTruthy();
       expect(title.tagName).toBe("H2");
     });
@@ -179,7 +179,7 @@ describe("StartScreen - User Interactions", () => {
     it("should apply theme colors to title", () => {
       setup();
 
-      const title = screen.getByText("GOD ROLL");
+      const title = screen.getByText("GOD-ROLL");
       expect(title.style.color).toBe(hexToRgb(mockTheme.textPrimary));
     });
 
@@ -217,7 +217,7 @@ describe("StartScreen - User Interactions", () => {
       setup();
 
       const title = screen.getByRole("heading", { level: 2 });
-      expect(title.textContent).toBe("GOD ROLL");
+      expect(title.textContent).toBe("GOD-ROLL");
     });
   });
 });
