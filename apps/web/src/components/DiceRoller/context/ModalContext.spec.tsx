@@ -6,6 +6,9 @@
 import { mockTheme } from "@/test-utils";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { AchievementProvider } from "./AchievementContext";
+import { AuthProvider } from "./AuthContext";
+import { DiceSkinProvider } from "./DiceSkinContext";
 import { ModalProvider } from "./ModalContext";
 import { ThemeProvider } from "./ThemeContext";
 
@@ -26,11 +29,31 @@ vi.mock("@/components/DiceRoller/components", () => ({
     onSelectTheme,
   }: {
     onClose: () => void;
-    onSelectTheme: (theme: any) => void;
+    onSelectTheme: (theme: unknown) => void;
   }) => (
     <div data-testid="mock-color-picker">
       <button onClick={() => onSelectTheme(mockTheme)}>Select Theme</button>
       <button onClick={onClose}>Close Picker</button>
+    </div>
+  ),
+  AchievementsModal: ({ onClose }: { onClose: () => void }) => (
+    <div data-testid="mock-achievements">
+      <button onClick={onClose}>Close Achievements</button>
+    </div>
+  ),
+  AuthModal: ({ onClose }: { onClose: () => void }) => (
+    <div data-testid="mock-auth">
+      <button onClick={onClose}>Close Auth</button>
+    </div>
+  ),
+  DiceSkinPicker: ({ onClose }: { onClose: () => void }) => (
+    <div data-testid="mock-dice-skin-picker">
+      <button onClick={onClose}>Close Dice Skin Picker</button>
+    </div>
+  ),
+  RewardsModal: ({ onClose }: { onClose: () => void }) => (
+    <div data-testid="mock-rewards">
+      <button onClick={onClose}>Close Rewards</button>
     </div>
   ),
 }));
@@ -55,6 +78,21 @@ function TestComponent() {
   );
 }
 
+// Helper to wrap with all required providers
+function renderWithProviders(ui: React.ReactElement) {
+  return render(
+    <ThemeProvider>
+      <AuthProvider>
+        <DiceSkinProvider>
+          <AchievementProvider>
+            <ModalProvider>{ui}</ModalProvider>
+          </AchievementProvider>
+        </DiceSkinProvider>
+      </AuthProvider>
+    </ThemeProvider>
+  );
+}
+
 // ============================================================================
 // TESTS
 // ============================================================================
@@ -66,13 +104,7 @@ describe("ModalContext", () => {
 
   describe("when opening leaderboard modal", () => {
     it("should render leaderboard via portal", () => {
-      render(
-        <ThemeProvider>
-          <ModalProvider>
-            <TestComponent />
-          </ModalProvider>
-        </ThemeProvider>
-      );
+      renderWithProviders(<TestComponent />);
 
       fireEvent.click(screen.getByText("Open Leaderboard"));
 
@@ -80,13 +112,7 @@ describe("ModalContext", () => {
     });
 
     it("should close leaderboard when close is clicked", () => {
-      render(
-        <ThemeProvider>
-          <ModalProvider>
-            <TestComponent />
-          </ModalProvider>
-        </ThemeProvider>
-      );
+      renderWithProviders(<TestComponent />);
 
       fireEvent.click(screen.getByText("Open Leaderboard"));
       expect(screen.getByTestId("mock-leaderboard")).toBeTruthy();
@@ -98,13 +124,7 @@ describe("ModalContext", () => {
 
   describe("when opening rules modal", () => {
     it("should render rules via portal", () => {
-      render(
-        <ThemeProvider>
-          <ModalProvider>
-            <TestComponent />
-          </ModalProvider>
-        </ThemeProvider>
-      );
+      renderWithProviders(<TestComponent />);
 
       fireEvent.click(screen.getByText("Open Rules"));
 
@@ -114,13 +134,7 @@ describe("ModalContext", () => {
 
   describe("when opening color picker modal", () => {
     it("should render color picker via portal", () => {
-      render(
-        <ThemeProvider>
-          <ModalProvider>
-            <TestComponent />
-          </ModalProvider>
-        </ThemeProvider>
-      );
+      renderWithProviders(<TestComponent />);
 
       fireEvent.click(screen.getByText("Open Color Picker"));
 
@@ -128,13 +142,7 @@ describe("ModalContext", () => {
     });
 
     it("should call setTheme and close when theme is selected", () => {
-      render(
-        <ThemeProvider>
-          <ModalProvider>
-            <TestComponent />
-          </ModalProvider>
-        </ThemeProvider>
-      );
+      renderWithProviders(<TestComponent />);
 
       fireEvent.click(screen.getByText("Open Color Picker"));
       fireEvent.click(screen.getByText("Select Theme"));

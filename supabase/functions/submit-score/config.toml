@@ -1,2 +1,3 @@
-# Allow anonymous access (no JWT required)
+# Manual JWT verification in function code
+# (verify_jwt = true doesn't work with new sb_publishable_* keys)
 verify_jwt = false

@@ -53,22 +53,28 @@ god-roll/
 ### Key Conventions
 
 1. **Testing Methodology**: Follow SIFERS (Setup, Invoke, Find, Expect, Reset, Snapshot)
+
    - Every test file should have a centralized `setup()` function with configurable options
    - Write user-centric, behavior-driven test names (e.g., "when user clicks button, should show feedback")
    - Use `@vitest-environment jsdom` for component tests
 
 2. **Component Standards**:
-   - Use React Context for global state (theme, sound, modals) to avoid prop drilling
-   - All UI components accept a `theme` prop for consistent styling
+
+   - Use React Context for global state (theme, sound, game state, modals) to avoid prop drilling
+   - Use `useGameState()` hook for accessing game state (score, round, results) instead of props
+   - All UI components use `useTheme()` hook for consistent styling
    - Export prop interfaces for testability
    - Modal management uses Context + Portal pattern
+   - Only pass action callbacks (e.g., `onRoll`) as props, not state
 
 3. **Code Organization**:
+
    - Co-locate components with their test files
    - Use barrel exports (`index.ts`) for clean imports
    - Test files use shared utilities from `test-utils/`
 
 4. **TypeScript**:
+
    - Use strict mode
    - Export interfaces for component props
    - Avoid `any` type without justification
@@ -90,6 +96,38 @@ god-roll/
 - Avoid hardcoding colors or using Tailwind classes for themed elements
 - Support custom color themes defined in `colorThemes.ts`
 
+### CSS Layout Guidelines
+
+- **Prefer flexbox/grid** over absolute/fixed positioning for layouts
+- Use `flex-col` with `flex-1` spacers to distribute space naturally
+- For full-screen canvas apps: canvas is `absolute inset-0`, UI overlays with flexbox
+- Use `pointer-events-none` on overlay containers, `pointer-events-auto` on interactive children
+- Avoid magic pixel values (e.g., `bottom: "80px"`) - let flexbox handle positioning
+- Use `gap` for spacing between flex children instead of margins
+
+### React Effects Guidelines
+
+**Follow React's guidance: [You Might Not Need an Effect](https://react.dev/learn/you-might-not-need-an-effect)**
+
+- **Effects are for syncing with external systems** (APIs, subscriptions, DOM)
+- **Validation**: Do in event handlers, not effects - provides instant feedback
+- **Derived state**: Calculate during render, don't use effects
+- **Async operations**: Use effects only for the fetch, handle validation separately
+- **Complex async logic**: Extract to custom hooks (e.g., `useDisplayNameEditor`)
+
+```typescript
+// ❌ Bad - effect for validation
+useEffect(() => {
+  setIsValid(name.length >= 2);
+}, [name]);
+
+// ✅ Good - validation in event handler
+const handleNameChange = (name: string) => {
+  setName(name);
+  setError(name.length < 2 ? "Too short" : null);
+};
+```
+
 ## Development Workflow
 
 1. **Before making changes**: Run existing tests to understand baseline (`npm run test`)
@@ -110,3 +148,4 @@ god-roll/
 - WebGL/Three.js tests require special mocking (see AGENTS.md)
 - Color assertions in DOM tests must account for rgb() normalization
 - Context providers wrap the app root for global state management
+- Use `GameStateProvider` with `initialValues` prop for testing components that consume game state

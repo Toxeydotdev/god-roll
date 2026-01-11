@@ -2,7 +2,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
   appId: "com.godroll.app",
-  appName: "God Roll",
+  appName: "God-Roll",
   webDir: "dist",
   ios: {
     contentInset: "automatic",
@@ -14,6 +14,12 @@ const config: CapacitorConfig = {
     // Remove or comment out for production builds
     // url: 'http://localhost:4200',
     cleartext: true,
+  },
+  plugins: {
+    CapacitorHttp: {
+      // Enable native HTTP handling to bypass WKWebView CORS restrictions
+      enabled: true,
+    },
   },
 };
 

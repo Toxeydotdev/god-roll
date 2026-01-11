@@ -1,6 +1,6 @@
 export { useAppLifecycle } from "./useAppLifecycle";
 export { useDicePhysics } from "./useDicePhysics";
 export type { SoundCallbacks } from "./useDicePhysics";
-export { useGameState } from "./useGameState";
+export { useScreenOrientation } from "./useScreenOrientation";
 export { useSound } from "./useSound";
 export { useThreeScene } from "./useThreeScene";

@@ -5,12 +5,15 @@
  * All modals are rendered at document root via createPortal to avoid z-index issues.
  */
 
-import { ColorTheme } from "@/components/DiceRoller/colorThemes";
+import { COLOR_THEMES, ColorTheme } from "@/components/DiceRoller/colorThemes";
 import {
+  AchievementsModal,
+  AuthModal,
   ColorPicker,
   DiceSkinPicker,
   GameRules,
   Leaderboard,
+  RewardsModal,
 } from "@/components/DiceRoller/components";
 import React, {
   createContext,
@@ -20,13 +23,22 @@ import React, {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
+import { useAchievements } from "./AchievementContext";
+import { useDiceSkin } from "./DiceSkinContext";
 import { useTheme } from "./ThemeContext";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
-export type ModalType = "leaderboard" | "rules" | "colorPicker" | "diceSkin";
+export type ModalType =
+  | "leaderboard"
+  | "rules"
+  | "colorPicker"
+  | "diceSkin"
+  | "achievements"
+  | "auth"
+  | "rewards";
 
 interface LeaderboardModalProps {
   highlightIndex?: number;
@@ -37,9 +49,14 @@ interface ColorPickerModalProps {
   onSelectTheme: (theme: ColorTheme) => void;
 }
 
+interface AchievementsModalProps {
+  highlightAchievementId?: string;
+}
+
 type ModalProps =
   | LeaderboardModalProps
   | ColorPickerModalProps
+  | AchievementsModalProps
   | Record<string, never>;
 
 interface ModalState {
@@ -72,6 +89,8 @@ export function ModalProvider({
 }: ModalProviderProps): React.ReactElement {
   const [activeModal, setActiveModal] = useState<ModalState | null>(null);
   const { theme, setTheme } = useTheme();
+  const { unlockedAchievements, profile } = useAchievements();
+  const { skinId, setSkinId } = useDiceSkin();
 
   const openModal = useCallback((type: ModalType, props: ModalProps = {}) => {
     setActiveModal({ type, props });
@@ -119,6 +138,53 @@ export function ModalProvider({
 
       case "diceSkin":
         modalElement = <DiceSkinPicker onClose={closeModal} theme={theme} />;
+        break;
+
+      case "achievements":
+        modalElement = (
+          <AchievementsModal
+            onClose={closeModal}
+            theme={theme}
+            unlockedAchievements={unlockedAchievements}
+            profile={profile}
+            highlightAchievementId={
+              (props as AchievementsModalProps).highlightAchievementId
+            }
+          />
+        );
+        break;
+
+      case "auth":
+        modalElement = (
+          <AuthModal isOpen={true} onClose={closeModal} theme={theme} />
+        );
+        break;
+
+      case "rewards":
+        modalElement = (
+          <RewardsModal
+            onClose={closeModal}
+            theme={theme}
+            unlockedAchievements={unlockedAchievements}
+            currentSkinId={skinId}
+            currentThemeId={theme.id}
+            onSelectSkin={(newSkinId) => {
+              setSkinId(newSkinId);
+            }}
+            onSelectTheme={(themeId) => {
+              const newTheme = COLOR_THEMES.find(
+                (t: ColorTheme) => t.id === themeId
+              );
+              if (newTheme) setTheme(newTheme);
+            }}
+            onViewAchievement={(achievementId) => {
+              // Navigate to achievements modal with the specific achievement highlighted
+              openModal("achievements", {
+                highlightAchievementId: achievementId,
+              });
+            }}
+          />
+        );
         break;
     }
 

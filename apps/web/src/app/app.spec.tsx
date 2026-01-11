@@ -15,7 +15,7 @@ import { setupLocalStorageMock } from "../test-utils";
 vi.mock("../components/DiceRoller", () => ({
   DiceRoller: () => (
     <div data-testid="mock-dice-roller">
-      <h2>GOD ROLL</h2>
+      <h2>GOD-ROLL</h2>
       <button>START GAME</button>
     </div>
   ),
@@ -67,7 +67,7 @@ describe("App - Integration", () => {
     it("should render the game title", () => {
       setup();
 
-      expect(screen.getByText(/god roll/i)).toBeTruthy();
+      expect(screen.getByText(/god-roll/i)).toBeTruthy();
     });
 
     it("should render start game button", () => {

@@ -41,7 +41,7 @@ describe("colorThemes - User Interactions", () => {
       // EXPECT: Should be the default Forest theme
       expect(themeId).toBe("green");
       expect(theme.name).toBe("Forest");
-      expect(theme.backgroundCss).toBe("#90EE90");
+      expect(theme.backgroundCss).toBe("#6AB06A");
     });
   });
 
@@ -60,7 +60,7 @@ describe("colorThemes - User Interactions", () => {
       // EXPECT: Ocean theme should be saved and retrievable
       expect(savedId).toBe("blue");
       expect(theme.name).toBe("Ocean");
-      expect(theme.backgroundCss).toBe("#87CEEB");
+      expect(theme.backgroundCss).toBe("#5BA3C0");
     });
 
     it("should persist theme across page reloads (simulated)", () => {
@@ -89,7 +89,7 @@ describe("colorThemes - User Interactions", () => {
         themeCycle.push(getSavedThemeId());
       }
 
-      // EXPECT: All themes should be selectable
+      // EXPECT: All themes should be selectable (including the new Mythic and Cyan themes)
       expect(themeCycle).toEqual([
         "green",
         "blue",
@@ -97,6 +97,8 @@ describe("colorThemes - User Interactions", () => {
         "orange",
         "pink",
         "gray",
+        "mythic",
+        "cyan",
       ]);
     });
   });
@@ -153,17 +155,21 @@ describe("colorThemes - User Interactions", () => {
         expect(theme).toHaveProperty("name");
         expect(theme).toHaveProperty("background");
         expect(theme).toHaveProperty("backgroundCss");
+        expect(theme).toHaveProperty("backgroundGradient");
         expect(theme).toHaveProperty("textPrimary");
         expect(theme).toHaveProperty("textSecondary");
         expect(theme).toHaveProperty("textTertiary");
+        expect(theme).toHaveProperty("buttonGlow");
+        expect(theme).toHaveProperty("successColor");
+        expect(theme).toHaveProperty("dangerColor");
 
         // Validate CSS color format
         expect(theme.backgroundCss).toMatch(/^#[0-9A-F]{6}$/i);
       }
     });
 
-    it("should have exactly 6 themes available", () => {
-      expect(COLOR_THEMES).toHaveLength(6);
+    it("should have exactly 8 themes available", () => {
+      expect(COLOR_THEMES).toHaveLength(8);
     });
   });
 });

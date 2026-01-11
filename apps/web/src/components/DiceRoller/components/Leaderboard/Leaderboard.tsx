@@ -59,14 +59,44 @@ export function Leaderboard({
   };
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center z-30 bg-black/60">
-      <div className="bg-white/95 rounded-2xl p-6 text-center shadow-2xl min-w-[300px] max-w-[90vw]">
-        <h2
-          className="text-2xl font-black mb-4"
-          style={{ color: theme.textPrimary }}
-        >
-          🏆 Leaderboard
-        </h2>
+    <div
+      className="fixed inset-0 flex items-end sm:items-center justify-center z-30 bg-black/60"
+      style={{ touchAction: "none" }}
+      onClick={onClose}
+    >
+      <div
+        className="bg-white/95 rounded-t-3xl sm:rounded-2xl p-6 pt-3 text-center shadow-2xl w-full sm:w-auto sm:min-w-[300px] sm:max-w-[90vw] max-h-[85vh] flex flex-col"
+        style={{
+          paddingBottom: "env(safe-area-inset-bottom)",
+          overscrollBehavior: "contain",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Drag handle */}
+        <div className="flex justify-center pb-3 sm:hidden">
+          <button
+            onClick={onClose}
+            className="w-10 h-1 rounded-full bg-gray-300 hover:bg-gray-400 transition-colors"
+            aria-label="Close"
+          />
+        </div>
+
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <h2
+            className="text-2xl font-black"
+            style={{ color: theme.textPrimary }}
+          >
+            🏆 Leaderboard
+          </h2>
+          <button
+            onClick={onClose}
+            className="hidden sm:flex w-8 h-8 rounded-full items-center justify-center text-lg hover:bg-black/10 transition-colors"
+            aria-label="Close"
+          >
+            ✕
+          </button>
+        </div>
 
         {/* Tabs */}
         <div className="flex justify-center gap-1 mb-4">
@@ -209,16 +239,6 @@ export function Leaderboard({
         )}
 
         <div className="flex gap-3 justify-center">
-          <button
-            onClick={onClose}
-            className="px-5 py-2 rounded-full font-bold text-base transition-all hover:scale-105 active:scale-95"
-            style={{
-              backgroundColor: theme.textPrimary,
-              color: theme.backgroundCss,
-            }}
-          >
-            Close
-          </button>
           {activeTab === "local" && entries.length > 0 && (
             <button
               onClick={handleClear}

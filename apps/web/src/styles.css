@@ -24,9 +24,10 @@
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
-  
-  --font-display: 'Bangers', 'Impact', 'Arial Black', cursive, sans-serif;
-  --font-body: 'Fredoka', 'Rounded Mplus 1c', 'Comic Sans MS', 'Arial Rounded MT Bold', sans-serif;
+
+  --font-display: "Bangers", "Impact", "Arial Black", cursive, sans-serif;
+  --font-body: "Fredoka", "Rounded Mplus 1c", "Comic Sans MS",
+    "Arial Rounded MT Bold", sans-serif;
 }
 
 .dark {
@@ -59,4 +60,323 @@ body {
   background-color: var(--color-background);
   color: var(--color-foreground);
   font-family: var(--font-body);
+}
+
+/* Hide scrollbar for horizontal carousels while keeping scroll functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* ============================================
+   GAME ANIMATIONS & EFFECTS
+   ============================================ */
+
+/* Pulsing glow animation for the roll button */
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: var(--button-shadow),
+      0 0 20px var(--glow-color, rgba(255, 215, 0, 0.4));
+  }
+  50% {
+    box-shadow: var(--button-shadow),
+      0 0 35px var(--glow-color, rgba(255, 215, 0, 0.6)),
+      0 0 50px var(--glow-color, rgba(255, 215, 0, 0.3));
+  }
+}
+
+.roll-button-idle {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Bounce animation for dice landing */
+@keyframes bounce-in {
+  0% {
+    transform: scale(0.3) translateY(-100px);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05) translateY(0);
+  }
+  70% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.bounce-in {
+  animation: bounce-in 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Pop animation for success indicators */
+@keyframes pop-in {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.pop-in {
+  animation: pop-in 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Shake animation for failed rolls */
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-5px);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(5px);
+  }
+}
+
+.shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+/* Screen flash for special moments */
+@keyframes flash {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.screen-flash {
+  animation: flash 0.4s ease-out;
+}
+
+/* Slide up animation for banners */
+@keyframes slide-up {
+  0% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.slide-up {
+  animation: slide-up 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Fade in animation */
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+/* Count up animation helper */
+@keyframes count-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.count-up {
+  animation: count-pulse 0.15s ease-out;
+}
+
+/* Glow animation for successful rolls */
+@keyframes success-glow {
+  0% {
+    text-shadow: 0 0 5px var(--success-color, #32cd32);
+  }
+  50% {
+    text-shadow: 0 0 10px var(--success-color, #32cd32),
+      0 0 20px var(--success-color, #32cd32),
+      0 0 30px var(--success-color, #32cd32);
+  }
+  100% {
+    text-shadow: 0 0 5px var(--success-color, #32cd32);
+  }
+}
+
+.success-glow {
+  animation: success-glow 0.6s ease-out;
+}
+
+/* Danger pulse for failed rolls */
+@keyframes danger-pulse {
+  0%,
+  100% {
+    text-shadow: 0 0 5px var(--danger-color, #dc3545);
+  }
+  50% {
+    text-shadow: 0 0 15px var(--danger-color, #dc3545),
+      0 0 30px var(--danger-color, #dc3545);
+  }
+}
+
+.danger-pulse {
+  animation: danger-pulse 0.3s ease-out 3;
+}
+
+/* Dice count indicator animation */
+@keyframes dice-unlock {
+  0% {
+    transform: scale(0) rotate(-180deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.2) rotate(10deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.dice-unlock {
+  animation: dice-unlock 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Highlight pulse animation for navigated-to items */
+@keyframes highlight-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px var(--highlight-color, #22c55e),
+      0 0 8px var(--highlight-color, #22c55e);
+  }
+  50% {
+    box-shadow: 0 0 0 4px var(--highlight-color, #22c55e),
+      0 0 16px var(--highlight-color, #22c55e);
+  }
+}
+
+.highlight-pulse {
+  animation: highlight-pulse 1.5s ease-in-out infinite;
+}
+
+/* Toast pop animation - quick in, fade out (for left:50% centered elements) */
+@keyframes toast-pop {
+  0% {
+    transform: translateX(-50%) translateY(-20px) scale(0.8);
+    opacity: 0;
+  }
+  15% {
+    transform: translateX(-50%) translateY(0) scale(1.05);
+    opacity: 1;
+  }
+  25% {
+    transform: translateX(-50%) translateY(0) scale(1);
+    opacity: 1;
+  }
+  75% {
+    transform: translateX(-50%) translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) translateY(-10px) scale(0.95);
+    opacity: 0;
+  }
+}
+
+/* Toast pop animation for flexbox-centered elements (no translateX) */
+@keyframes toast-pop-center {
+  0% {
+    transform: translateY(-20px) scale(0.8);
+    opacity: 0;
+  }
+  60% {
+    transform: translateY(0) scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Toast pop animation for side-positioned elements (with fade out like toast-pop) */
+@keyframes toast-pop-side {
+  0% {
+    transform: translateY(-20px) scale(0.8);
+    opacity: 0;
+  }
+  15% {
+    transform: translateY(0) scale(1.05);
+    opacity: 1;
+  }
+  25% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  75% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-10px) scale(0.95);
+    opacity: 0;
+  }
+}
+
+/* Subtle floating animation for idle elements */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Background texture overlay */
+.texture-overlay {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  pointer-events: none;
+  mix-blend-mode: overlay;
 }

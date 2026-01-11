@@ -4,6 +4,11 @@
  * GameOverScreen User Interaction Tests following SIFERS methodology
  */
 import {
+  AchievementProvider,
+  AuthProvider,
+  DiceSkinProvider,
+  GameStateProvider,
+  ModalProvider,
   OnlineModeProvider,
   ThemeProvider,
 } from "@/components/DiceRoller/context";
@@ -39,9 +44,11 @@ vi.mock("@/lib/leaderboardService", () => ({
 // ============================================================================
 
 interface SetupOptions {
+  // Game state (via context)
   lastRollTotal?: number;
   totalScore?: number;
   round?: number;
+  // Component props
   onPlayAgain?: Mock;
   highlightIndex?: number;
   leaderboardEntries?: LeaderboardEntry[];
@@ -59,9 +66,11 @@ interface SetupResult {
 
 function setup(options: SetupOptions = {}): SetupResult {
   const {
+    // Game state defaults (via context)
     lastRollTotal = 21,
     totalScore = 150,
     round = 4,
+    // Props defaults
     onPlayAgain = vi.fn(),
     highlightIndex,
     leaderboardEntries = [],
@@ -71,18 +80,32 @@ function setup(options: SetupOptions = {}): SetupResult {
 
   const { container } = render(
     <ThemeProvider>
-      <OnlineModeProvider>
-        <GameOverScreen
-          lastRollTotal={lastRollTotal}
-          totalScore={totalScore}
-          round={round}
-          onPlayAgain={onPlayAgain}
-          highlightIndex={highlightIndex}
-          leaderboardEntries={leaderboardEntries}
-          onLeaderboardChange={onLeaderboardChange}
-          sessionId={sessionId}
-        />
-      </OnlineModeProvider>
+      <AuthProvider>
+        <DiceSkinProvider>
+          <GameStateProvider
+            initialValues={{
+              lastRollTotal,
+              totalScore,
+              round,
+              gameOver: true,
+            }}
+          >
+            <AchievementProvider>
+              <ModalProvider>
+                <OnlineModeProvider>
+                  <GameOverScreen
+                    onPlayAgain={onPlayAgain}
+                    highlightIndex={highlightIndex}
+                    leaderboardEntries={leaderboardEntries}
+                    onLeaderboardChange={onLeaderboardChange}
+                    sessionId={sessionId}
+                  />
+                </OnlineModeProvider>
+              </ModalProvider>
+            </AchievementProvider>
+          </GameStateProvider>
+        </DiceSkinProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 
@@ -118,6 +141,8 @@ function createLeaderboardEntries(count: number): LeaderboardEntry[] {
 describe("GameOverScreen - User Interactions", () => {
   beforeEach(() => {
     localStorage.clear();
+    // Mock window.scrollTo for jsdom
+    window.scrollTo = vi.fn();
   });
 
   afterEach(() => {
@@ -132,21 +157,25 @@ describe("GameOverScreen - User Interactions", () => {
     it("should display GAME OVER message", () => {
       setup();
 
-      const gameOver = screen.getByText("GAME OVER!");
+      // New UI includes emoji: "💀 GAME OVER!"
+      const gameOver = screen.getByText(/GAME OVER/);
       expect(gameOver).toBeTruthy();
     });
 
     it("should show what roll caused the loss", () => {
       setup({ lastRollTotal: 28 });
 
-      expect(screen.getByText(/You rolled 28/)).toBeTruthy();
+      // The roll total is now in a separate span element
+      expect(screen.getByText("28")).toBeTruthy();
       expect(screen.getByText(/divisible by 7/)).toBeTruthy();
     });
 
     it("should display final score", () => {
       setup({ totalScore: 275 });
 
-      expect(screen.getByText(/Final Score: 275/)).toBeTruthy();
+      // The score is now displayed as a large number with separate label
+      expect(screen.getByText("275")).toBeTruthy();
+      expect(screen.getByText(/Final Score/i)).toBeTruthy();
     });
   });
 
@@ -157,25 +186,25 @@ describe("GameOverScreen - User Interactions", () => {
     it("should show plural 'rounds' for multiple rounds", () => {
       setup({ round: 4 }); // Survived rounds 1, 2, 3
 
-      expect(screen.getByText(/You survived 3 rounds!/)).toBeTruthy();
+      expect(screen.getByText(/Survived 3 round/)).toBeTruthy();
     });
 
     it("should show singular 'round' for one round", () => {
       setup({ round: 2 }); // Survived 1 round
 
-      expect(screen.getByText(/You survived 1 round!/)).toBeTruthy();
+      expect(screen.getByText(/Survived 1 round/)).toBeTruthy();
     });
 
     it("should show 0 rounds when dying on first roll", () => {
       setup({ round: 1 }); // Survived 0 rounds
 
-      expect(screen.getByText(/You survived 0 rounds!/)).toBeTruthy();
+      expect(screen.getByText(/Survived 0 round/)).toBeTruthy();
     });
 
     it("should handle high round counts", () => {
       setup({ round: 51 }); // Survived 50 rounds
 
-      expect(screen.getByText(/You survived 50 rounds!/)).toBeTruthy();
+      expect(screen.getByText(/Survived 50 round/)).toBeTruthy();
     });
   });
 
@@ -250,18 +279,18 @@ describe("GameOverScreen - User Interactions", () => {
   // Theme Styling
   // --------------------------------------------------------------------------
   describe("theme styling", () => {
-    it("should apply Forest theme to text", () => {
+    it("should apply Forest theme to final score label", () => {
       setup();
 
-      const finalScore = screen.getByText(/Final Score:/);
-      expect(finalScore.style.color).toBe(hexToRgb(mockTheme.textPrimary));
+      const finalScore = screen.getByText(/Final Score/i);
+      expect(finalScore.style.color).toBe(hexToRgb(mockTheme.textSecondary));
     });
 
-    it("should style Play Again button with theme", () => {
+    it("should style Play Again button with accent color", () => {
       const { getPlayAgainButton } = setup();
 
       expect(getPlayAgainButton().style.backgroundColor).toBe(
-        hexToRgb(mockTheme.textPrimary)
+        hexToRgb(mockTheme.accentColor)
       );
     });
   });
@@ -273,7 +302,7 @@ describe("GameOverScreen - User Interactions", () => {
     it("should have a semi-transparent backdrop", () => {
       const { container } = setup();
 
-      const backdrop = container.querySelector(".bg-black\\/50");
+      const backdrop = container.querySelector(".bg-black\\/60");
       expect(backdrop).toBeTruthy();
     });
 
@@ -284,10 +313,10 @@ describe("GameOverScreen - User Interactions", () => {
       expect(scrollable).toBeTruthy();
     });
 
-    it("should have white card background", () => {
+    it("should have slide-up animation class", () => {
       const { container } = setup();
 
-      const card = container.querySelector(".bg-white\\/95");
+      const card = container.querySelector(".slide-up");
       expect(card).toBeTruthy();
     });
   });
@@ -299,19 +328,21 @@ describe("GameOverScreen - User Interactions", () => {
     it("should handle score of 0", () => {
       setup({ totalScore: 0 });
 
-      expect(screen.getByText(/Final Score: 0/)).toBeTruthy();
+      // The score is now displayed as a large number, not with "Final Score:" prefix
+      expect(screen.getByText("0")).toBeTruthy();
     });
 
     it("should handle very high scores", () => {
       setup({ totalScore: 999999 });
 
-      expect(screen.getByText(/Final Score: 999999/)).toBeTruthy();
+      expect(screen.getByText("999999")).toBeTruthy();
     });
 
     it("should handle roll total of exactly 7", () => {
       setup({ lastRollTotal: 7 });
 
-      expect(screen.getByText(/You rolled 7/)).toBeTruthy();
+      // The roll total is now highlighted separately
+      expect(screen.getByText("7")).toBeTruthy();
     });
 
     it("should handle large leaderboard", () => {

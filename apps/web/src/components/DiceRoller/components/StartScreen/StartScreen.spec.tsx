@@ -3,7 +3,13 @@
  *
  * StartScreen User Interaction Tests following SIFERS methodology
  */
-import { ModalProvider, ThemeProvider } from "@/components/DiceRoller/context";
+import {
+  AchievementProvider,
+  AuthProvider,
+  DiceSkinProvider,
+  ModalProvider,
+  ThemeProvider,
+} from "@/components/DiceRoller/context";
 import { hexToRgb, mockTheme } from "@/test-utils";
 import {
   cleanup,
@@ -33,10 +39,8 @@ interface SetupResult {
   container: RenderResult["container"];
   onStartGame: Mock;
   getStartButton: () => HTMLElement;
-  getThemeButton: () => HTMLElement;
   getLeaderboardButton: () => HTMLElement;
   clickStart: () => void;
-  clickTheme: () => void;
   clickLeaderboard: () => void;
 }
 
@@ -45,30 +49,32 @@ function setup(options: SetupOptions = {}): SetupResult {
 
   const { container } = render(
     <ThemeProvider>
-      <ModalProvider>
-        <StartScreen onStartGame={onStartGame} />
-      </ModalProvider>
+      <AuthProvider>
+        <DiceSkinProvider>
+          <AchievementProvider>
+            <ModalProvider>
+              <StartScreen onStartGame={onStartGame} />
+            </ModalProvider>
+          </AchievementProvider>
+        </DiceSkinProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 
   const getStartButton = () =>
     screen.getByRole("button", { name: /start game/i });
-  const getThemeButton = () => screen.getByRole("button", { name: /theme/i });
   const getLeaderboardButton = () =>
     screen.getByRole("button", { name: /leaderboard/i });
 
   const clickStart = () => fireEvent.click(getStartButton());
-  const clickTheme = () => fireEvent.click(getThemeButton());
   const clickLeaderboard = () => fireEvent.click(getLeaderboardButton());
 
   return {
     container,
     onStartGame,
     getStartButton,
-    getThemeButton,
     getLeaderboardButton,
     clickStart,
-    clickTheme,
     clickLeaderboard,
   };
 }
@@ -89,7 +95,7 @@ describe("StartScreen - User Interactions", () => {
     it("should display the game title prominently", () => {
       setup();
 
-      const title = screen.getByText("GOD ROLL");
+      const title = screen.getByText("GOD-ROLL");
       expect(title).toBeTruthy();
       expect(title.tagName).toBe("H2");
     });
@@ -99,7 +105,7 @@ describe("StartScreen - User Interactions", () => {
 
       expect(screen.getByText("Roll dice to score points")).toBeTruthy();
       expect(screen.getByText("Avoid totals divisible by 7!")).toBeTruthy();
-      expect(screen.getByText("Dice increase each round")).toBeTruthy();
+      expect(screen.getByText(/Each round adds \+1 die/)).toBeTruthy();
     });
 
     it("should display a prominent start button", () => {
@@ -107,13 +113,6 @@ describe("StartScreen - User Interactions", () => {
 
       expect(getStartButton()).toBeTruthy();
       expect(getStartButton().className).toContain("text-3xl");
-    });
-
-    it("should show theme button", () => {
-      const { getThemeButton } = setup();
-
-      expect(getThemeButton()).toBeTruthy();
-      expect(getThemeButton().textContent).toContain("🎨");
     });
   });
 
@@ -140,45 +139,21 @@ describe("StartScreen - User Interactions", () => {
   });
 
   // --------------------------------------------------------------------------
-  // Theme Selection
-  // --------------------------------------------------------------------------
-  describe("when user wants to change theme", () => {
-    it("should trigger color picker on click", () => {
-      const { clickTheme } = setup();
-
-      clickTheme();
-
-      // Modal should open (ColorPicker component renders via portal)
-      // We can't easily test portal-rendered content in unit tests,
-      // but we can verify the button exists and is clickable
-      expect(true).toBe(true);
-    });
-
-    it("should not start the game when clicking theme", () => {
-      const { clickTheme, onStartGame } = setup();
-
-      clickTheme();
-
-      expect(onStartGame).not.toHaveBeenCalled();
-    });
-  });
-
-  // --------------------------------------------------------------------------
   // Theme Styling
   // --------------------------------------------------------------------------
   describe("theme styling", () => {
     it("should apply theme colors to title", () => {
       setup();
 
-      const title = screen.getByText("GOD ROLL");
+      const title = screen.getByText("GOD-ROLL");
       expect(title.style.color).toBe(hexToRgb(mockTheme.textPrimary));
     });
 
-    it("should style start button with theme colors", () => {
+    it("should style start button with accent colors", () => {
       const { getStartButton } = setup();
 
       expect(getStartButton().style.backgroundColor).toBe(
-        hexToRgb(mockTheme.textPrimary)
+        hexToRgb(mockTheme.accentColor)
       );
       expect(getStartButton().style.color).toBe(
         hexToRgb(mockTheme.backgroundCss)
@@ -198,17 +173,16 @@ describe("StartScreen - User Interactions", () => {
   // --------------------------------------------------------------------------
   describe("accessibility", () => {
     it("should have accessible button labels", () => {
-      const { getStartButton, getThemeButton } = setup();
+      const { getStartButton } = setup();
 
       expect(getStartButton()).toBeTruthy();
-      expect(getThemeButton()).toBeTruthy();
     });
 
     it("should use semantic heading for title", () => {
       setup();
 
       const title = screen.getByRole("heading", { level: 2 });
-      expect(title.textContent).toBe("GOD ROLL");
+      expect(title.textContent).toBe("GOD-ROLL");
     });
   });
 });

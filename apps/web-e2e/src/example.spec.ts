@@ -11,7 +11,7 @@ async function startGame(page: Page) {
 test("shows the game title", async ({ page }) => {
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { level: 1, name: "GOD ROLL" })
+    page.getByRole("heading", { level: 1, name: "GOD-ROLL" })
   ).toBeVisible();
 });
 

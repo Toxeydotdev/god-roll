@@ -1,4 +1,11 @@
-import { useOnlineMode, useTheme } from "@/components/DiceRoller/context";
+import {
+  useAchievements,
+  useAuth,
+  useGameState,
+  useModal,
+  useOnlineMode,
+  useTheme,
+} from "@/components/DiceRoller/context";
 import {
   clearLeaderboard,
   LeaderboardEntry,
@@ -14,9 +21,6 @@ import React, { useEffect, useState } from "react";
 type LeaderboardTab = "local" | "global";
 
 interface GameOverScreenProps {
-  lastRollTotal: number;
-  totalScore: number;
-  round: number;
   onPlayAgain: () => void;
   highlightIndex?: number;
   leaderboardEntries: LeaderboardEntry[];
@@ -25,9 +29,6 @@ interface GameOverScreenProps {
 }
 
 export function GameOverScreen({
-  lastRollTotal,
-  totalScore,
-  round,
   onPlayAgain,
   highlightIndex,
   leaderboardEntries,
@@ -35,7 +36,12 @@ export function GameOverScreen({
   sessionId,
 }: GameOverScreenProps): React.ReactElement {
   const { theme } = useTheme();
-  const { isOnlineMode, playerName, setPlayerName } = useOnlineMode();
+  const { isOnlineMode, setPlayerName } = useOnlineMode();
+  const { isAuthenticated, user } = useAuth();
+  const { profile } = useAchievements();
+  const { openModal } = useModal();
+  const { lastRollTotal, totalScore, round } = useGameState();
+
   const roundsSurvived = round - 1;
   const onlineAvailable = isOnlineAvailable();
 
@@ -52,8 +58,24 @@ export function GameOverScreen({
     message: string;
     rank?: number;
   } | null>(null);
-  const [nameInput, setNameInput] = useState(playerName);
   const [hasSubmitted, setHasSubmitted] = useState(false);
+
+  // Prevent background scroll on mobile using overflow hidden on html/body
+  // This approach avoids the viewport jump caused by position:fixed on body
+  useEffect(() => {
+    // Store original overflow values
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+    const originalBodyOverflow = document.body.style.overflow;
+
+    // Prevent scrolling on both html and body
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.documentElement.style.overflow = originalHtmlOverflow;
+      document.body.style.overflow = originalBodyOverflow;
+    };
+  }, []);
 
   // Load global leaderboard when tab changes to global
   useEffect(() => {
@@ -66,17 +88,18 @@ export function GameOverScreen({
   }, [activeTab]);
 
   const handleSubmitScore = async () => {
-    if (!nameInput.trim() || hasSubmitted) return;
+    if (!isAuthenticated || !user || hasSubmitted) return;
 
     setIsSubmitting(true);
-    setPlayerName(nameInput.trim());
+    setPlayerName(profile.displayName);
 
-    const result = await submitScore(
-      nameInput.trim(),
-      totalScore,
+    const result = await submitScore({
+      playerId: user.id,
+      playerName: profile.displayName,
+      score: totalScore,
       roundsSurvived,
-      sessionId
-    );
+      sessionId,
+    });
 
     setSubmitResult(result);
     setHasSubmitted(true);
@@ -104,21 +127,38 @@ export function GameOverScreen({
   };
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center z-20 bg-black/50 p-4">
-      <div className="bg-white/95 rounded-2xl p-6 shadow-2xl max-w-[95vw] max-h-[90vh] overflow-auto">
+    <div
+      className="fixed inset-0 flex items-center justify-center z-20 bg-black/60 p-4 fade-in"
+      style={{
+        paddingTop: "env(safe-area-inset-top, 0px)",
+        touchAction: "none",
+      }}
+      onTouchMove={(e) => e.preventDefault()}
+    >
+      <div
+        className="rounded-2xl p-6 shadow-2xl max-w-[95vw] max-h-[90vh] overflow-auto slide-up"
+        onClick={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
+        style={{
+          background: `linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(245,245,245,0.98) 100%)`,
+          boxShadow: `0 25px 50px rgba(0,0,0,0.3), 0 0 60px ${theme.buttonGlow}`,
+          overscrollBehavior: "contain",
+          touchAction: "pan-y",
+        }}
+      >
         <div className="flex flex-col md:flex-row gap-6">
           {/* Game Over Info */}
           <div className="text-center flex-shrink-0">
             <h2
-              className="text-3xl md:text-4xl mb-2"
+              className="text-3xl md:text-4xl mb-2 shake"
               style={{
-                color: "#c44",
+                color: theme.dangerColor,
                 fontFamily: "var(--font-display)",
-                textShadow: "3px 3px 0px rgba(0,0,0,0.15)",
+                textShadow: `3px 3px 0px rgba(0,0,0,0.15), 0 0 20px ${theme.dangerColor}40`,
                 letterSpacing: "0.05em",
               }}
             >
-              GAME OVER!
+              💀 GAME OVER!
             </h2>
             <p
               className="text-lg mb-1"
@@ -127,18 +167,42 @@ export function GameOverScreen({
                 fontWeight: 600,
               }}
             >
-              You rolled {lastRollTotal} (divisible by 7)
+              You rolled{" "}
+              <span style={{ color: theme.dangerColor, fontWeight: 700 }}>
+                {lastRollTotal}
+              </span>{" "}
+              (divisible by 7)
             </p>
-            <p
-              className="text-xl md:text-2xl mb-2"
+            <div
+              className="my-4 py-3 px-6 rounded-xl inline-block pop-in"
               style={{
-                color: theme.textPrimary,
-                fontFamily: "var(--font-display)",
-                letterSpacing: "0.05em",
+                background: `linear-gradient(145deg, ${theme.accentColor}20 0%, ${theme.accentColor}10 100%)`,
+                border: `2px solid ${theme.accentColor}40`,
               }}
             >
-              Final Score: {totalScore}
-            </p>
+              <p
+                className="text-4xl md:text-5xl mb-1"
+                style={{
+                  color: theme.textPrimary,
+                  fontFamily: "var(--font-display)",
+                  letterSpacing: "0.05em",
+                  textShadow: `2px 2px 0 rgba(0,0,0,0.1)`,
+                }}
+              >
+                {totalScore}
+              </p>
+              <p
+                className="text-sm"
+                style={{
+                  color: theme.textSecondary,
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                }}
+              >
+                Final Score
+              </p>
+            </div>
             <p
               className="text-base mb-4"
               style={{
@@ -146,19 +210,22 @@ export function GameOverScreen({
                 fontWeight: 600,
               }}
             >
-              You survived {roundsSurvived} round
-              {roundsSurvived !== 1 ? "s" : ""}!
+              Survived {roundsSurvived} round
+              {roundsSurvived !== 1 ? "s" : ""} • 🎲 Max {roundsSurvived} dice
             </p>
             <button
               onClick={onPlayAgain}
-              className="text-xl md:text-2xl px-6 md:px-8 py-2 md:py-3 rounded-full transition-all hover:scale-105 active:scale-95"
+              className="text-xl md:text-2xl px-8 md:px-10 py-3 md:py-4 rounded-full transition-all hover:scale-105 active:scale-95 roll-button-idle"
               style={{
-                backgroundColor: theme.textPrimary,
+                backgroundColor: theme.accentColor,
                 color: theme.backgroundCss,
                 fontFamily: "var(--font-display)",
                 textShadow: "2px 2px 0px rgba(0,0,0,0.3)",
-                boxShadow: "0 4px 0 rgba(0,0,0,0.2)",
-                letterSpacing: "0.05em",
+                ["--button-shadow" as string]: `0 5px 0 ${theme.accentHover}, 0 8px 20px rgba(0,0,0,0.25)`,
+                ["--glow-color" as string]: theme.buttonGlow,
+                boxShadow: `0 5px 0 ${theme.accentHover}, 0 8px 20px rgba(0,0,0,0.25), 0 0 20px ${theme.buttonGlow}`,
+                letterSpacing: "0.08em",
+                border: `3px solid ${theme.accentHover}`,
               }}
             >
               PLAY AGAIN
@@ -281,38 +348,56 @@ export function GameOverScreen({
             {/* Global Leaderboard */}
             {activeTab === "global" && (
               <div>
-                {/* Submit Score Form */}
+                {/* Submit Score Form - Only for authenticated users */}
                 {!hasSubmitted && totalScore > 0 && (
                   <div className="mb-3 p-3 rounded-lg bg-gray-100">
-                    <p
-                      className="text-sm mb-2"
-                      style={{ color: theme.textSecondary }}
-                    >
-                      Submit your score to the global leaderboard!
-                    </p>
-                    <input
-                      type="text"
-                      placeholder="Enter your name"
-                      value={nameInput}
-                      onChange={(e) => setNameInput(e.target.value)}
-                      maxLength={20}
-                      className="w-full px-3 py-1.5 rounded-lg border text-sm mb-2"
-                      style={{
-                        borderColor: theme.textSecondary,
-                        color: theme.textPrimary,
-                      }}
-                    />
-                    <button
-                      onClick={handleSubmitScore}
-                      disabled={!nameInput.trim() || isSubmitting}
-                      className="px-4 py-1.5 rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                      style={{
-                        backgroundColor: theme.textPrimary,
-                        color: theme.backgroundCss,
-                      }}
-                    >
-                      {isSubmitting ? "Submitting..." : "Submit Score"}
-                    </button>
+                    {isAuthenticated ? (
+                      <>
+                        <p
+                          className="text-sm mb-2"
+                          style={{ color: theme.textSecondary }}
+                        >
+                          Submit as{" "}
+                          <span
+                            className="font-bold"
+                            style={{ color: theme.textPrimary }}
+                          >
+                            {profile.displayName}
+                          </span>
+                        </p>
+                        <button
+                          onClick={handleSubmitScore}
+                          disabled={isSubmitting}
+                          className="px-4 py-1.5 rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                          style={{
+                            backgroundColor: theme.textPrimary,
+                            color: theme.backgroundCss,
+                          }}
+                        >
+                          {isSubmitting ? "Submitting..." : "Submit Score"}
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <p
+                          className="text-sm mb-2"
+                          style={{ color: theme.textSecondary }}
+                        >
+                          🔒 Sign in to submit your score to the global
+                          leaderboard
+                        </p>
+                        <button
+                          onClick={() => openModal("auth")}
+                          className="px-4 py-1.5 rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95"
+                          style={{
+                            backgroundColor: theme.accentColor,
+                            color: theme.backgroundCss,
+                          }}
+                        >
+                          Sign In / Sign Up
+                        </button>
+                      </>
+                    )}
                   </div>
                 )}
 

@@ -255,6 +255,7 @@ interface ComponentProps {
 
 - Global UI state (theme, modals, notifications)
 - Cross-cutting concerns (authentication, sound settings)
+- **Game state** (score, round, rolling status, results)
 - State accessed by many components at different levels
 - Avoiding props passed through 3+ component layers
 
@@ -263,6 +264,76 @@ interface ComponentProps {
 - Local component state
 - State only used by parent-child pairs
 - Frequently changing values that cause unnecessary re-renders
+
+### Game State Context
+
+Use `GameStateContext` for all game-related state. This eliminates prop drilling for common values like `totalScore`, `round`, `isRolling`, and `results`.
+
+#### ✅ DO: Access game state via useGameState hook
+
+```typescript
+import { useGameState } from "@/components/DiceRoller/context";
+
+function RollButton({ onRoll }: { onRoll: () => void }) {
+  const { results, lastRollTotal, isRolling, round, gameOver } = useGameState();
+
+  return (
+    <button onClick={onRoll} disabled={isRolling}>
+      {isRolling ? "Rolling..." : `Roll ${round} dice`}
+    </button>
+  );
+}
+```
+
+#### ✅ DO: Use initialValues prop for testing
+
+```typescript
+// In tests, use initialValues to set up specific game states
+const { container } = render(
+  <GameStateProvider
+    initialValues={{
+      totalScore: 150,
+      round: 4,
+      gameOver: true,
+      lastRollTotal: 21,
+    }}
+  >
+    <GameOverScreen onPlayAgain={mockPlayAgain} />
+  </GameStateProvider>
+);
+```
+
+#### ❌ DON'T: Pass game state through props
+
+```typescript
+// Bad - prop drilling game state
+interface RollButtonProps {
+  results: DiceFaceNumber[];
+  lastRollTotal: number;
+  isRolling: boolean;
+  round: number;
+  gameOver: boolean;
+  onRoll: () => void;
+}
+
+// Instead, use useGameState() for state and only pass action callbacks
+interface RollButtonProps {
+  onRoll: () => void;
+}
+```
+
+**Available Context Providers:**
+
+| Provider              | Hook              | Purpose                             |
+| --------------------- | ----------------- | ----------------------------------- |
+| `ThemeProvider`       | `useTheme`        | Color theme state and changes       |
+| `SoundProvider`       | `useSound`        | Sound effects and volume            |
+| `GameStateProvider`   | `useGameState`    | Score, round, rolling, results      |
+| `AuthProvider`        | `useAuth`         | Authentication state                |
+| `AchievementProvider` | `useAchievements` | Achievement tracking and unlocks    |
+| `ModalProvider`       | `useModal`        | Modal open/close state              |
+| `OnlineModeProvider`  | `useOnlineMode`   | Online/offline mode and player name |
+| `DiceSkinProvider`    | `useDiceSkin`     | Dice appearance customization       |
 
 ### Modal Management with Context + Portal
 
@@ -361,6 +432,167 @@ All UI components should accept a `theme` prop for consistent styling.
 // Bad - not themeable
 <h2 className="text-green-800">Title</h2>
 ```
+
+### CSS Layout
+
+Use proper CSS layout techniques (flexbox, grid) instead of absolute/fixed positioning. This creates more maintainable, responsive layouts.
+
+#### ✅ DO: Use flexbox for page layouts
+
+```typescript
+// Good - proper flexbox layout with UI overlaying canvas
+<div className="relative w-full h-dvh">
+  {/* Canvas fills entire screen */}
+  <div ref={containerRef} className="absolute inset-0" />
+
+  {/* UI Layer - overlays on top with flexbox */}
+  <div className="absolute inset-0 pointer-events-none flex flex-col">
+    <header className="flex-none flex justify-between p-4 pointer-events-auto">
+      {/* Header content */}
+    </header>
+
+    <div className="flex-1">
+      {/* Middle content - spacer pushes footer down */}
+    </div>
+
+    <footer className="flex-none flex flex-col items-center pointer-events-auto">
+      {/* Footer content */}
+    </footer>
+  </div>
+</div>
+```
+
+#### ❌ DON'T: Use absolute positioning with magic pixel values
+
+```typescript
+// Bad - brittle, doesn't respond to content changes
+<div className="absolute top-4 left-4">Title</div>
+<div className="absolute bottom-20 left-1/2">Button</div>
+<div style={{ bottom: "80px", position: "fixed" }}>Controls</div>
+```
+
+**When to use each approach:**
+
+| Layout Technique | Use For                                                      |
+| ---------------- | ------------------------------------------------------------ |
+| Flexbox          | Page layouts, navigation bars, centering, distributing space |
+| Grid             | Complex 2D layouts, card grids, dashboard layouts            |
+| Absolute/Fixed   | Overlays on canvas, tooltips, dropdowns, modals              |
+
+**Key principles:**
+
+- Use `flex-col` with `flex-1` spacers to push elements to edges
+- Use `pointer-events-none` on overlay containers, `pointer-events-auto` on interactive elements
+- For full-screen canvas apps: canvas is `absolute inset-0`, UI overlays with flexbox
+- Avoid magic pixel values like `bottom: "80px"` - use flexbox to naturally position elements
+- Use `gap` instead of margins for spacing between flex children
+
+### React Effects - You Might Not Need an Effect
+
+Follow React's official guidance: [You Might Not Need an Effect](https://react.dev/learn/you-might-not-need-an-effect)
+
+Effects are for **synchronizing with external systems** (APIs, DOM, subscriptions). Most other use cases should be handled differently.
+
+#### ❌ DON'T: Use effects for derived state or validation
+
+```typescript
+// Bad - this is just derived state, no effect needed
+const [firstName, setFirstName] = useState("");
+const [lastName, setLastName] = useState("");
+const [fullName, setFullName] = useState("");
+
+useEffect(() => {
+  setFullName(firstName + " " + lastName);
+}, [firstName, lastName]);
+
+// Bad - validation in effect
+const [email, setEmail] = useState("");
+const [isValid, setIsValid] = useState(false);
+
+useEffect(() => {
+  setIsValid(email.includes("@"));
+}, [email]);
+```
+
+#### ✅ DO: Calculate during render or in event handlers
+
+```typescript
+// Good - derive during render
+const [firstName, setFirstName] = useState("");
+const [lastName, setLastName] = useState("");
+const fullName = firstName + " " + lastName; // Just calculate it!
+
+// Good - validate in event handler with instant feedback
+const [email, setEmail] = useState("");
+const [formatError, setFormatError] = useState<string | null>(null);
+
+const handleEmailChange = (value: string) => {
+  setEmail(value);
+  // Immediate validation feedback - no effect needed
+  setFormatError(value.includes("@") ? null : "Invalid email format");
+};
+```
+
+#### ✅ DO: Use effects only for external system sync
+
+```typescript
+// Good - async API call is external system sync
+useEffect(() => {
+  if (!shouldFetch) return;
+
+  const controller = new AbortController();
+
+  const timer = setTimeout(async () => {
+    const result = await checkAvailability(value);
+    if (!controller.signal.aborted) {
+      setIsAvailable(result);
+    }
+  }, 500);
+
+  return () => {
+    clearTimeout(timer);
+    controller.abort();
+  };
+}, [value, shouldFetch]);
+```
+
+#### ✅ DO: Extract complex effect logic into custom hooks
+
+```typescript
+// Good - encapsulate complex async logic in a custom hook
+function useDisplayNameEditor({ initialName, playerId }) {
+  const [displayName, setDisplayName] = useState(initialName);
+  const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
+
+  // Validation in setter (event handler pattern)
+  const updateName = (name: string) => {
+    setDisplayName(name);
+    setFormatError(validateFormat(name).error);
+    setNeedsCheck(name !== initialName);
+  };
+
+  // Effect only for the async part
+  useEffect(() => {
+    if (!needsCheck) return;
+    // ... debounced API call
+  }, [needsCheck, displayName]);
+
+  return { displayName, updateName, isAvailable };
+}
+```
+
+**When to use Effects:**
+
+| Use Case                                     | Effect Needed?                            |
+| -------------------------------------------- | ----------------------------------------- |
+| Fetching data                                | ✅ Yes                                    |
+| Subscribing to events (WebSocket, resize)    | ✅ Yes                                    |
+| Controlling non-React widgets (maps, charts) | ✅ Yes                                    |
+| Sending analytics                            | ✅ Yes                                    |
+| Calculating derived state                    | ❌ No - calculate during render           |
+| Transforming data for display                | ❌ No - calculate during render           |
+| Validating user input                        | ❌ No - do in event handler               |
+| Resetting state on prop change               | ❌ No - use key prop or update in handler |
 
 ---
 

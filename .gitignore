@@ -58,3 +58,5 @@ tsconfig.tsbuildinfo
 apps/web/.env.local
 supabase/schema.sql
 supabase/README.md
+supabase/**/*.sql
+supabase/migrations/
