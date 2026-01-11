@@ -1,7 +1,8 @@
 /**
  * @vitest-environment jsdom
  *
- * MusicManager Tests following SIFERS methodology
+ * MusicManager Tests following SIFERS methodology:
+ * Setup, Invoke, Find, Expect, Reset, Snapshot
  */
 
 // ============================================================================

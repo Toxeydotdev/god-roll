@@ -44,7 +44,7 @@ class MusicManager {
           this._wasPlayingBeforeHidden = false;
           this.audio.play().catch(() => {
             // Autoplay blocked, will need user interaction
-            console.log("Music autoplay blocked after returning to tab");
+            console.log("Music autoplay blocked after returning to tab. Click anywhere to resume music.");
           });
         }
       }
