@@ -56,10 +56,33 @@
   border-color: var(--color-border);
 }
 
+html {
+  height: 100%;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  /* Dark fallback that works with any theme */
+  background-color: #111;
+}
+
 body {
+  height: 100%;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
   background-color: var(--color-background);
   color: var(--color-foreground);
   font-family: var(--font-body);
+}
+
+#root {
+  height: 100%;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
 }
 
 /* Hide scrollbar for horizontal carousels while keeping scroll functionality */
