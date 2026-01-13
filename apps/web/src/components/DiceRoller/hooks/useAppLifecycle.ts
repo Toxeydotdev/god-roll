@@ -7,6 +7,7 @@
 
 import { App, type PluginListenerHandle } from "@capacitor/app";
 import { useEffect, useRef } from "react";
+import { musicManager } from "../utils/musicManager";
 import { soundManager } from "../utils/soundManager";
 
 /**
@@ -29,11 +30,13 @@ export function useAppLifecycle(): void {
           "appStateChange",
           async (state) => {
             console.log(
-              `[useAppLifecycle] App state changed to: ${state.isActive ? "active" : "background"}`
+              `[useAppLifecycle] App state changed to: ${
+                state.isActive ? "active" : "background"
+              }`
             );
 
             if (state.isActive) {
-              // App came to foreground - resume audio context
+              // App came to foreground - resume audio context and music
               const audioState = soundManager.getState();
               console.log(
                 `[useAppLifecycle] App became active - AudioContext state: ${audioState}`
@@ -51,6 +54,17 @@ export function useAppLifecycle(): void {
                 );
                 // Error is logged but we don't want to crash the app
                 // User can still interact to resume audio manually
+              }
+
+              // Also resume background music if it was playing
+              try {
+                await musicManager.resume();
+                console.log("[useAppLifecycle] Music resume completed");
+              } catch (error) {
+                console.error(
+                  "[useAppLifecycle] Failed to resume music:",
+                  error
+                );
               }
             } else {
               // App went to background

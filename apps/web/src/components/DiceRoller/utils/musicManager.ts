@@ -33,19 +33,32 @@ class MusicManager {
 
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
-        // App is being hidden/backgrounded
+        // App is being hidden/backgrounded - only track if actually playing
         if (this.isPlaying && this.audio) {
           this._wasPlayingBeforeHidden = true;
           this.audio.pause();
+          console.log(
+            "[MusicManager] Paused for background, will resume when active"
+          );
         }
       } else {
-        // App is becoming visible again
-        if (this._wasPlayingBeforeHidden && this.audio) {
+        // App is becoming visible again - only resume if we paused it
+        if (
+          this._wasPlayingBeforeHidden &&
+          this._savedEnabledState &&
+          this.audio
+        ) {
           this._wasPlayingBeforeHidden = false;
           this.audio.play().catch(() => {
             // Autoplay blocked, will need user interaction
-            console.log("Music autoplay blocked after returning to tab. Click anywhere to resume music.");
+            console.log(
+              "[MusicManager] Autoplay blocked after returning to tab"
+            );
+            this._pendingStart = true;
           });
+        } else {
+          // Clear the flag if user disabled music while backgrounded
+          this._wasPlayingBeforeHidden = false;
         }
       }
     });
@@ -145,29 +158,33 @@ class MusicManager {
 
     this._isToggling = true;
 
-    try {
-      this.isPlaying = false;
-      this._savedEnabledState = false;
+    // Immediately mark as not playing and clear all resume flags
+    this.isPlaying = false;
+    this._savedEnabledState = false;
+    this._wasPlayingBeforeHidden = false;
+    this._pendingStart = false;
 
-      if (this.audio) {
-        // Fade out
-        const fadeOut = () => {
-          if (this.audio && this.audio.volume > 0.05) {
-            this.audio.volume = Math.max(0, this.audio.volume - 0.05);
-            setTimeout(fadeOut, 50);
-          } else if (this.audio) {
-            this.audio.pause();
-            this.audio.currentTime = 0;
-            this.audio.volume = this._savedVolume;
-          }
-        };
-        fadeOut();
-      }
-
-      this.saveSettings();
-    } finally {
+    if (this.audio) {
+      // Fade out with proper cleanup
+      const fadeOut = () => {
+        if (this.audio && this.audio.volume > 0.05) {
+          this.audio.volume = Math.max(0, this.audio.volume - 0.05);
+          setTimeout(fadeOut, 50);
+        } else if (this.audio) {
+          this.audio.pause();
+          this.audio.currentTime = 0;
+          this.audio.volume = this._savedVolume;
+          // Only release the toggle lock after fade completes
+          this._isToggling = false;
+        }
+      };
+      fadeOut();
+    } else {
       this._isToggling = false;
     }
+
+    this.saveSettings();
+    console.log("[MusicManager] Music stopped");
   }
 
   async toggle(): Promise<boolean> {
@@ -199,6 +216,47 @@ class MusicManager {
    */
   isActuallyPlaying(): boolean {
     return this.isPlaying;
+  }
+
+  /**
+   * Resume music playback if it was playing before being interrupted.
+   * Called when app returns from background on mobile devices.
+   * Only resumes if music was explicitly enabled and playing before backgrounding.
+   */
+  async resume(): Promise<void> {
+    // Only resume if:
+    // 1. Music was playing before being hidden, OR
+    // 2. Music is supposed to be enabled (savedEnabledState) AND not currently playing
+    // But never resume if the user explicitly stopped the music
+    if (!this._savedEnabledState) {
+      console.log("[MusicManager] Resume skipped - music is disabled");
+      return;
+    }
+
+    if (this.isPlaying) {
+      console.log("[MusicManager] Resume skipped - already playing");
+      return;
+    }
+
+    if (this._wasPlayingBeforeHidden || this._savedEnabledState) {
+      this._wasPlayingBeforeHidden = false;
+      if (this.audio) {
+        try {
+          await this.audio.play();
+          this.isPlaying = true;
+          console.log("[MusicManager] Music resumed successfully");
+        } catch (error) {
+          console.log(
+            "[MusicManager] Music resume blocked, waiting for interaction:",
+            error
+          );
+          this._pendingStart = true;
+        }
+      } else if (this._savedEnabledState) {
+        // Audio element doesn't exist yet, try to start fresh
+        await this.start();
+      }
+    }
   }
 
   setVolume(volume: number): void {
