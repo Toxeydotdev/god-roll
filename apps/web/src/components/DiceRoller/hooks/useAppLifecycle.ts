@@ -24,66 +24,28 @@ export function useAppLifecycle(): void {
     // Set up app state change listener
     const setupListener = async () => {
       try {
-        console.log("[useAppLifecycle] Setting up app state listener");
-
         listenerHandle.current = await App.addListener(
           "appStateChange",
           async (state) => {
-            console.log(
-              `[useAppLifecycle] App state changed to: ${
-                state.isActive ? "active" : "background"
-              }`
-            );
-
             if (state.isActive) {
               // App came to foreground - resume audio context and music
-              const audioState = soundManager.getState();
-              console.log(
-                `[useAppLifecycle] App became active - AudioContext state: ${audioState}`
-              );
-
               try {
                 await soundManager.resume();
-                console.log(
-                  "[useAppLifecycle] AudioContext resume completed successfully"
-                );
-              } catch (error) {
-                console.error(
-                  "[useAppLifecycle] Failed to resume AudioContext:",
-                  error
-                );
-                // Error is logged but we don't want to crash the app
+              } catch {
                 // User can still interact to resume audio manually
               }
 
               // Also resume background music if it was playing
               try {
                 await musicManager.resume();
-                console.log("[useAppLifecycle] Music resume completed");
-              } catch (error) {
-                console.error(
-                  "[useAppLifecycle] Failed to resume music:",
-                  error
-                );
+              } catch {
+                // Music will resume on next user interaction
               }
-            } else {
-              // App went to background
-              const audioState = soundManager.getState();
-              console.log(
-                `[useAppLifecycle] App went to background - AudioContext state: ${audioState}`
-              );
             }
           }
         );
-
-        console.log("[useAppLifecycle] App state listener registered");
-      } catch (error) {
-        // If Capacitor App plugin is not available (e.g., running in browser),
-        // this is expected and should not cause issues
-        console.log(
-          "[useAppLifecycle] App plugin not available (likely running in browser):",
-          error
-        );
+      } catch {
+        // Capacitor App plugin not available (running in browser)
       }
     };
 
@@ -92,7 +54,6 @@ export function useAppLifecycle(): void {
     // Cleanup listener on unmount
     return () => {
       if (listenerHandle.current) {
-        console.log("[useAppLifecycle] Removing app state listener");
         listenerHandle.current.remove();
         listenerHandle.current = null;
       }

@@ -61,7 +61,6 @@ describe("useAppLifecycle", () => {
     });
 
     const resumeSpy = vi.spyOn(soundManager, "resume");
-    const getStateSpy = vi.spyOn(soundManager, "getState");
 
     renderHook(() => useAppLifecycle());
 
@@ -74,11 +73,10 @@ describe("useAppLifecycle", () => {
       await stateChangeCallback({ isActive: true });
     }
 
-    expect(getStateSpy).toHaveBeenCalled();
     expect(resumeSpy).toHaveBeenCalled();
   });
 
-  it("should log when app goes to background without resuming audio", async () => {
+  it("should not resume audio when app goes to background", async () => {
     const { App } = await import("@capacitor/app");
     let stateChangeCallback: ((state: { isActive: boolean }) => void) | null =
       null;
@@ -90,7 +88,6 @@ describe("useAppLifecycle", () => {
     });
 
     const resumeSpy = vi.spyOn(soundManager, "resume");
-    const getStateSpy = vi.spyOn(soundManager, "getState");
 
     renderHook(() => useAppLifecycle());
 
@@ -103,8 +100,7 @@ describe("useAppLifecycle", () => {
       await stateChangeCallback({ isActive: false });
     }
 
-    // Should check state but not resume
-    expect(getStateSpy).toHaveBeenCalled();
+    // Should not resume when going to background
     expect(resumeSpy).not.toHaveBeenCalled();
   });
 

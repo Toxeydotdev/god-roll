@@ -16,7 +16,7 @@ import {
   isOnlineAvailable,
   submitScore,
 } from "@/lib/leaderboardService";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 type LeaderboardTab = "local" | "global";
 
@@ -59,6 +59,8 @@ export function GameOverScreen({
     rank?: number;
   } | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [clearProgress, setClearProgress] = useState(0);
+  const clearTimerRef = useRef<number | null>(null);
 
   // Prevent background scroll on mobile using overflow hidden on html/body
   // This approach avoids the viewport jump caused by position:fixed on body
@@ -112,10 +114,45 @@ export function GameOverScreen({
     }
   };
 
-  const handleClear = () => {
-    clearLeaderboard();
-    onLeaderboardChange([]);
+  const handleClearStart = () => {
+    setClearProgress(0);
+    const startTime = Date.now();
+    const holdDuration = 1000; // 1 second hold
+
+    const updateProgress = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / holdDuration, 1);
+      setClearProgress(progress);
+
+      if (progress >= 1) {
+        // Clear completed
+        clearLeaderboard();
+        onLeaderboardChange([]);
+        setClearProgress(0);
+      } else {
+        clearTimerRef.current = window.setTimeout(updateProgress, 16);
+      }
+    };
+
+    clearTimerRef.current = window.setTimeout(updateProgress, 16);
   };
+
+  const handleClearEnd = () => {
+    if (clearTimerRef.current) {
+      clearTimeout(clearTimerRef.current);
+      clearTimerRef.current = null;
+    }
+    setClearProgress(0);
+  };
+
+  // Cleanup clear timer on unmount
+  useEffect(() => {
+    return () => {
+      if (clearTimerRef.current) {
+        clearTimeout(clearTimerRef.current);
+      }
+    };
+  }, []);
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -335,11 +372,38 @@ export function GameOverScreen({
                 )}
                 {leaderboardEntries.length > 0 && (
                   <button
-                    onClick={handleClear}
-                    className="mt-2 px-3 py-1 rounded-full font-bold text-xs transition-all hover:scale-105 active:scale-95"
-                    style={{ backgroundColor: "#c44", color: "#fff" }}
+                    onMouseDown={handleClearStart}
+                    onMouseUp={handleClearEnd}
+                    onMouseLeave={handleClearEnd}
+                    onTouchStart={(e) => {
+                      e.preventDefault();
+                      handleClearStart();
+                    }}
+                    onTouchEnd={(e) => {
+                      e.preventDefault();
+                      handleClearEnd();
+                    }}
+                    className="mt-2 px-3 py-1 rounded-full font-bold text-xs transition-all hover:scale-105 active:scale-95 relative overflow-hidden"
+                    style={{
+                      backgroundColor: "#c44",
+                      color: "#fff",
+                      opacity: 0.7 + clearProgress * 0.3,
+                    }}
+                    title="Hold to clear all scores"
                   >
-                    Clear All
+                    {/* Progress indicator */}
+                    {clearProgress > 0 && (
+                      <span
+                        className="absolute inset-0 bg-red-800 transition-none"
+                        style={{
+                          width: `${clearProgress * 100}%`,
+                          opacity: 0.5,
+                        }}
+                      />
+                    )}
+                    <span className="relative z-10">
+                      {clearProgress > 0 ? "Hold..." : "Clear All"}
+                    </span>
                   </button>
                 )}
               </>

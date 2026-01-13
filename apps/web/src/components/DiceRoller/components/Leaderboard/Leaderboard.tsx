@@ -9,7 +9,7 @@ import {
   getLeaderboard as getGlobalLeaderboard,
   isOnlineAvailable,
 } from "@/lib/leaderboardService";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 type LeaderboardTab = "local" | "global";
 
@@ -33,6 +33,8 @@ export function Leaderboard({
     []
   );
   const [isLoadingGlobal, setIsLoadingGlobal] = useState(false);
+  const [clearProgress, setClearProgress] = useState(0);
+  const clearTimerRef = useRef<number | null>(null);
 
   // Load global leaderboard when tab changes to global
   useEffect(() => {
@@ -44,10 +46,45 @@ export function Leaderboard({
     }
   }, [activeTab]);
 
-  const handleClear = () => {
-    clearLeaderboard();
-    setEntries([]);
+  const handleClearStart = () => {
+    setClearProgress(0);
+    const startTime = Date.now();
+    const holdDuration = 1000; // 1 second hold
+
+    const updateProgress = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / holdDuration, 1);
+      setClearProgress(progress);
+
+      if (progress >= 1) {
+        // Clear completed
+        clearLeaderboard();
+        setEntries([]);
+        setClearProgress(0);
+      } else {
+        clearTimerRef.current = window.setTimeout(updateProgress, 16);
+      }
+    };
+
+    clearTimerRef.current = window.setTimeout(updateProgress, 16);
   };
+
+  const handleClearEnd = () => {
+    if (clearTimerRef.current) {
+      clearTimeout(clearTimerRef.current);
+      clearTimerRef.current = null;
+    }
+    setClearProgress(0);
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (clearTimerRef.current) {
+        clearTimeout(clearTimerRef.current);
+      }
+    };
+  }, []);
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -241,11 +278,38 @@ export function Leaderboard({
         <div className="flex gap-3 justify-center">
           {activeTab === "local" && entries.length > 0 && (
             <button
-              onClick={handleClear}
-              className="px-5 py-2 rounded-full font-bold text-base transition-all hover:scale-105 active:scale-95"
-              style={{ backgroundColor: "#c44", color: "#fff" }}
+              onMouseDown={handleClearStart}
+              onMouseUp={handleClearEnd}
+              onMouseLeave={handleClearEnd}
+              onTouchStart={(e) => {
+                e.preventDefault();
+                handleClearStart();
+              }}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                handleClearEnd();
+              }}
+              className="px-5 py-2 rounded-full font-bold text-base transition-all hover:scale-105 active:scale-95 relative overflow-hidden"
+              style={{
+                backgroundColor: "#c44",
+                color: "#fff",
+                opacity: 0.7 + clearProgress * 0.3,
+              }}
+              title="Hold to clear all scores"
             >
-              Clear All
+              {/* Progress indicator */}
+              {clearProgress > 0 && (
+                <span
+                  className="absolute inset-0 bg-red-800 transition-none"
+                  style={{
+                    width: `${clearProgress * 100}%`,
+                    opacity: 0.5,
+                  }}
+                />
+              )}
+              <span className="relative z-10">
+                {clearProgress > 0 ? "Hold..." : "Clear All"}
+              </span>
             </button>
           )}
         </div>

@@ -37,9 +37,6 @@ class MusicManager {
         if (this.isPlaying && this.audio) {
           this._wasPlayingBeforeHidden = true;
           this.audio.pause();
-          console.log(
-            "[MusicManager] Paused for background, will resume when active"
-          );
         }
       } else {
         // App is becoming visible again - only resume if we paused it
@@ -51,9 +48,6 @@ class MusicManager {
           this._wasPlayingBeforeHidden = false;
           this.audio.play().catch(() => {
             // Autoplay blocked, will need user interaction
-            console.log(
-              "[MusicManager] Autoplay blocked after returning to tab"
-            );
             this._pendingStart = true;
           });
         } else {
@@ -92,10 +86,6 @@ class MusicManager {
       // Save the enabled state, not playing state (they can differ during transitions)
       localStorage.setItem(STORAGE_KEY, this._savedEnabledState.toString());
       localStorage.setItem(VOLUME_KEY, this._savedVolume.toString());
-      console.log(
-        "[MusicManager] Settings saved, enabled:",
-        this._savedEnabledState
-      );
     } catch {
       // localStorage not available
     }
@@ -149,7 +139,6 @@ class MusicManager {
         this.saveSettings();
       } catch {
         // Autoplay was blocked - will retry on user interaction
-        console.log("Music autoplay blocked, will retry on interaction");
         this._pendingStart = true;
       }
     } finally {
@@ -158,15 +147,8 @@ class MusicManager {
   }
 
   stop(): void {
-    console.log("[MusicManager] Stop called, current state:", {
-      isPlaying: this.isPlaying,
-      isToggling: this._isToggling,
-      savedEnabledState: this._savedEnabledState,
-    });
-
     // Allow stopping even if not currently playing to clear saved state
     if (this._isToggling) {
-      console.log("[MusicManager] Stop blocked - already toggling");
       return;
     }
 
@@ -190,7 +172,6 @@ class MusicManager {
         this.audio.pause();
         this.audio.currentTime = 0;
         this.audio.volume = this._savedVolume;
-        console.log("[MusicManager] Music stopped immediately (mobile)");
       } else {
         // Fade out on desktop
         this._isToggling = true;
@@ -203,31 +184,20 @@ class MusicManager {
             this.audio.currentTime = 0;
             this.audio.volume = this._savedVolume;
             this._isToggling = false;
-            console.log("[MusicManager] Music stopped with fade (desktop)");
           }
         };
         fadeOut();
       }
-    } else {
-      console.log("[MusicManager] No audio element to stop");
     }
   }
 
   async toggle(): Promise<boolean> {
-    console.log("[MusicManager] Toggle called, current state:", {
-      isPlaying: this.isPlaying,
-      isToggling: this._isToggling,
-      savedEnabledState: this._savedEnabledState,
-    });
-
     if (this._isToggling) {
-      console.log("[MusicManager] Toggle blocked - already toggling");
       return this.isEnabled();
     }
 
     // Check actual desired state, not just playing state
     const shouldStop = this.isPlaying || this._savedEnabledState;
-    console.log("[MusicManager] Should stop:", shouldStop);
 
     if (shouldStop) {
       this.stop();
@@ -263,12 +233,10 @@ class MusicManager {
     // 2. Music is supposed to be enabled (savedEnabledState) AND not currently playing
     // But never resume if the user explicitly stopped the music
     if (!this._savedEnabledState) {
-      console.log("[MusicManager] Resume skipped - music is disabled");
       return;
     }
 
     if (this.isPlaying) {
-      console.log("[MusicManager] Resume skipped - already playing");
       return;
     }
 
@@ -278,12 +246,8 @@ class MusicManager {
         try {
           await this.audio.play();
           this.isPlaying = true;
-          console.log("[MusicManager] Music resumed successfully");
-        } catch (error) {
-          console.log(
-            "[MusicManager] Music resume blocked, waiting for interaction:",
-            error
-          );
+        } catch {
+          // Autoplay blocked, will need user interaction
           this._pendingStart = true;
         }
       } else if (this._savedEnabledState) {
