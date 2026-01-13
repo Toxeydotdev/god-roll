@@ -342,12 +342,7 @@ function DiceRollerContent(): React.ReactElement {
 
       {/* Footer - fixed at bottom to prevent layout shift */}
       {gameStarted && !gameOver && (
-        <footer
-          className="fixed bottom-0 left-0 right-0 z-10 flex flex-col items-center gap-3 pointer-events-auto"
-          style={{
-            paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 8px)",
-          }}
-        >
+        <footer className="fixed bottom-0 left-0 right-0 z-10 flex flex-col items-center gap-3 pointer-events-auto">
           <RollButton onRoll={handleRoll} />
           <ControlsPanel />
         </footer>
