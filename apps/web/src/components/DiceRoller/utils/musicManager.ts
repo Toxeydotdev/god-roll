@@ -89,8 +89,13 @@ class MusicManager {
 
   private saveSettings(): void {
     try {
-      localStorage.setItem(STORAGE_KEY, this.isPlaying.toString());
+      // Save the enabled state, not playing state (they can differ during transitions)
+      localStorage.setItem(STORAGE_KEY, this._savedEnabledState.toString());
       localStorage.setItem(VOLUME_KEY, this._savedVolume.toString());
+      console.log(
+        "[MusicManager] Settings saved, enabled:",
+        this._savedEnabledState
+      );
     } catch {
       // localStorage not available
     }
@@ -153,10 +158,17 @@ class MusicManager {
   }
 
   stop(): void {
-    // Allow stopping even if not currently playing to clear saved state
-    if (this._isToggling) return;
+    console.log("[MusicManager] Stop called, current state:", {
+      isPlaying: this.isPlaying,
+      isToggling: this._isToggling,
+      savedEnabledState: this._savedEnabledState,
+    });
 
-    this._isToggling = true;
+    // Allow stopping even if not currently playing to clear saved state
+    if (this._isToggling) {
+      console.log("[MusicManager] Stop blocked - already toggling");
+      return;
+    }
 
     // Immediately mark as not playing and clear all resume flags
     this.isPlaying = false;
@@ -164,36 +176,58 @@ class MusicManager {
     this._wasPlayingBeforeHidden = false;
     this._pendingStart = false;
 
-    if (this.audio) {
-      // Fade out with proper cleanup
-      const fadeOut = () => {
-        if (this.audio && this.audio.volume > 0.05) {
-          this.audio.volume = Math.max(0, this.audio.volume - 0.05);
-          setTimeout(fadeOut, 50);
-        } else if (this.audio) {
-          this.audio.pause();
-          this.audio.currentTime = 0;
-          this.audio.volume = this._savedVolume;
-          // Only release the toggle lock after fade completes
-          this._isToggling = false;
-        }
-      };
-      fadeOut();
-    } else {
-      this._isToggling = false;
-    }
-
+    // Save settings immediately before any async operations
     this.saveSettings();
-    console.log("[MusicManager] Music stopped");
+
+    if (this.audio) {
+      // On mobile, skip fade and stop immediately for reliability
+      const isMobile =
+        /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
+        "ontouchstart" in window;
+
+      if (isMobile) {
+        // Immediate stop on mobile - more reliable
+        this.audio.pause();
+        this.audio.currentTime = 0;
+        this.audio.volume = this._savedVolume;
+        console.log("[MusicManager] Music stopped immediately (mobile)");
+      } else {
+        // Fade out on desktop
+        this._isToggling = true;
+        const fadeOut = () => {
+          if (this.audio && this.audio.volume > 0.05) {
+            this.audio.volume = Math.max(0, this.audio.volume - 0.05);
+            setTimeout(fadeOut, 50);
+          } else if (this.audio) {
+            this.audio.pause();
+            this.audio.currentTime = 0;
+            this.audio.volume = this._savedVolume;
+            this._isToggling = false;
+            console.log("[MusicManager] Music stopped with fade (desktop)");
+          }
+        };
+        fadeOut();
+      }
+    } else {
+      console.log("[MusicManager] No audio element to stop");
+    }
   }
 
   async toggle(): Promise<boolean> {
+    console.log("[MusicManager] Toggle called, current state:", {
+      isPlaying: this.isPlaying,
+      isToggling: this._isToggling,
+      savedEnabledState: this._savedEnabledState,
+    });
+
     if (this._isToggling) {
+      console.log("[MusicManager] Toggle blocked - already toggling");
       return this.isEnabled();
     }
 
     // Check actual desired state, not just playing state
     const shouldStop = this.isPlaying || this._savedEnabledState;
+    console.log("[MusicManager] Should stop:", shouldStop);
 
     if (shouldStop) {
       this.stop();
