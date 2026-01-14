@@ -15,6 +15,7 @@ import {
   type ReactNode,
 } from "react";
 import { isSupabaseConfigured, supabase } from "../../../lib/supabase";
+import { deleteAccount as performAccountDeletion } from "../utils/accountDeletion";
 
 // ============================================================================
 // TYPES
@@ -42,6 +43,7 @@ export interface AuthContextValue extends AuthState {
   ) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<{ error: AuthError | null }>;
   resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
+  deleteAccount: () => Promise<{ success: boolean; error?: string }>;
   isSupabaseAvailable: boolean;
 }
 
@@ -182,6 +184,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
     []
   );
 
+  // Delete account and all associated data
+  const deleteAccount = useCallback(async (): Promise<{
+    success: boolean;
+    error?: string;
+  }> => {
+    if (!user) {
+      return { success: false, error: "No user logged in" };
+    }
+
+    return performAccountDeletion(user.id);
+  }, [user]);
+
   const value: AuthContextValue = {
     status,
     user,
@@ -193,6 +207,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signIn,
     signOut,
     resetPassword,
+    deleteAccount,
     isSupabaseAvailable: isSupabaseConfigured,
   };
 

@@ -9,7 +9,13 @@
  */
 
 import type { User } from "@supabase/supabase-js";
-import { useCallback, useState, type FormEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+} from "react";
 import { createPortal } from "react-dom";
 import type { UserProfile } from "../../achievements";
 import type { ColorTheme } from "../../colorThemes";
@@ -48,9 +54,16 @@ function AuthenticatedView({
   onClose,
 }: AuthenticatedViewProps) {
   const { syncNow } = useAchievements();
+  const { deleteAccount, signOut } = useAuth();
   const [isSavingName, setIsSavingName] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Delete account state
+  const [deleteProgress, setDeleteProgress] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const deleteTimerRef = useRef<number | null>(null);
 
   // Use custom hook for display name editing (cleaner than inline effect)
   const {
@@ -91,6 +104,73 @@ function AuthenticatedView({
     }
 
     setIsSavingName(false);
+  };
+
+  // Handle hold-to-delete start
+  const handleDeleteStart = () => {
+    if (isDeleting) return;
+    setDeleteProgress(0);
+    setDeleteError(null);
+    const startTime = Date.now();
+    const holdDuration = 5000; // 5 seconds for destructive action
+
+    const updateProgress = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / holdDuration, 1);
+      setDeleteProgress(progress);
+
+      if (progress >= 1) {
+        // Delete triggered
+        performDelete();
+      } else {
+        deleteTimerRef.current = window.setTimeout(updateProgress, 16);
+      }
+    };
+
+    deleteTimerRef.current = window.setTimeout(updateProgress, 16);
+  };
+
+  // Handle hold-to-delete end
+  const handleDeleteEnd = () => {
+    if (deleteTimerRef.current) {
+      clearTimeout(deleteTimerRef.current);
+      deleteTimerRef.current = null;
+    }
+    if (!isDeleting) {
+      setDeleteProgress(0);
+    }
+  };
+
+  // Perform the actual deletion
+  const performDelete = async () => {
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    const result = await deleteAccount();
+
+    if (result.success) {
+      // Account deleted, close modal
+      onClose();
+    } else {
+      setDeleteError(result.error || "Failed to delete account");
+      setIsDeleting(false);
+      setDeleteProgress(0);
+    }
+  };
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (deleteTimerRef.current) {
+        clearTimeout(deleteTimerRef.current);
+      }
+    };
+  }, []);
+
+  // Handle sign out
+  const handleSignOut = async () => {
+    await signOut();
+    onClose();
   };
 
   return createPortal(
@@ -299,11 +379,90 @@ function AuthenticatedView({
         </div>
 
         <p
-          className="text-center text-sm"
+          className="text-center text-sm mb-4"
           style={{ color: theme.textPrimary, opacity: 0.7 }}
         >
           ✅ Your progress is synced to the cloud
         </p>
+
+        {/* Sign Out Button */}
+        <button
+          onClick={handleSignOut}
+          className="w-full py-3 rounded-lg font-bold text-sm mb-4 transition-opacity hover:opacity-80"
+          style={{
+            border: `2px solid ${theme.textPrimary}`,
+            color: theme.textPrimary,
+            backgroundColor: "transparent",
+          }}
+        >
+          Sign Out
+        </button>
+
+        {/* Danger Zone - Account Deletion */}
+        <div
+          className="p-4 rounded-lg border-2"
+          style={{
+            borderColor: "#ef4444",
+            backgroundColor: "#ef444410",
+          }}
+        >
+          <p className="font-bold text-sm mb-2" style={{ color: "#ef4444" }}>
+            ⚠️ Danger Zone
+          </p>
+          <p
+            className="text-xs mb-3"
+            style={{ color: theme.textPrimary, opacity: 0.7 }}
+          >
+            Permanently delete your account and all associated data. This action
+            cannot be undone.
+          </p>
+
+          {deleteError && (
+            <p className="text-xs mb-2" style={{ color: "#ef4444" }}>
+              ✗ {deleteError}
+            </p>
+          )}
+
+          <button
+            onMouseDown={handleDeleteStart}
+            onMouseUp={handleDeleteEnd}
+            onMouseLeave={handleDeleteEnd}
+            onTouchStart={(e) => {
+              e.preventDefault();
+              handleDeleteStart();
+            }}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              handleDeleteEnd();
+            }}
+            disabled={isDeleting}
+            className="w-full py-2 rounded-lg font-bold text-sm transition-all relative overflow-hidden disabled:cursor-not-allowed"
+            style={{
+              backgroundColor: "#dc2626",
+              color: "#fff",
+              opacity: isDeleting ? 0.5 : 0.8 + deleteProgress * 0.2,
+            }}
+            title="Hold for 2 seconds to delete account"
+          >
+            {/* Progress indicator */}
+            {deleteProgress > 0 && (
+              <span
+                className="absolute inset-0 bg-red-900 transition-none"
+                style={{
+                  width: `${deleteProgress * 100}%`,
+                  opacity: 0.5,
+                }}
+              />
+            )}
+            <span className="relative z-10">
+              {isDeleting
+                ? "Deleting..."
+                : deleteProgress > 0
+                ? `Hold... ${Math.ceil((1 - deleteProgress) * 5)}s`
+                : "Hold to Delete Account"}
+            </span>
+          </button>
+        </div>
       </div>
     </div>,
     document.body
