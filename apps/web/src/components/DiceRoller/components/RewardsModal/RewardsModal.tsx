@@ -9,6 +9,12 @@ import { ACHIEVEMENTS } from "@/components/DiceRoller/achievements";
 import type { ColorTheme } from "@/components/DiceRoller/colorThemes";
 import { COLOR_THEMES } from "@/components/DiceRoller/colorThemes";
 import { DICE_SKINS, DiceSkin } from "@/components/DiceRoller/diceSkins";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import React, { useMemo, useState } from "react";
 
 // ============================================================================
@@ -211,46 +217,21 @@ export function RewardsModal({
   const categories: RewardCategory[] = ["skins", "themes", "badges", "titles"];
 
   return (
-    <div
-      className="fixed inset-0 flex items-end sm:items-center justify-center z-30 bg-black/60"
-      style={{ touchAction: "none" }}
-      onClick={onClose}
-    >
-      <div
-        className="bg-white/95 rounded-t-3xl sm:rounded-2xl p-6 pt-3 text-center shadow-2xl w-full sm:w-[90vw] sm:max-w-[500px] max-h-[85vh] flex flex-col overflow-hidden"
-        style={{
-          paddingBottom: "env(safe-area-inset-bottom)",
-          overscrollBehavior: "contain",
-        }}
-        onClick={(e) => e.stopPropagation()}
+    <Drawer open={true} onOpenChange={(open) => !open && onClose()}>
+      <DrawerContent
+        className="max-h-[85vh] mx-auto sm:w-[90vw] sm:max-w-[500px] flex flex-col overflow-hidden"
+        style={{ backgroundColor: "rgba(255, 255, 255, 0.95)" }}
       >
-        {/* Drag handle */}
-        <div className="flex justify-center pb-3 sm:hidden">
-          <button
-            onClick={onClose}
-            className="w-10 h-1 rounded-full bg-gray-300 hover:bg-gray-400 transition-colors"
-            aria-label="Close"
-          />
-        </div>
+        <DrawerHeader className="text-center pb-0">
+          <DrawerTitle
+            className="text-2xl font-black"
+            style={{ color: theme.textPrimary }}
+          >
+            🎁 Rewards
+          </DrawerTitle>
+        </DrawerHeader>
 
-        {/* Header */}
-        <div className="flex-shrink-0">
-          <div className="flex items-center justify-between mb-4">
-            <h2
-              className="text-2xl font-black"
-              style={{ color: theme.textPrimary }}
-            >
-              🎁 Rewards
-            </h2>
-            <button
-              onClick={onClose}
-              className="hidden sm:flex w-8 h-8 rounded-full items-center justify-center text-lg hover:bg-black/10 transition-colors"
-              aria-label="Close"
-            >
-              ✕
-            </button>
-          </div>
-
+        <div className="px-4 pb-6 flex flex-col flex-1 overflow-hidden">
           {/* Category Tabs */}
           <div className="flex justify-center gap-1 mb-4">
             {categories.map((cat) => {
@@ -279,68 +260,68 @@ export function RewardsModal({
               );
             })}
           </div>
-        </div>
 
-        {/* Content List */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
-          <div className="space-y-2">
-            {activeCategory === "skins" &&
-              sortedSkins.map((skin) => (
-                <SkinCard
-                  key={skin.id}
-                  skin={skin}
-                  isUnlocked={unlockedSkins.includes(skin.id)}
-                  isSelected={currentSkinId === skin.id}
-                  onSelect={() => onSelectSkin(skin.id)}
-                  theme={theme}
-                  achievement={findAchievementForReward(skin.id, "dice_skin")}
-                  onViewAchievement={onViewAchievement}
-                />
-              ))}
+          {/* Content List */}
+          <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
+            <div className="space-y-2">
+              {activeCategory === "skins" &&
+                sortedSkins.map((skin) => (
+                  <SkinCard
+                    key={skin.id}
+                    skin={skin}
+                    isUnlocked={unlockedSkins.includes(skin.id)}
+                    isSelected={currentSkinId === skin.id}
+                    onSelect={() => onSelectSkin(skin.id)}
+                    theme={theme}
+                    achievement={findAchievementForReward(skin.id, "dice_skin")}
+                    onViewAchievement={onViewAchievement}
+                  />
+                ))}
 
-            {activeCategory === "themes" &&
-              sortedThemes.map((t) => (
-                <ThemeCard
-                  key={t.id}
-                  colorTheme={t}
-                  isUnlocked={unlockedThemes.includes(t.id)}
-                  isSelected={currentThemeId === t.id}
-                  onSelect={() => onSelectTheme(t.id)}
-                  theme={theme}
-                  achievement={findAchievementForReward(t.id, "theme")}
-                  onViewAchievement={onViewAchievement}
-                />
-              ))}
+              {activeCategory === "themes" &&
+                sortedThemes.map((t) => (
+                  <ThemeCard
+                    key={t.id}
+                    colorTheme={t}
+                    isUnlocked={unlockedThemes.includes(t.id)}
+                    isSelected={currentThemeId === t.id}
+                    onSelect={() => onSelectTheme(t.id)}
+                    theme={theme}
+                    achievement={findAchievementForReward(t.id, "theme")}
+                    onViewAchievement={onViewAchievement}
+                  />
+                ))}
 
-            {activeCategory === "badges" &&
-              sortedBadges.map(([id, badge]) => (
-                <BadgeCard
-                  key={id}
-                  badgeId={id}
-                  badge={badge}
-                  isUnlocked={unlockedBadges.includes(id)}
-                  theme={theme}
-                  achievement={findAchievementForReward(id, "badge")}
-                  onViewAchievement={onViewAchievement}
-                />
-              ))}
+              {activeCategory === "badges" &&
+                sortedBadges.map(([id, badge]) => (
+                  <BadgeCard
+                    key={id}
+                    badgeId={id}
+                    badge={badge}
+                    isUnlocked={unlockedBadges.includes(id)}
+                    theme={theme}
+                    achievement={findAchievementForReward(id, "badge")}
+                    onViewAchievement={onViewAchievement}
+                  />
+                ))}
 
-            {activeCategory === "titles" &&
-              sortedTitles.map(([id, title]) => (
-                <TitleCard
-                  key={id}
-                  titleId={id}
-                  title={title}
-                  isUnlocked={unlockedTitles.includes(id)}
-                  theme={theme}
-                  achievement={findAchievementForReward(id, "title")}
-                  onViewAchievement={onViewAchievement}
-                />
-              ))}
+              {activeCategory === "titles" &&
+                sortedTitles.map(([id, title]) => (
+                  <TitleCard
+                    key={id}
+                    titleId={id}
+                    title={title}
+                    isUnlocked={unlockedTitles.includes(id)}
+                    theme={theme}
+                    achievement={findAchievementForReward(id, "title")}
+                    onViewAchievement={onViewAchievement}
+                  />
+                ))}
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      </DrawerContent>
+    </Drawer>
   );
 }
 

@@ -7,6 +7,12 @@
 import { ColorTheme } from "@/components/DiceRoller/colorThemes";
 import { useDiceSkin } from "@/components/DiceRoller/context";
 import { getAllDiceSkins } from "@/components/DiceRoller/diceSkins";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import React from "react";
 
 interface DiceSkinPickerProps {
@@ -27,45 +33,21 @@ export function DiceSkinPicker({
   };
 
   return (
-    <div
-      className="fixed inset-0 flex items-end sm:items-center justify-center z-30 bg-black/60"
-      onClick={onClose}
-    >
-      <div
-        className="rounded-t-3xl sm:rounded-2xl p-6 pt-3 shadow-2xl w-full sm:max-w-2xl max-h-[85vh] overflow-hidden flex flex-col"
-        style={{
-          backgroundColor: theme.backgroundCss,
-          paddingBottom: "env(safe-area-inset-bottom)",
-        }}
-        onClick={(e) => e.stopPropagation()}
+    <Drawer open={true} onOpenChange={(open) => !open && onClose()}>
+      <DrawerContent
+        className="max-h-[85vh] mx-auto sm:max-w-2xl flex flex-col"
+        style={{ backgroundColor: theme.backgroundCss }}
       >
-        {/* Drag handle */}
-        <div className="flex justify-center pb-3 sm:hidden">
-          <button
-            onClick={onClose}
-            className="w-10 h-1 rounded-full bg-gray-300 hover:bg-gray-400 transition-colors"
-            aria-label="Close"
-          />
-        </div>
-
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <h2
+        <DrawerHeader>
+          <DrawerTitle
             className="text-2xl font-bold"
             style={{ color: theme.textPrimary }}
           >
             🎲 Choose Dice Skin
-          </h2>
-          <button
-            onClick={onClose}
-            className="hidden sm:flex w-8 h-8 rounded-full items-center justify-center text-lg hover:bg-black/10 transition-colors"
-            aria-label="Close"
-          >
-            ✕
-          </button>
-        </div>
+          </DrawerTitle>
+        </DrawerHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto flex-1">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto flex-1 px-4 pb-6">
           {skins.map((skin) => (
             <button
               key={skin.id}
@@ -111,7 +93,7 @@ export function DiceSkinPicker({
             </button>
           ))}
         </div>
-      </div>
-    </div>
+      </DrawerContent>
+    </Drawer>
   );
 }

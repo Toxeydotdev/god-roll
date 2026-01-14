@@ -14,6 +14,12 @@ import {
   UserProfile,
 } from "@/components/DiceRoller/achievements";
 import type { ColorTheme } from "@/components/DiceRoller/colorThemes";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 // ============================================================================
@@ -114,46 +120,21 @@ export function AchievementsModal({
   ];
 
   return (
-    <div
-      className="fixed inset-0 flex items-end sm:items-center justify-center z-30 bg-black/60"
-      style={{ touchAction: "none" }}
-      onClick={onClose}
-    >
-      <div
-        className="bg-white/95 rounded-t-3xl sm:rounded-2xl p-6 pt-3 text-center shadow-2xl w-full sm:w-[90vw] sm:max-w-[500px] max-h-[85vh] flex flex-col"
-        style={{
-          paddingBottom: "env(safe-area-inset-bottom)",
-          overscrollBehavior: "contain",
-        }}
-        onClick={(e) => e.stopPropagation()}
+    <Drawer open={true} onOpenChange={(open) => !open && onClose()}>
+      <DrawerContent
+        className="max-h-[85vh] mx-auto sm:w-[90vw] sm:max-w-[500px] flex flex-col"
+        style={{ backgroundColor: "rgba(255, 255, 255, 0.95)" }}
       >
-        {/* Drag handle */}
-        <div className="flex justify-center pb-3 sm:hidden">
-          <button
-            onClick={onClose}
-            className="w-10 h-1 rounded-full bg-gray-300 hover:bg-gray-400 transition-colors"
-            aria-label="Close"
-          />
-        </div>
+        <DrawerHeader className="text-center pb-0">
+          <DrawerTitle
+            className="text-2xl font-black"
+            style={{ color: theme.textPrimary }}
+          >
+            🏆 Achievements
+          </DrawerTitle>
+        </DrawerHeader>
 
-        {/* Header */}
-        <div className="flex-shrink-0">
-          <div className="flex items-center justify-between mb-2">
-            <h2
-              className="text-2xl font-black"
-              style={{ color: theme.textPrimary }}
-            >
-              🏆 Achievements
-            </h2>
-            <button
-              onClick={onClose}
-              className="hidden sm:flex w-8 h-8 rounded-full items-center justify-center text-lg hover:bg-black/10 transition-colors"
-              aria-label="Close"
-            >
-              ✕
-            </button>
-          </div>
-
+        <div className="px-4 pb-6 flex flex-col flex-1 overflow-hidden">
           {/* Progress Bar */}
           <div className="mb-4">
             <div className="flex justify-between text-sm mb-1">
@@ -250,40 +231,40 @@ export function AchievementsModal({
               );
             })}
           </div>
-        </div>
 
-        {/* Achievement List */}
-        <div
-          ref={scrollContainerRef}
-          className="flex-1 overflow-y-auto min-h-0"
-        >
-          <div className="space-y-2">
-            {filteredAchievements.map((achievement) => {
-              const isHighlighted = achievement.id === highlightAchievementId;
-              return (
-                <AchievementCard
-                  key={achievement.id}
-                  achievement={achievement}
-                  isUnlocked={unlockedAchievements.has(achievement.id)}
-                  theme={theme}
-                  isHighlighted={isHighlighted}
-                  cardRef={isHighlighted ? highlightedCardRef : undefined}
-                />
-              );
-            })}
+          {/* Achievement List */}
+          <div
+            ref={scrollContainerRef}
+            className="flex-1 overflow-y-auto min-h-0"
+          >
+            <div className="space-y-2">
+              {filteredAchievements.map((achievement) => {
+                const isHighlighted = achievement.id === highlightAchievementId;
+                return (
+                  <AchievementCard
+                    key={achievement.id}
+                    achievement={achievement}
+                    isUnlocked={unlockedAchievements.has(achievement.id)}
+                    theme={theme}
+                    isHighlighted={isHighlighted}
+                    cardRef={isHighlighted ? highlightedCardRef : undefined}
+                  />
+                );
+              })}
+            </div>
+
+            {filteredAchievements.length === 0 && (
+              <p
+                className="text-center py-8"
+                style={{ color: theme.textSecondary }}
+              >
+                No achievements in this category yet!
+              </p>
+            )}
           </div>
-
-          {filteredAchievements.length === 0 && (
-            <p
-              className="text-center py-8"
-              style={{ color: theme.textSecondary }}
-            >
-              No achievements in this category yet!
-            </p>
-          )}
         </div>
-      </div>
-    </div>
+      </DrawerContent>
+    </Drawer>
   );
 }
 

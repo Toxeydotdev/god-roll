@@ -16,7 +16,12 @@ import {
   useState,
   type FormEvent,
 } from "react";
-import { createPortal } from "react-dom";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "../../../ui/drawer";
 import type { UserProfile } from "../../achievements";
 import type { ColorTheme } from "../../colorThemes";
 import { useAchievements } from "../../context/AchievementContext";
@@ -173,299 +178,287 @@ function AuthenticatedView({
     onClose();
   };
 
-  return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
-      style={{ backgroundColor: "rgba(0, 0, 0, 0.8)" }}
-      onClick={onClose}
-    >
-      <div
-        className="relative w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
-        style={{
-          backgroundColor: theme.backgroundCss,
-          paddingBottom: "env(safe-area-inset-bottom)",
-        }}
-        onClick={(e) => e.stopPropagation()}
+  return (
+    <Drawer open={true} onOpenChange={(open) => !open && onClose()}>
+      <DrawerContent
+        className="max-h-[85vh] mx-auto sm:max-w-md"
+        style={{ backgroundColor: "rgba(255, 255, 255, 0.95)" }}
       >
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-2xl opacity-60 hover:opacity-100 transition-opacity"
-          style={{ color: theme.textPrimary }}
-          aria-label="Close"
-        >
-          ×
-        </button>
-
-        <h2
-          className="text-2xl font-bold mb-4"
-          style={{ color: theme.textPrimary }}
-        >
-          👤 Account
-        </h2>
-
-        {/* Email */}
-        <div
-          className="p-4 rounded-lg mb-4"
-          style={{ backgroundColor: `${theme.textPrimary}15` }}
-        >
-          <p
-            className="text-sm opacity-70"
+        <DrawerHeader className="pb-2">
+          <DrawerTitle
+            className="text-2xl font-bold"
             style={{ color: theme.textPrimary }}
           >
-            Signed in as
-          </p>
-          <p className="font-bold" style={{ color: theme.textPrimary }}>
-            {user.email}
-          </p>
-        </div>
+            👤 Account
+          </DrawerTitle>
+        </DrawerHeader>
 
-        {/* Display Name Editor */}
-        <div
-          className="p-4 rounded-lg mb-4"
-          style={{ backgroundColor: `${theme.textPrimary}15` }}
-        >
-          <div className="flex items-center justify-between mb-2">
+        <div className="px-4 pb-6 overflow-y-auto">
+          {/* Email */}
+          <div
+            className="p-4 rounded-lg mb-4"
+            style={{ backgroundColor: `${theme.textPrimary}15` }}
+          >
             <p
-              className="text-sm font-bold"
+              className="text-sm opacity-70"
               style={{ color: theme.textPrimary }}
             >
-              Display Name (for leaderboard)
+              Signed in as
             </p>
-            {!isEditingName && (
-              <button
-                onClick={startEditing}
-                className="text-sm px-2 py-1 rounded hover:opacity-80"
-                style={{ color: theme.accentColor }}
-              >
-                Edit
-              </button>
-            )}
+            <p className="font-bold" style={{ color: theme.textPrimary }}>
+              {user.email}
+            </p>
           </div>
 
-          {isEditingName ? (
-            <div>
-              <input
-                type="text"
-                value={displayNameInput}
-                onChange={(e) => setDisplayName(e.target.value)}
-                maxLength={20}
-                className="w-full px-3 py-2 rounded-lg border-2 transition-colors mb-2"
-                style={{
-                  backgroundColor: theme.backgroundCss,
-                  borderColor: nameError
-                    ? "#ef4444"
-                    : nameAvailable
-                    ? "#22c55e"
-                    : `${theme.textPrimary}40`,
-                  color: theme.textPrimary,
-                }}
-                placeholder="Enter display name"
-              />
-
-              {/* Availability indicator */}
-              <div className="text-sm mb-2">
-                {isCheckingName && (
-                  <span style={{ color: theme.textSecondary }}>
-                    Checking availability...
-                  </span>
-                )}
-                {!isCheckingName && nameAvailable === true && (
-                  <span style={{ color: "#22c55e" }}>✓ Name is available</span>
-                )}
-                {!isCheckingName && nameError && (
-                  <span style={{ color: "#ef4444" }}>✗ {nameError}</span>
-                )}
-              </div>
-
-              <div className="flex gap-2">
+          {/* Display Name Editor */}
+          <div
+            className="p-4 rounded-lg mb-4"
+            style={{ backgroundColor: `${theme.textPrimary}15` }}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <p
+                className="text-sm font-bold"
+                style={{ color: theme.textPrimary }}
+              >
+                Display Name (for leaderboard)
+              </p>
+              {!isEditingName && (
                 <button
-                  onClick={handleSaveName}
-                  disabled={!canSave || isSavingName}
-                  className="flex-1 py-2 rounded-lg font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{
-                    backgroundColor: theme.textPrimary,
-                    color: theme.backgroundCss,
-                  }}
+                  onClick={startEditing}
+                  className="text-sm px-2 py-1 rounded hover:opacity-80"
+                  style={{ color: theme.accentColor }}
                 >
-                  {isSavingName ? "Saving..." : "Save"}
+                  Edit
                 </button>
-                <button
-                  onClick={cancelEditing}
-                  className="px-4 py-2 rounded-lg font-bold text-sm"
+              )}
+            </div>
+
+            {isEditingName ? (
+              <div>
+                <input
+                  type="text"
+                  value={displayNameInput}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  maxLength={20}
+                  className="w-full px-3 py-2 rounded-lg border-2 transition-colors mb-2"
                   style={{
-                    border: `2px solid ${theme.textPrimary}`,
+                    backgroundColor: theme.backgroundCss,
+                    borderColor: nameError
+                      ? "#ef4444"
+                      : nameAvailable
+                      ? "#22c55e"
+                      : `${theme.textPrimary}40`,
                     color: theme.textPrimary,
                   }}
+                  placeholder="Enter display name"
+                />
+
+                {/* Availability indicator */}
+                <div className="text-sm mb-2">
+                  {isCheckingName && (
+                    <span style={{ color: theme.textSecondary }}>
+                      Checking availability...
+                    </span>
+                  )}
+                  {!isCheckingName && nameAvailable === true && (
+                    <span style={{ color: "#22c55e" }}>
+                      ✓ Name is available
+                    </span>
+                  )}
+                  {!isCheckingName && nameError && (
+                    <span style={{ color: "#ef4444" }}>✗ {nameError}</span>
+                  )}
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleSaveName}
+                    disabled={!canSave || isSavingName}
+                    className="flex-1 py-2 rounded-lg font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{
+                      backgroundColor: theme.textPrimary,
+                      color: theme.backgroundCss,
+                    }}
+                  >
+                    {isSavingName ? "Saving..." : "Save"}
+                  </button>
+                  <button
+                    onClick={cancelEditing}
+                    className="px-4 py-2 rounded-lg font-bold text-sm"
+                    style={{
+                      border: `2px solid ${theme.textPrimary}`,
+                      color: theme.textPrimary,
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <p
+                className="font-bold text-lg"
+                style={{ color: theme.textPrimary }}
+              >
+                {profile.displayName}
+              </p>
+            )}
+
+            {saveSuccess && (
+              <p className="text-sm mt-2" style={{ color: "#22c55e" }}>
+                ✓ {saveSuccess}
+              </p>
+            )}
+            {saveError && (
+              <p className="text-sm mt-2" style={{ color: "#ef4444" }}>
+                ✗ {saveError}
+              </p>
+            )}
+          </div>
+
+          {/* Stats */}
+          <div
+            className="p-4 rounded-lg mb-4"
+            style={{ backgroundColor: `${theme.textPrimary}15` }}
+          >
+            <p className="font-bold mb-2" style={{ color: theme.textPrimary }}>
+              Your Stats
+            </p>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div>
+                <span style={{ color: theme.textPrimary, opacity: 0.7 }}>
+                  High Score:
+                </span>
+                <span
+                  className="ml-2 font-bold"
+                  style={{ color: theme.textPrimary }}
                 >
-                  Cancel
-                </button>
+                  {profile.highestScore}
+                </span>
+              </div>
+              <div>
+                <span style={{ color: theme.textPrimary, opacity: 0.7 }}>
+                  Games:
+                </span>
+                <span
+                  className="ml-2 font-bold"
+                  style={{ color: theme.textPrimary }}
+                >
+                  {profile.totalGamesPlayed}
+                </span>
+              </div>
+              <div>
+                <span style={{ color: theme.textPrimary, opacity: 0.7 }}>
+                  Total Score:
+                </span>
+                <span
+                  className="ml-2 font-bold"
+                  style={{ color: theme.textPrimary }}
+                >
+                  {profile.totalScore}
+                </span>
+              </div>
+              <div>
+                <span style={{ color: theme.textPrimary, opacity: 0.7 }}>
+                  Best Round:
+                </span>
+                <span
+                  className="ml-2 font-bold"
+                  style={{ color: theme.textPrimary }}
+                >
+                  {profile.highestRound}
+                </span>
               </div>
             </div>
-          ) : (
-            <p
-              className="font-bold text-lg"
-              style={{ color: theme.textPrimary }}
-            >
-              {profile.displayName}
-            </p>
-          )}
-
-          {saveSuccess && (
-            <p className="text-sm mt-2" style={{ color: "#22c55e" }}>
-              ✓ {saveSuccess}
-            </p>
-          )}
-          {saveError && (
-            <p className="text-sm mt-2" style={{ color: "#ef4444" }}>
-              ✗ {saveError}
-            </p>
-          )}
-        </div>
-
-        {/* Stats */}
-        <div
-          className="p-4 rounded-lg mb-4"
-          style={{ backgroundColor: `${theme.textPrimary}15` }}
-        >
-          <p className="font-bold mb-2" style={{ color: theme.textPrimary }}>
-            Your Stats
-          </p>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div>
-              <span style={{ color: theme.textPrimary, opacity: 0.7 }}>
-                High Score:
-              </span>
-              <span
-                className="ml-2 font-bold"
-                style={{ color: theme.textPrimary }}
-              >
-                {profile.highestScore}
-              </span>
-            </div>
-            <div>
-              <span style={{ color: theme.textPrimary, opacity: 0.7 }}>
-                Games:
-              </span>
-              <span
-                className="ml-2 font-bold"
-                style={{ color: theme.textPrimary }}
-              >
-                {profile.totalGamesPlayed}
-              </span>
-            </div>
-            <div>
-              <span style={{ color: theme.textPrimary, opacity: 0.7 }}>
-                Total Score:
-              </span>
-              <span
-                className="ml-2 font-bold"
-                style={{ color: theme.textPrimary }}
-              >
-                {profile.totalScore}
-              </span>
-            </div>
-            <div>
-              <span style={{ color: theme.textPrimary, opacity: 0.7 }}>
-                Best Round:
-              </span>
-              <span
-                className="ml-2 font-bold"
-                style={{ color: theme.textPrimary }}
-              >
-                {profile.highestRound}
-              </span>
-            </div>
           </div>
-        </div>
 
-        <p
-          className="text-center text-sm mb-4"
-          style={{ color: theme.textPrimary, opacity: 0.7 }}
-        >
-          ✅ Your progress is synced to the cloud
-        </p>
-
-        {/* Sign Out Button */}
-        <button
-          onClick={handleSignOut}
-          className="w-full py-3 rounded-lg font-bold text-sm mb-4 transition-opacity hover:opacity-80"
-          style={{
-            border: `2px solid ${theme.textPrimary}`,
-            color: theme.textPrimary,
-            backgroundColor: "transparent",
-          }}
-        >
-          Sign Out
-        </button>
-
-        {/* Danger Zone - Account Deletion */}
-        <div
-          className="p-4 rounded-lg border-2"
-          style={{
-            borderColor: "#ef4444",
-            backgroundColor: "#ef444410",
-          }}
-        >
-          <p className="font-bold text-sm mb-2" style={{ color: "#ef4444" }}>
-            ⚠️ Danger Zone
-          </p>
           <p
-            className="text-xs mb-3"
+            className="text-center text-sm mb-4"
             style={{ color: theme.textPrimary, opacity: 0.7 }}
           >
-            Permanently delete your account and all associated data. This action
-            cannot be undone.
+            ✅ Your progress is synced to the cloud
           </p>
 
-          {deleteError && (
-            <p className="text-xs mb-2" style={{ color: "#ef4444" }}>
-              ✗ {deleteError}
-            </p>
-          )}
-
+          {/* Sign Out Button */}
           <button
-            onMouseDown={handleDeleteStart}
-            onMouseUp={handleDeleteEnd}
-            onMouseLeave={handleDeleteEnd}
-            onTouchStart={(e) => {
-              e.preventDefault();
-              handleDeleteStart();
-            }}
-            onTouchEnd={(e) => {
-              e.preventDefault();
-              handleDeleteEnd();
-            }}
-            disabled={isDeleting}
-            className="w-full py-2 rounded-lg font-bold text-sm transition-all relative overflow-hidden disabled:cursor-not-allowed"
+            onClick={handleSignOut}
+            className="w-full py-3 rounded-lg font-bold text-sm mb-4 transition-opacity hover:opacity-80"
             style={{
-              backgroundColor: "#dc2626",
-              color: "#fff",
-              opacity: isDeleting ? 0.5 : 0.8 + deleteProgress * 0.2,
+              border: `2px solid ${theme.textPrimary}`,
+              color: theme.textPrimary,
+              backgroundColor: "transparent",
             }}
-            title="Hold for 2 seconds to delete account"
           >
-            {/* Progress indicator */}
-            {deleteProgress > 0 && (
-              <span
-                className="absolute inset-0 bg-red-900 transition-none"
-                style={{
-                  width: `${deleteProgress * 100}%`,
-                  opacity: 0.5,
-                }}
-              />
-            )}
-            <span className="relative z-10">
-              {isDeleting
-                ? "Deleting..."
-                : deleteProgress > 0
-                ? `Hold... ${Math.ceil((1 - deleteProgress) * 5)}s`
-                : "Hold to Delete Account"}
-            </span>
+            Sign Out
           </button>
+
+          {/* Danger Zone - Account Deletion */}
+          <div
+            className="p-4 rounded-lg border-2"
+            style={{
+              borderColor: "#ef4444",
+              backgroundColor: "#ef444410",
+            }}
+          >
+            <p className="font-bold text-sm mb-2" style={{ color: "#ef4444" }}>
+              ⚠️ Danger Zone
+            </p>
+            <p
+              className="text-xs mb-3"
+              style={{ color: theme.textPrimary, opacity: 0.7 }}
+            >
+              Permanently delete your account and all associated data. This
+              action cannot be undone.
+            </p>
+
+            {deleteError && (
+              <p className="text-xs mb-2" style={{ color: "#ef4444" }}>
+                ✗ {deleteError}
+              </p>
+            )}
+
+            <button
+              onMouseDown={handleDeleteStart}
+              onMouseUp={handleDeleteEnd}
+              onMouseLeave={handleDeleteEnd}
+              onTouchStart={(e) => {
+                e.preventDefault();
+                handleDeleteStart();
+              }}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                handleDeleteEnd();
+              }}
+              disabled={isDeleting}
+              className="w-full py-2 rounded-lg font-bold text-sm transition-all relative overflow-hidden disabled:cursor-not-allowed"
+              style={{
+                backgroundColor: "#dc2626",
+                color: "#fff",
+                opacity: isDeleting ? 0.5 : 0.8 + deleteProgress * 0.2,
+              }}
+              title="Hold for 2 seconds to delete account"
+            >
+              {/* Progress indicator */}
+              {deleteProgress > 0 && (
+                <span
+                  className="absolute inset-0 bg-red-900 transition-none"
+                  style={{
+                    width: `${deleteProgress * 100}%`,
+                    opacity: 0.5,
+                  }}
+                />
+              )}
+              <span className="relative z-10">
+                {isDeleting
+                  ? "Deleting..."
+                  : deleteProgress > 0
+                  ? `Hold... ${Math.ceil((1 - deleteProgress) * 5)}s`
+                  : "Hold to Delete Account"}
+              </span>
+            </button>
+          </div>
         </div>
-      </div>
-    </div>,
-    document.body
+      </DrawerContent>
+    </Drawer>
   );
 }
 
@@ -578,243 +571,229 @@ export function AuthModal({ isOpen, onClose, theme }: AuthModalProps) {
   }
 
   // Guest view - show progress that will be claimed
-  return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
-      style={{ backgroundColor: "rgba(0, 0, 0, 0.8)" }}
-      onClick={onClose}
-    >
-      <div
-        className="relative w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
-        style={{
-          backgroundColor: theme.backgroundCss,
-          paddingBottom: "env(safe-area-inset-bottom)",
-        }}
-        onClick={(e) => e.stopPropagation()}
+  return (
+    <Drawer open={true} onOpenChange={(open) => !open && onClose()}>
+      <DrawerContent
+        className="max-h-[85vh] mx-auto sm:max-w-md"
+        style={{ backgroundColor: "rgba(255, 255, 255, 0.95)" }}
       >
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-2xl opacity-60 hover:opacity-100 transition-opacity"
-          style={{ color: theme.textPrimary }}
-          aria-label="Close"
-        >
-          ×
-        </button>
-
-        <h2
-          className="text-2xl font-bold mb-2"
-          style={{ color: theme.textPrimary }}
-        >
-          {mode === "signin"
-            ? "🔑 Sign In"
-            : mode === "signup"
-            ? "📝 Create Account"
-            : "🔄 Reset Password"}
-        </h2>
-
-        {/* Guest progress preview */}
-        {mode === "signup" && profile.totalGamesPlayed > 0 && (
-          <div
-            className="p-3 rounded-lg mb-4"
-            style={{ backgroundColor: `${theme.textPrimary}15` }}
+        <DrawerHeader className="pb-2">
+          <DrawerTitle
+            className="text-2xl font-bold"
+            style={{ color: theme.textPrimary }}
           >
-            <p
-              className="text-sm font-bold mb-1"
-              style={{ color: theme.textPrimary }}
-            >
-              🎮 Your current progress will be saved:
-            </p>
-            <div className="text-sm grid grid-cols-2 gap-1">
-              <span style={{ color: theme.textPrimary, opacity: 0.8 }}>
-                {profile.totalGamesPlayed} games played
-              </span>
-              <span style={{ color: theme.textPrimary, opacity: 0.8 }}>
-                High score: {profile.highestScore}
-              </span>
-            </div>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label
-              className="block text-sm font-medium mb-1"
-              style={{ color: theme.textPrimary }}
-            >
-              Email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 rounded-lg border-2 transition-colors"
-              style={{
-                backgroundColor: theme.backgroundCss,
-                borderColor: `${theme.textPrimary}40`,
-                color: theme.textPrimary,
-              }}
-              placeholder="your@email.com"
-              required
-              disabled={submitting || isLoading}
-            />
-          </div>
-
-          {mode !== "forgot" && (
-            <div>
-              <label
-                className="block text-sm font-medium mb-1"
-                style={{ color: theme.textPrimary }}
-              >
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border-2 transition-colors"
-                style={{
-                  backgroundColor: theme.backgroundCss,
-                  borderColor: `${theme.textPrimary}40`,
-                  color: theme.textPrimary,
-                }}
-                placeholder="••••••••"
-                required
-                disabled={submitting || isLoading}
-                minLength={6}
-              />
-            </div>
-          )}
-
-          {mode === "signup" && (
-            <div>
-              <label
-                className="block text-sm font-medium mb-1"
-                style={{ color: theme.textPrimary }}
-              >
-                Confirm Password
-              </label>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border-2 transition-colors"
-                style={{
-                  backgroundColor: theme.backgroundCss,
-                  borderColor: `${theme.textPrimary}40`,
-                  color: theme.textPrimary,
-                }}
-                placeholder="••••••••"
-                required
-                disabled={submitting || isLoading}
-                minLength={6}
-              />
-            </div>
-          )}
-
-          {error && (
-            <div
-              className="p-3 rounded-lg text-sm"
-              style={{ backgroundColor: "#ef444420", color: "#ef4444" }}
-            >
-              ❌ {error}
-            </div>
-          )}
-
-          {success && (
-            <div
-              className="p-3 rounded-lg text-sm"
-              style={{ backgroundColor: "#22c55e20", color: "#22c55e" }}
-            >
-              ✅ {success}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={submitting || isLoading}
-            className="w-full py-3 rounded-lg font-bold text-lg transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{
-              backgroundColor: theme.textPrimary,
-              color: theme.backgroundCss,
-            }}
-          >
-            {submitting || isLoading
-              ? "Loading..."
-              : mode === "signin"
-              ? "Sign In"
+            {mode === "signin"
+              ? "🔑 Sign In"
               : mode === "signup"
-              ? "Create Account"
-              : "Send Reset Email"}
-          </button>
-        </form>
+              ? "📝 Create Account"
+              : "🔄 Reset Password"}
+          </DrawerTitle>
+        </DrawerHeader>
 
-        {/* Mode switching links */}
-        <div className="mt-4 text-center text-sm space-y-2">
-          {mode === "signin" && (
-            <>
+        <div className="px-4 pb-6 overflow-y-auto">
+          {/* Guest progress preview */}
+          {mode === "signup" && profile.totalGamesPlayed > 0 && (
+            <div
+              className="p-3 rounded-lg mb-4"
+              style={{ backgroundColor: `${theme.textPrimary}15` }}
+            >
+              <p
+                className="text-sm font-bold mb-1"
+                style={{ color: theme.textPrimary }}
+              >
+                🎮 Your current progress will be saved:
+              </p>
+              <div className="text-sm grid grid-cols-2 gap-1">
+                <span style={{ color: theme.textPrimary, opacity: 0.8 }}>
+                  {profile.totalGamesPlayed} games played
+                </span>
+                <span style={{ color: theme.textPrimary, opacity: 0.8 }}>
+                  High score: {profile.highestScore}
+                </span>
+              </div>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label
+                className="block text-sm font-medium mb-1"
+                style={{ color: theme.textPrimary }}
+              >
+                Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-2 rounded-lg border-2 transition-colors"
+                style={{
+                  backgroundColor: theme.backgroundCss,
+                  borderColor: `${theme.textPrimary}40`,
+                  color: theme.textPrimary,
+                }}
+                placeholder="your@email.com"
+                required
+                disabled={submitting || isLoading}
+              />
+            </div>
+
+            {mode !== "forgot" && (
+              <div>
+                <label
+                  className="block text-sm font-medium mb-1"
+                  style={{ color: theme.textPrimary }}
+                >
+                  Password
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border-2 transition-colors"
+                  style={{
+                    backgroundColor: theme.backgroundCss,
+                    borderColor: `${theme.textPrimary}40`,
+                    color: theme.textPrimary,
+                  }}
+                  placeholder="••••••••"
+                  required
+                  disabled={submitting || isLoading}
+                  minLength={6}
+                />
+              </div>
+            )}
+
+            {mode === "signup" && (
+              <div>
+                <label
+                  className="block text-sm font-medium mb-1"
+                  style={{ color: theme.textPrimary }}
+                >
+                  Confirm Password
+                </label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border-2 transition-colors"
+                  style={{
+                    backgroundColor: theme.backgroundCss,
+                    borderColor: `${theme.textPrimary}40`,
+                    color: theme.textPrimary,
+                  }}
+                  placeholder="••••••••"
+                  required
+                  disabled={submitting || isLoading}
+                  minLength={6}
+                />
+              </div>
+            )}
+
+            {error && (
+              <div
+                className="p-3 rounded-lg text-sm"
+                style={{ backgroundColor: "#ef444420", color: "#ef4444" }}
+              >
+                ❌ {error}
+              </div>
+            )}
+
+            {success && (
+              <div
+                className="p-3 rounded-lg text-sm"
+                style={{ backgroundColor: "#22c55e20", color: "#22c55e" }}
+              >
+                ✅ {success}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={submitting || isLoading}
+              className="w-full py-3 rounded-lg font-bold text-lg transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                backgroundColor: theme.textPrimary,
+                color: theme.backgroundCss,
+              }}
+            >
+              {submitting || isLoading
+                ? "Loading..."
+                : mode === "signin"
+                ? "Sign In"
+                : mode === "signup"
+                ? "Create Account"
+                : "Send Reset Email"}
+            </button>
+          </form>
+
+          {/* Mode switching links */}
+          <div className="mt-4 text-center text-sm space-y-2">
+            {mode === "signin" && (
+              <>
+                <p>
+                  <span style={{ color: theme.textPrimary, opacity: 0.7 }}>
+                    Don't have an account?{" "}
+                  </span>
+                  <button
+                    onClick={() => switchMode("signup")}
+                    className="font-bold hover:underline"
+                    style={{ color: theme.textPrimary }}
+                  >
+                    Sign Up
+                  </button>
+                </p>
+                <p>
+                  <button
+                    onClick={() => switchMode("forgot")}
+                    className="hover:underline"
+                    style={{ color: theme.textPrimary, opacity: 0.7 }}
+                  >
+                    Forgot password?
+                  </button>
+                </p>
+              </>
+            )}
+            {mode === "signup" && (
               <p>
                 <span style={{ color: theme.textPrimary, opacity: 0.7 }}>
-                  Don't have an account?{" "}
+                  Already have an account?{" "}
                 </span>
                 <button
-                  onClick={() => switchMode("signup")}
+                  onClick={() => switchMode("signin")}
                   className="font-bold hover:underline"
                   style={{ color: theme.textPrimary }}
                 >
-                  Sign Up
+                  Sign In
                 </button>
               </p>
+            )}
+            {mode === "forgot" && (
               <p>
                 <button
-                  onClick={() => switchMode("forgot")}
-                  className="hover:underline"
-                  style={{ color: theme.textPrimary, opacity: 0.7 }}
+                  onClick={() => switchMode("signin")}
+                  className="font-bold hover:underline"
+                  style={{ color: theme.textPrimary }}
                 >
-                  Forgot password?
+                  ← Back to Sign In
                 </button>
               </p>
-            </>
-          )}
-          {mode === "signup" && (
-            <p>
-              <span style={{ color: theme.textPrimary, opacity: 0.7 }}>
-                Already have an account?{" "}
-              </span>
-              <button
-                onClick={() => switchMode("signin")}
-                className="font-bold hover:underline"
-                style={{ color: theme.textPrimary }}
-              >
-                Sign In
-              </button>
-            </p>
-          )}
-          {mode === "forgot" && (
-            <p>
-              <button
-                onClick={() => switchMode("signin")}
-                className="font-bold hover:underline"
-                style={{ color: theme.textPrimary }}
-              >
-                ← Back to Sign In
-              </button>
-            </p>
-          )}
-        </div>
+            )}
+          </div>
 
-        {/* Guest note */}
-        <div
-          className="mt-4 p-3 rounded-lg text-center text-sm"
-          style={{ backgroundColor: `${theme.textPrimary}10` }}
-        >
-          <p style={{ color: theme.textPrimary, opacity: 0.7 }}>
-            🎮 You can keep playing as a guest.
-            <br />
-            Create an account to sync progress across devices.
-          </p>
+          {/* Guest note */}
+          <div
+            className="mt-4 p-3 rounded-lg text-center text-sm"
+            style={{ backgroundColor: `${theme.textPrimary}10` }}
+          >
+            <p style={{ color: theme.textPrimary, opacity: 0.7 }}>
+              🎮 You can keep playing as a guest.
+              <br />
+              Create an account to sync progress across devices.
+            </p>
+          </div>
         </div>
-      </div>
-    </div>,
-    document.body
+      </DrawerContent>
+    </Drawer>
   );
 }
