@@ -37,8 +37,8 @@ Deno.serve(async (req) => {
     }
 
     // Get the authorization header (user's JWT)
-    const authHeader = req.headers.get("authorization");
-    if (!authHeader) {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return new Response(
         JSON.stringify({ error: "Missing authorization header" }),
         {
@@ -48,22 +48,20 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Create a client with the user's JWT to verify they're authenticated
+    const token = authHeader.replace("Bearer ", "");
+
+    // Create a client with the anon key to verify the user's JWT
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
     // Verify the user is authenticated
-    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: { Authorization: authHeader },
-      },
-    });
+    const userClient = createClient(supabaseUrl, supabaseAnonKey);
 
     const {
       data: { user },
       error: userError,
-    } = await userClient.auth.getUser();
+    } = await userClient.auth.getUser(token);
 
     if (userError || !user) {
       return new Response(
