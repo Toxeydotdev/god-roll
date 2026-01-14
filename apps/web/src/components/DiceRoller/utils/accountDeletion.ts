@@ -136,19 +136,22 @@ export async function deleteAuthAccount(): Promise<DeleteAccountResult> {
   }
 
   try {
-    // Get the current user
+    // Get the current session (needed for the auth header)
     const {
-      data: { user },
-    } = await supabase.auth.getUser();
+      data: { session },
+    } = await supabase.auth.getSession();
 
-    if (!user) {
-      return { success: false, error: "No authenticated user found" };
+    if (!session) {
+      return { success: false, error: "No authenticated session found" };
     }
 
     // Call the delete-account edge function
     // This function uses the service role key to delete the user
     const { error } = await supabase.functions.invoke("delete-account", {
-      body: { userId: user.id },
+      body: { userId: session.user.id },
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
     });
 
     if (error) {
