@@ -75,7 +75,6 @@ export function SettingsDrawer({
                   backgroundColor: soundEnabled
                     ? theme.accentColor
                     : "#d1d5db",
-                  focusRing: theme.accentColor,
                 }}
                 aria-label="Toggle sound effects"
               >
@@ -140,7 +139,6 @@ export function SettingsDrawer({
                   backgroundColor: musicEnabled
                     ? theme.accentColor
                     : "#d1d5db",
-                  focusRing: theme.accentColor,
                 }}
                 aria-label="Toggle background music"
               >
