@@ -25,8 +25,12 @@ interface SoundContextValue {
   soundEnabled: boolean;
   toggleSound: () => void;
   playDiceHit: (velocity: number) => void;
+  soundVolume: number;
+  setSoundVolume: (volume: number) => void;
   musicEnabled: boolean;
   toggleMusic: () => void;
+  musicVolume: number;
+  setMusicVolume: (volume: number) => void;
 }
 
 // ============================================================================
@@ -49,6 +53,9 @@ export function SoundProvider({
   const soundState = useSoundState();
   const [musicEnabled, setMusicEnabled] = useState(() =>
     musicManager.isEnabled()
+  );
+  const [musicVolume, setMusicVolumeState] = useState(() =>
+    musicManager.getVolume()
   );
   const isTogglingMusic = useRef(false);
 
@@ -91,8 +98,24 @@ export function SoundProvider({
     }
   }, []);
 
+  const handleSetMusicVolume = useCallback((volume: number) => {
+    const clamped = Math.max(0, Math.min(1, volume));
+    setMusicVolumeState(clamped);
+    musicManager.setVolume(clamped);
+  }, []);
+
   return (
-    <SoundContext.Provider value={{ ...soundState, musicEnabled, toggleMusic }}>
+    <SoundContext.Provider
+      value={{
+        ...soundState,
+        soundVolume: soundState.volume,
+        setSoundVolume: soundState.setVolume,
+        musicEnabled,
+        toggleMusic,
+        musicVolume,
+        setMusicVolume: handleSetMusicVolume,
+      }}
+    >
       {children}
     </SoundContext.Provider>
   );

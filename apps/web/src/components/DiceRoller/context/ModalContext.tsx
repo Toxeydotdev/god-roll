@@ -14,6 +14,7 @@ import {
   GameRules,
   Leaderboard,
   RewardsModal,
+  SettingsDrawer,
 } from "@/components/DiceRoller/components";
 import React, {
   createContext,
@@ -25,6 +26,7 @@ import React, {
 import { createPortal } from "react-dom";
 import { useAchievements } from "./AchievementContext";
 import { useDiceSkin } from "./DiceSkinContext";
+import { useSound } from "./SoundContext";
 import { useTheme } from "./ThemeContext";
 
 // ============================================================================
@@ -38,7 +40,8 @@ export type ModalType =
   | "diceSkin"
   | "achievements"
   | "auth"
-  | "rewards";
+  | "rewards"
+  | "settings";
 
 interface LeaderboardModalProps {
   highlightIndex?: number;
@@ -91,6 +94,16 @@ export function ModalProvider({
   const { theme, setTheme } = useTheme();
   const { unlockedAchievements, profile } = useAchievements();
   const { skinId, setSkinId } = useDiceSkin();
+  const {
+    soundEnabled,
+    toggleSound,
+    soundVolume,
+    setSoundVolume,
+    musicEnabled,
+    toggleMusic,
+    musicVolume,
+    setMusicVolume,
+  } = useSound();
 
   const openModal = useCallback((type: ModalType, props: ModalProps = {}) => {
     setActiveModal({ type, props });
@@ -183,6 +196,23 @@ export function ModalProvider({
                 highlightAchievementId: achievementId,
               });
             }}
+          />
+        );
+        break;
+
+      case "settings":
+        modalElement = (
+          <SettingsDrawer
+            onClose={closeModal}
+            theme={theme}
+            soundEnabled={soundEnabled}
+            soundVolume={soundVolume}
+            musicEnabled={musicEnabled}
+            musicVolume={musicVolume}
+            onToggleSound={toggleSound}
+            onToggleMusic={toggleMusic}
+            onSoundVolumeChange={setSoundVolume}
+            onMusicVolumeChange={setMusicVolume}
           />
         );
         break;

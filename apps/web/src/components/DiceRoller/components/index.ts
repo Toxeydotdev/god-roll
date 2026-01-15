@@ -13,4 +13,5 @@ export { GameTitle } from "./GameTitle/GameTitle";
 export { Leaderboard } from "./Leaderboard/Leaderboard";
 export { RewardsModal } from "./RewardsModal/RewardsModal";
 export { RollButton } from "./RollButton/RollButton";
+export { SettingsDrawer } from "./SettingsDrawer/SettingsDrawer";
 export { StartScreen } from "./StartScreen/StartScreen";
