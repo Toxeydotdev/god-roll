@@ -101,7 +101,7 @@ export function SettingsDrawer({
                   max="100"
                   value={soundVolume * 100}
                   onChange={(e) =>
-                    onSoundVolumeChange(parseInt(e.target.value) / 100)
+                    onSoundVolumeChange(parseFloat(e.target.value) / 100)
                   }
                   className="w-full h-2 rounded-lg appearance-none cursor-pointer"
                   style={{
@@ -165,7 +165,7 @@ export function SettingsDrawer({
                   max="100"
                   value={musicVolume * 100}
                   onChange={(e) =>
-                    onMusicVolumeChange(parseInt(e.target.value) / 100)
+                    onMusicVolumeChange(parseFloat(e.target.value) / 100)
                   }
                   className="w-full h-2 rounded-lg appearance-none cursor-pointer"
                   style={{
