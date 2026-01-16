@@ -115,6 +115,7 @@ export async function checkDisplayNameAvailable(
 
 /**
  * Update the display name for a player
+ * Uses upsert to create the profile if it doesn't exist yet
  */
 export async function updateDisplayName(
   playerId: string,
@@ -133,13 +134,19 @@ export async function updateDisplayName(
   }
 
   try {
-    const { error } = await supabase
-      .from("user_profiles")
-      .update({ display_name: trimmed })
-      .eq("player_id", playerId);
+    // Use upsert to create profile if it doesn't exist
+    // This handles the case where user edits name before completing a game
+    const { error } = await supabase.from("user_profiles").upsert(
+      {
+        player_id: playerId,
+        display_name: trimmed,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "player_id" }
+    );
 
     if (error) {
-      // Check for unique constraint violation
+      // Check for unique constraint violation on display_name
       if (error.code === "23505") {
         return { success: false, error: "This name is already taken" };
       }
