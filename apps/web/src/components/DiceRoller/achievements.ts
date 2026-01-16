@@ -50,6 +50,7 @@ export type AchievementRequirement =
   | { type: "roll_straight"; length: number } // Roll consecutive numbers
   | { type: "roll_all_same"; value: DiceFaceNumber } // All dice show same value
   | { type: "score_single"; score: number } // Score X in one game
+  | { type: "score_exact"; score: number } // Score exactly X in one game
   | { type: "score_lifetime"; score: number } // Score X total across all games
   | { type: "survive_rounds"; rounds: number } // Survive N rounds in one game
   | { type: "games_played"; count: number } // Play N games total
@@ -794,7 +795,21 @@ export const ACHIEVEMENTS: Achievement[] = [
     category: "score",
     icon: "🔮",
     reward: { type: "theme", value: "mythic", displayName: "Mythic Theme" },
-    requirement: { type: "single_game_score", score: 2500 },
+    requirement: { type: "score_single", score: 2500 },
+  },
+  {
+    id: "the_one",
+    name: "The One",
+    description: "Finish a game with exactly 1 point",
+    category: "special",
+    icon: "☝️",
+    reward: {
+      type: "dice_skin",
+      value: "the_one",
+      displayName: "The One Dice Skin",
+    },
+    hidden: true,
+    requirement: { type: "score_exact", score: 1 },
   },
 ];
 
@@ -973,6 +988,10 @@ export function checkAchievements(
 
       case "score_single":
         unlocked = gameScore >= req.score;
+        break;
+
+      case "score_exact":
+        unlocked = gameScore === req.score;
         break;
 
       case "score_lifetime":

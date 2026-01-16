@@ -5,7 +5,13 @@
  * materials, and special effects.
  */
 
-export type DotStyle = "circle" | "flower" | "fireball" | "star" | "heart";
+export type DotStyle =
+  | "circle"
+  | "flower"
+  | "fireball"
+  | "star"
+  | "heart"
+  | "digit";
 
 export interface DiceSkin {
   id: string;
@@ -170,6 +176,19 @@ export const DICE_SKINS: Record<string, DiceSkin> = {
     emissiveIntensity: 0.3,
     roughness: 0.1,
     metalness: 0.5,
+  },
+  the_one: {
+    id: "the_one",
+    name: "The One",
+    description: "All pips are the number 1 - for those who scored exactly one",
+    diceColor: "#1a1a2e",
+    dotColor: "#ffd700",
+    dotOneColor: "#ffd700",
+    dotStyle: "digit",
+    emissive: "#ffd700",
+    emissiveIntensity: 0.2,
+    roughness: 0.2,
+    metalness: 0.3,
   },
 };
 

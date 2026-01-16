@@ -199,6 +199,48 @@ function drawFireball(
   ctx.fill();
 }
 
+// Helper function to draw the digit "1"
+function drawDigitOne(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  digitColor: string,
+  _highlightColor: string,
+  size: number = 1
+): void {
+  const scale = 1.8 * size;
+
+  // Draw shadow
+  ctx.save();
+  ctx.font = `bold ${24 * scale}px Arial, sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+  ctx.fillText("1", x + 2, y + 2);
+  ctx.restore();
+
+  // Draw the digit with gradient
+  ctx.save();
+  ctx.font = `bold ${24 * scale}px Arial, sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  // Create gradient for the digit
+  const gradient = ctx.createLinearGradient(
+    x,
+    y - 15 * scale,
+    x,
+    y + 15 * scale
+  );
+  gradient.addColorStop(0, shadeColor(digitColor, 30));
+  gradient.addColorStop(0.5, digitColor);
+  gradient.addColorStop(1, shadeColor(digitColor, -20));
+
+  ctx.fillStyle = gradient;
+  ctx.fillText("1", x, y);
+  ctx.restore();
+}
+
 // Helper function to draw a star
 function drawStar(
   ctx: CanvasRenderingContext2D,
@@ -337,6 +379,9 @@ function drawShape(
       break;
     case "heart":
       drawHeart(ctx, x, y, primaryColor, secondaryColor, size);
+      break;
+    case "digit":
+      drawDigitOne(ctx, x, y, primaryColor, secondaryColor, size);
       break;
     default:
       // Default circle handled in main drawing code
