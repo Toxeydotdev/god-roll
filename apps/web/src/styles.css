@@ -302,12 +302,12 @@ body {
 @keyframes highlight-pulse {
   0%,
   100% {
-    box-shadow: 0 0 0 3px var(--highlight-color, #22c55e),
-      0 0 8px var(--highlight-color, #22c55e);
+    box-shadow: inset 0 0 0 3px var(--highlight-color, #22c55e),
+      inset 0 0 8px var(--highlight-color, #22c55e);
   }
   50% {
-    box-shadow: 0 0 0 4px var(--highlight-color, #22c55e),
-      0 0 16px var(--highlight-color, #22c55e);
+    box-shadow: inset 0 0 0 4px var(--highlight-color, #22c55e),
+      inset 0 0 16px var(--highlight-color, #22c55e);
   }
 }
 

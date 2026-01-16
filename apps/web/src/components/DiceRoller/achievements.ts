@@ -787,6 +787,15 @@ export const ACHIEVEMENTS: Achievement[] = [
     hidden: true,
     requirement: { type: "roll_total", total: 77 },
   },
+  {
+    id: "mythic_journey",
+    name: "Mythic Journey",
+    description: "Score 2,500+ points in a single game",
+    category: "score",
+    icon: "🔮",
+    reward: { type: "theme", value: "mythic", displayName: "Mythic Theme" },
+    requirement: { type: "single_game_score", score: 2500 },
+  },
 ];
 
 // ============================================================================

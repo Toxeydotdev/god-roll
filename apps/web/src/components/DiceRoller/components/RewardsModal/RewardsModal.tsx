@@ -22,7 +22,7 @@ import React, { useMemo, useState } from "react";
 // ============================================================================
 
 const DEFAULT_SKINS = ["cartoon", "classic"];
-const DEFAULT_THEMES = ["green"];
+const DEFAULT_THEMES = ["green", "gray", "cyan"];
 
 type RewardCategory = "skins" | "themes" | "badges" | "titles";
 
