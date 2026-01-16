@@ -21,30 +21,41 @@ vi.mock("@/assets/audio/good-night-lofi-cozy-chill-music-160166.mp3", () => ({
 // SETUP
 // ============================================================================
 
-// Mock HTMLAudioElement
-class MockAudio {
-  src = "";
-  loop = false;
-  volume = 0.15;
-  currentTime = 0;
-  paused = true;
+// Mock Howler.js
+let mockPlaying = false;
+let mockVolume = 0.15;
 
-  async play() {
-    this.paused = false;
-    return Promise.resolve();
-  }
+const mockHowlInstance = {
+  play: vi.fn(() => {
+    mockPlaying = true;
+  }),
+  pause: vi.fn(() => {
+    mockPlaying = false;
+  }),
+  stop: vi.fn(() => {
+    mockPlaying = false;
+  }),
+  playing: vi.fn(() => mockPlaying),
+  volume: vi.fn((val?: number) => {
+    if (val !== undefined) mockVolume = val;
+    return mockVolume;
+  }),
+  fade: vi.fn(),
+  once: vi.fn(),
+  on: vi.fn(),
+  off: vi.fn(),
+};
 
-  pause() {
-    this.paused = true;
-  }
-
-  addEventListener() {
-    // Mock event listener
+// Mock class that returns our instance
+class MockHowl {
+  constructor() {
+    return mockHowlInstance;
   }
 }
 
-// Replace global Audio constructor
-global.Audio = MockAudio as any;
+vi.mock("howler", () => ({
+  Howl: MockHowl,
+}));
 
 // ============================================================================
 // TESTS
@@ -54,6 +65,10 @@ describe("MusicManager", () => {
   beforeEach(() => {
     setupLocalStorageMock();
     vi.clearAllMocks();
+
+    // Reset mock state
+    mockPlaying = false;
+    mockVolume = 0.15;
 
     // Clear module cache to get fresh instance
     vi.resetModules();
@@ -120,7 +135,7 @@ describe("MusicManager", () => {
       musicManager.stop();
 
       // Invoke
-      const result = await musicManager.toggle();
+      const result = musicManager.toggle();
 
       // Expect - should now be playing
       expect(result).toBe(true);
@@ -131,11 +146,11 @@ describe("MusicManager", () => {
       const { musicManager } = await import("./musicManager");
 
       // Setup - start music
-      await musicManager.start();
+      musicManager.start();
       expect(musicManager.isActuallyPlaying()).toBe(true);
 
       // Invoke
-      const result = await musicManager.toggle();
+      const result = musicManager.toggle();
 
       // Expect - should now be stopped
       expect(result).toBe(false);
@@ -143,11 +158,13 @@ describe("MusicManager", () => {
     });
 
     it("should handle toggle when saved state is true but not playing", async () => {
+      // Setup - save music as enabled BEFORE importing
+      localStorage.setItem("godroll_music_enabled_v1", "true");
+
+      // Import after setting up localStorage
       const { musicManager } = await import("./musicManager");
 
-      // Setup - simulate saved state true but not actually playing
-      // (e.g., autoplay was blocked)
-      localStorage.setItem("godroll_music_enabled_v1", "true");
+      // Wait for loadSettings to complete
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       // The music should show as "enabled" but not actually playing
@@ -155,7 +172,7 @@ describe("MusicManager", () => {
       expect(musicManager.isActuallyPlaying()).toBe(false);
 
       // Invoke - toggle should turn it OFF
-      const result = await musicManager.toggle();
+      const result = musicManager.toggle();
 
       // Expect - should be turned off
       expect(result).toBe(false);
@@ -168,7 +185,7 @@ describe("MusicManager", () => {
       const { musicManager } = await import("./musicManager");
 
       // Setup - start music
-      await musicManager.start();
+      musicManager.start();
       expect(musicManager.isActuallyPlaying()).toBe(true);
 
       // Mock document.hidden
@@ -192,7 +209,7 @@ describe("MusicManager", () => {
       const { musicManager } = await import("./musicManager");
 
       // Setup - start music
-      await musicManager.start();
+      musicManager.start();
 
       // Simulate hiding
       Object.defineProperty(document, "hidden", {
