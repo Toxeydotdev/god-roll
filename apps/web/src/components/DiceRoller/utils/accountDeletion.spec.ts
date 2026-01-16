@@ -25,6 +25,14 @@ vi.mock("@/lib/supabase", () => ({
       getUser: vi
         .fn()
         .mockResolvedValue({ data: { user: { id: "test-user-id" } } }),
+      getSession: vi.fn().mockResolvedValue({
+        data: {
+          session: {
+            user: { id: "test-user-id" },
+            access_token: "test-token",
+          },
+        },
+      }),
       signOut: vi.fn().mockResolvedValue({ error: null }),
     },
   },

@@ -10,6 +10,7 @@ import { AchievementProvider } from "./AchievementContext";
 import { AuthProvider } from "./AuthContext";
 import { DiceSkinProvider } from "./DiceSkinContext";
 import { ModalProvider } from "./ModalContext";
+import { SoundProvider } from "./SoundContext";
 import { ThemeProvider } from "./ThemeContext";
 
 // Mock the modal components to avoid Three.js/WebGL issues
@@ -83,11 +84,13 @@ function renderWithProviders(ui: React.ReactElement) {
   return render(
     <ThemeProvider>
       <AuthProvider>
-        <DiceSkinProvider>
-          <AchievementProvider>
-            <ModalProvider>{ui}</ModalProvider>
-          </AchievementProvider>
-        </DiceSkinProvider>
+        <SoundProvider>
+          <DiceSkinProvider>
+            <AchievementProvider>
+              <ModalProvider>{ui}</ModalProvider>
+            </AchievementProvider>
+          </DiceSkinProvider>
+        </SoundProvider>
       </AuthProvider>
     </ThemeProvider>
   );

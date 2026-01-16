@@ -8,6 +8,7 @@ import {
   AuthProvider,
   DiceSkinProvider,
   ModalProvider,
+  SoundProvider,
   ThemeProvider,
 } from "@/components/DiceRoller/context";
 import { hexToRgb, mockTheme } from "@/test-utils";
@@ -50,13 +51,15 @@ function setup(options: SetupOptions = {}): SetupResult {
   const { container } = render(
     <ThemeProvider>
       <AuthProvider>
-        <DiceSkinProvider>
-          <AchievementProvider>
-            <ModalProvider>
-              <StartScreen onStartGame={onStartGame} />
-            </ModalProvider>
-          </AchievementProvider>
-        </DiceSkinProvider>
+        <SoundProvider>
+          <DiceSkinProvider>
+            <AchievementProvider>
+              <ModalProvider>
+                <StartScreen onStartGame={onStartGame} />
+              </ModalProvider>
+            </AchievementProvider>
+          </DiceSkinProvider>
+        </SoundProvider>
       </AuthProvider>
     </ThemeProvider>
   );

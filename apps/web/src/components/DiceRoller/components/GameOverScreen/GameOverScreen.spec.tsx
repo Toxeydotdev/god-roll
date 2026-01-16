@@ -10,6 +10,7 @@ import {
   GameStateProvider,
   ModalProvider,
   OnlineModeProvider,
+  SoundProvider,
   ThemeProvider,
 } from "@/components/DiceRoller/context";
 import { LeaderboardEntry } from "@/components/DiceRoller/leaderboard";
@@ -81,30 +82,32 @@ function setup(options: SetupOptions = {}): SetupResult {
   const { container } = render(
     <ThemeProvider>
       <AuthProvider>
-        <DiceSkinProvider>
-          <GameStateProvider
-            initialValues={{
-              lastRollTotal,
-              totalScore,
-              round,
-              gameOver: true,
-            }}
-          >
-            <AchievementProvider>
-              <ModalProvider>
-                <OnlineModeProvider>
-                  <GameOverScreen
-                    onPlayAgain={onPlayAgain}
-                    highlightIndex={highlightIndex}
-                    leaderboardEntries={leaderboardEntries}
-                    onLeaderboardChange={onLeaderboardChange}
-                    sessionId={sessionId}
-                  />
-                </OnlineModeProvider>
-              </ModalProvider>
-            </AchievementProvider>
-          </GameStateProvider>
-        </DiceSkinProvider>
+        <SoundProvider>
+          <DiceSkinProvider>
+            <GameStateProvider
+              initialValues={{
+                lastRollTotal,
+                totalScore,
+                round,
+                gameOver: true,
+              }}
+            >
+              <AchievementProvider>
+                <ModalProvider>
+                  <OnlineModeProvider>
+                    <GameOverScreen
+                      onPlayAgain={onPlayAgain}
+                      highlightIndex={highlightIndex}
+                      leaderboardEntries={leaderboardEntries}
+                      onLeaderboardChange={onLeaderboardChange}
+                      sessionId={sessionId}
+                    />
+                  </OnlineModeProvider>
+                </ModalProvider>
+              </AchievementProvider>
+            </GameStateProvider>
+          </DiceSkinProvider>
+        </SoundProvider>
       </AuthProvider>
     </ThemeProvider>
   );
