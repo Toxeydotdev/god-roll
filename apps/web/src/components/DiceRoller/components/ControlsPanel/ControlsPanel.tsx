@@ -77,6 +77,11 @@ export function ControlsPanel(): React.ReactElement {
       label: isAuthenticated ? "Account" : "Login",
       onClick: () => openModal("auth"),
     },
+    {
+      icon: <span className="text-lg">☕</span>,
+      label: "Support",
+      onClick: () => window.open("https://buymeacoffee.com/toxey", "_blank"),
+    },
   ];
 
   return (
