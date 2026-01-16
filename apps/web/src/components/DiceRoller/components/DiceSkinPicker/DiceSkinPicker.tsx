@@ -35,7 +35,7 @@ export function DiceSkinPicker({
   return (
     <Drawer open={true} onOpenChange={(open) => !open && onClose()}>
       <DrawerContent
-        className="max-h-[85vh] mx-auto sm:max-w-2xl flex flex-col"
+        className="min-h-[50vh] max-h-[85vh] mx-auto sm:max-w-md flex flex-col"
         style={{ backgroundColor: theme.backgroundCss }}
       >
         <DrawerHeader>

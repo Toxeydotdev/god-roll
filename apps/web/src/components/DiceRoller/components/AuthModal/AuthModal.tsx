@@ -181,7 +181,7 @@ function AuthenticatedView({
   return (
     <Drawer open={true} onOpenChange={(open) => !open && onClose()}>
       <DrawerContent
-        className="max-h-[85vh] mx-auto sm:max-w-md"
+        className="min-h-[50vh] max-h-[85vh] mx-auto sm:max-w-md"
         style={{ backgroundColor: "rgba(255, 255, 255, 0.95)" }}
       >
         <DrawerHeader className="pb-2">
@@ -574,7 +574,7 @@ export function AuthModal({ isOpen, onClose, theme }: AuthModalProps) {
   return (
     <Drawer open={true} onOpenChange={(open) => !open && onClose()}>
       <DrawerContent
-        className="max-h-[85vh] mx-auto sm:max-w-md"
+        className="min-h-[50vh] max-h-[85vh] mx-auto sm:max-w-md"
         style={{ backgroundColor: "rgba(255, 255, 255, 0.95)" }}
       >
         <DrawerHeader className="pb-2">

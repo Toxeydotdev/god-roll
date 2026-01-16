@@ -35,7 +35,7 @@ export function SettingsDrawer({
   return (
     <Drawer open={true} onOpenChange={(open) => !open && onClose()}>
       <DrawerContent
-        className="max-h-[85vh] mx-auto sm:max-w-md"
+        className="min-h-[50vh] max-h-[85vh] mx-auto sm:max-w-md"
         style={{ backgroundColor: "rgba(255, 255, 255, 0.95)" }}
       >
         <DrawerHeader className="text-left">
@@ -72,9 +72,7 @@ export function SettingsDrawer({
                 onClick={onToggleSound}
                 className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2"
                 style={{
-                  backgroundColor: soundEnabled
-                    ? theme.accentColor
-                    : "#d1d5db",
+                  backgroundColor: soundEnabled ? theme.accentColor : "#d1d5db",
                 }}
                 aria-label="Toggle sound effects"
               >
@@ -105,7 +103,11 @@ export function SettingsDrawer({
                   }
                   className="w-full h-2 rounded-lg appearance-none cursor-pointer"
                   style={{
-                    background: `linear-gradient(to right, ${theme.accentColor} 0%, ${theme.accentColor} ${soundVolume * 100}%, #d1d5db ${soundVolume * 100}%, #d1d5db 100%)`,
+                    background: `linear-gradient(to right, ${
+                      theme.accentColor
+                    } 0%, ${theme.accentColor} ${soundVolume * 100}%, #d1d5db ${
+                      soundVolume * 100
+                    }%, #d1d5db 100%)`,
                   }}
                 />
               </div>
@@ -136,9 +138,7 @@ export function SettingsDrawer({
                 onClick={onToggleMusic}
                 className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2"
                 style={{
-                  backgroundColor: musicEnabled
-                    ? theme.accentColor
-                    : "#d1d5db",
+                  backgroundColor: musicEnabled ? theme.accentColor : "#d1d5db",
                 }}
                 aria-label="Toggle background music"
               >
@@ -169,7 +169,11 @@ export function SettingsDrawer({
                   }
                   className="w-full h-2 rounded-lg appearance-none cursor-pointer"
                   style={{
-                    background: `linear-gradient(to right, ${theme.accentColor} 0%, ${theme.accentColor} ${musicVolume * 100}%, #d1d5db ${musicVolume * 100}%, #d1d5db 100%)`,
+                    background: `linear-gradient(to right, ${
+                      theme.accentColor
+                    } 0%, ${theme.accentColor} ${musicVolume * 100}%, #d1d5db ${
+                      musicVolume * 100
+                    }%, #d1d5db 100%)`,
                   }}
                 />
               </div>

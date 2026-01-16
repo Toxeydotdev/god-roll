@@ -122,7 +122,7 @@ export function AchievementsModal({
   return (
     <Drawer open={true} onOpenChange={(open) => !open && onClose()}>
       <DrawerContent
-        className="max-h-[85vh] mx-auto sm:w-[90vw] sm:max-w-[500px] flex flex-col"
+        className="min-h-[50vh] max-h-[85vh] mx-auto sm:max-w-md flex flex-col"
         style={{ backgroundColor: "rgba(255, 255, 255, 0.95)" }}
       >
         <DrawerHeader className="text-center pb-0">

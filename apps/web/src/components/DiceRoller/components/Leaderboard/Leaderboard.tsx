@@ -104,7 +104,7 @@ export function Leaderboard({
   return (
     <Drawer open={true} onOpenChange={(open) => !open && onClose()}>
       <DrawerContent
-        className="max-h-[85vh] mx-auto sm:min-w-[300px] sm:max-w-[90vw] flex flex-col"
+        className="min-h-[50vh] max-h-[85vh] mx-auto sm:max-w-md flex flex-col"
         style={{ backgroundColor: "rgba(255, 255, 255, 0.95)" }}
       >
         <DrawerHeader className="text-center">

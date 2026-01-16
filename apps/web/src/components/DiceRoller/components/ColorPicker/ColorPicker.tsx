@@ -21,7 +21,7 @@ export function ColorPicker({
   return (
     <Drawer open={true} onOpenChange={(open) => !open && onClose()}>
       <DrawerContent
-        className="max-h-[85vh] mx-auto sm:max-w-md"
+        className="min-h-[50vh] max-h-[85vh] mx-auto sm:max-w-md"
         style={{ backgroundColor: currentTheme.backgroundCss }}
       >
         <DrawerHeader className="text-center">

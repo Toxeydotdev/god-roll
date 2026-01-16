@@ -19,7 +19,7 @@ export function GameRules({
   return (
     <Drawer open={true} onOpenChange={(open) => !open && onClose()}>
       <DrawerContent
-        className="max-h-[85vh] mx-auto sm:max-w-md"
+        className="min-h-[50vh] max-h-[85vh] mx-auto sm:max-w-md"
         style={{ backgroundColor: "rgba(255, 255, 255, 0.95)" }}
       >
         <DrawerHeader className="text-left">

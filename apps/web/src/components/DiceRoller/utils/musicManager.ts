@@ -115,8 +115,8 @@ class MusicManager {
     }
   }
 
-  async start(): Promise<void> {
-    if (this.isPlaying || this._isToggling) return;
+  async start(): Promise<boolean> {
+    if (this.isPlaying || this._isToggling) return this.isPlaying;
 
     this._isToggling = true;
     this._pendingStart = false;
@@ -126,7 +126,7 @@ class MusicManager {
 
       if (!this.audio) {
         this._isToggling = false;
-        return;
+        return false;
       }
 
       // Set volume before playing
@@ -137,9 +137,14 @@ class MusicManager {
         this.isPlaying = true;
         this._savedEnabledState = true;
         this.saveSettings();
+        return true;
       } catch {
-        // Autoplay was blocked - will retry on user interaction
+        // Autoplay was blocked - still mark as enabled so UI shows correct state
+        // User will need another interaction to actually start playback
+        this._savedEnabledState = true;
         this._pendingStart = true;
+        this.saveSettings();
+        return true; // Return true because user intent is to enable music
       }
     } finally {
       this._isToggling = false;
@@ -196,15 +201,15 @@ class MusicManager {
       return this.isEnabled();
     }
 
-    // Check actual desired state, not just playing state
-    const shouldStop = this.isPlaying || this._savedEnabledState;
+    // Check if music is currently enabled (either playing or user wants it on)
+    const currentlyEnabled = this.isPlaying || this._savedEnabledState;
 
-    if (shouldStop) {
+    if (currentlyEnabled) {
       this.stop();
       return false;
     } else {
-      await this.start();
-      return this.isPlaying;
+      const started = await this.start();
+      return started;
     }
   }
 
