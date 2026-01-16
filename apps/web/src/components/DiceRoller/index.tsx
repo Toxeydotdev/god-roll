@@ -23,6 +23,7 @@ import {
 } from "@/components/DiceRoller/context";
 import {
   SoundCallbacks,
+  useDeepLink,
   useDicePhysics,
   useScreenOrientation,
   useThreeScene,
@@ -75,6 +76,9 @@ function DiceRollerContent(): React.ReactElement {
 
   // Lock screen orientation on mobile devices
   useScreenOrientation();
+
+  // Handle deep link callbacks (e.g., from Supabase auth emails)
+  useDeepLink();
 
   const { theme } = useTheme();
   const { playDiceHit } = useSound();

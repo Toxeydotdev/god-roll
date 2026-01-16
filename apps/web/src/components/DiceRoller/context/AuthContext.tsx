@@ -114,6 +114,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const { error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: "godroll://auth/callback",
+        },
       });
 
       return { error };
@@ -178,7 +181,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         };
       }
 
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: "godroll://auth/callback",
+      });
       return { error };
     },
     []
