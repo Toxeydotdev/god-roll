@@ -15,6 +15,7 @@ import {
   Leaderboard,
   RewardsModal,
   SettingsDrawer,
+  SupportDrawer,
 } from "@/components/DiceRoller/components";
 import React, {
   createContext,
@@ -41,7 +42,8 @@ export type ModalType =
   | "achievements"
   | "auth"
   | "rewards"
-  | "settings";
+  | "settings"
+  | "support";
 
 interface LeaderboardModalProps {
   highlightIndex?: number;
@@ -215,6 +217,10 @@ export function ModalProvider({
             onMusicVolumeChange={setMusicVolume}
           />
         );
+        break;
+
+      case "support":
+        modalElement = <SupportDrawer onClose={closeModal} theme={theme} />;
         break;
     }
 
