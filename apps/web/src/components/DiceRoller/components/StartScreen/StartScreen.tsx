@@ -104,14 +104,14 @@ export function StartScreen({
             🎯 Each round adds +1 die
           </p>
           <a
-            href="mailto:support@godroll.app"
+            href="mailto:support@god-roll.com"
             className="text-sm hover:opacity-80 transition-opacity"
             style={{
               color: theme.textSecondary,
               fontWeight: 600,
             }}
           >
-            💬 Need help? support@godroll.app
+            💬 Need help? support@god-roll.com
           </a>
         </div>
       </div>
