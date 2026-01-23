@@ -19,12 +19,12 @@ export function ControlsPanel(): React.ReactElement {
       onClick: () => openModal("settings"),
     },
     {
-      icon: <span className="text-lg">�</span>,
+      icon: <span className="text-lg">💬</span>,
       label: "Support",
       onClick: () => openModal("support"),
     },
     {
-      icon: <span className="text-lg">�🎁</span>,
+      icon: <span className="text-lg">🎁</span>,
       label: "Rewards",
       onClick: () => openModal("rewards"),
     },

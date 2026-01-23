@@ -87,9 +87,9 @@ export function StartScreen({
           </button>
         </div>
 
-        {/* Game mechanic hint */}
+        {/* Game info */}
         <div
-          className="mt-6 px-4 py-2 rounded-lg inline-block"
+          className="mt-6 px-4 py-3 rounded-lg flex flex-col gap-2"
           style={{
             backgroundColor: "rgba(0,0,0,0.1)",
           }}
@@ -103,6 +103,16 @@ export function StartScreen({
           >
             🎯 Each round adds +1 die
           </p>
+          <a
+            href="mailto:support@godroll.app"
+            className="text-sm hover:opacity-80 transition-opacity"
+            style={{
+              color: theme.textSecondary,
+              fontWeight: 600,
+            }}
+          >
+            💬 Need help? support@godroll.app
+          </a>
         </div>
       </div>
     </div>

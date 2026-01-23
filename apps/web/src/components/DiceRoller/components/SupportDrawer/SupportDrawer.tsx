@@ -12,33 +12,19 @@ interface SupportDrawerProps {
   theme: ColorTheme;
 }
 
+const SUPPORT_EMAIL = "support@godroll.app";
+
 export function SupportDrawer({
   onClose,
   theme,
 }: SupportDrawerProps): React.ReactElement {
-  const supportLinks = [
-    {
-      icon: "📧",
-      title: "Email Support",
-      description: "Get help via email",
-      action: "support@godroll.app",
-      href: "mailto:support@godroll.app",
-    },
-    {
-      icon: "🐛",
-      title: "Report a Bug",
-      description: "Found an issue? Let us know",
-      action: "GitHub Issues",
-      href: "https://github.com/Toxeydotdev/god-roll/issues",
-    },
-    {
-      icon: "💡",
-      title: "Feature Request",
-      description: "Have an idea? Share it with us",
-      action: "GitHub Discussions",
-      href: "https://github.com/Toxeydotdev/god-roll/discussions",
-    },
-  ];
+  const handleCopyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText(SUPPORT_EMAIL);
+    } catch {
+      // Fallback for older browsers
+    }
+  };
 
   return (
     <Drawer open={true} onOpenChange={(open) => !open && onClose()}>
@@ -51,66 +37,40 @@ export function SupportDrawer({
             className="text-2xl font-black"
             style={{ color: theme.textPrimary }}
           >
-            🆘 Support
+            💬 Support
           </DrawerTitle>
         </DrawerHeader>
 
         <div className="space-y-4 px-4 pb-6 overflow-auto">
-          {/* Welcome Message */}
+          {/* Contact Section */}
           <div
-            className="p-4 rounded-xl"
+            className="p-4 rounded-xl text-center"
             style={{ backgroundColor: `${theme.accentColor}15` }}
           >
-            <p
-              className="text-sm leading-relaxed"
-              style={{ color: theme.textPrimary }}
-            >
-              Need help with God Roll? We're here for you! Choose an option
-              below to get support or share your feedback.
+            <p className="text-sm mb-3" style={{ color: theme.textSecondary }}>
+              Have a question or need help? Reach out to us at:
             </p>
-          </div>
-
-          {/* Support Options */}
-          <div className="space-y-3">
-            {supportLinks.map((link) => (
-              <a
-                key={link.title}
-                href={link.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-4 p-4 rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98]"
-                style={{
-                  backgroundColor: `${theme.textTertiary}15`,
-                  border: `1px solid ${theme.textTertiary}30`,
-                }}
-              >
-                <span className="text-3xl">{link.icon}</span>
-                <div className="flex-1">
-                  <div
-                    className="font-bold"
-                    style={{ color: theme.textPrimary }}
-                  >
-                    {link.title}
-                  </div>
-                  <div
-                    className="text-sm"
-                    style={{ color: theme.textSecondary }}
-                  >
-                    {link.description}
-                  </div>
-                </div>
-                <span
-                  className="text-sm font-medium"
-                  style={{ color: theme.accentColor }}
-                >
-                  →
-                </span>
-              </a>
-            ))}
+            <a
+              href={`mailto:${SUPPORT_EMAIL}`}
+              className="inline-block text-lg font-bold py-2 px-4 rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
+              style={{
+                color: theme.accentColor,
+                backgroundColor: `${theme.accentColor}20`,
+              }}
+            >
+              📧 {SUPPORT_EMAIL}
+            </a>
+            <button
+              onClick={handleCopyEmail}
+              className="block mx-auto mt-2 text-xs underline"
+              style={{ color: theme.textTertiary }}
+            >
+              Copy email address
+            </button>
           </div>
 
           {/* FAQ Section */}
-          <div className="pt-4">
+          <div className="pt-2">
             <h3
               className="font-bold text-lg mb-3"
               style={{ color: theme.textPrimary }}
