@@ -12,7 +12,7 @@ interface SupportDrawerProps {
   theme: ColorTheme;
 }
 
-const SUPPORT_EMAIL = "support@god-roll.com";
+const SUPPORT_EMAIL = "team@support.god-roll.com";
 
 export function SupportDrawer({
   onClose,
