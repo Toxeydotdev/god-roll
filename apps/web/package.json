@@ -10,12 +10,12 @@
   },
   "dependencies": {
     "@capacitor/app": "^8.0.0",
-    "@capacitor/cli": "^8.0.0",
-    "@capacitor/core": "^8.0.0",
-    "@capacitor/ios": "^8.0.0",
+    "@capacitor/cli": "^8.0.1",
+    "@capacitor/core": "^8.0.1",
+    "@capacitor/ios": "^8.0.1",
     "@capacitor/screen-orientation": "^8.0.0",
     "@radix-ui/react-dialog": "^1.1.15",
-    "@supabase/supabase-js": "^2.90.0",
+    "@supabase/supabase-js": "^2.91.1",
     "@types/three": "^0.182.0",
     "three": "^0.182.0",
     "vaul": "^1.1.2"
