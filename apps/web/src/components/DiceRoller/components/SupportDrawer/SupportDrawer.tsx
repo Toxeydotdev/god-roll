@@ -6,6 +6,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import React from "react";
+import { Link } from "react-router-dom";
 
 interface SupportDrawerProps {
   onClose: () => void;
@@ -153,7 +154,14 @@ export function SupportDrawer({
             className="text-center pt-4 text-xs"
             style={{ color: theme.textTertiary }}
           >
-            God Roll v1.1 • Made with 🎲
+            <Link
+              to="/privacy"
+              className="underline hover:opacity-80 transition-opacity"
+              style={{ color: theme.textSecondary }}
+            >
+              Privacy Policy
+            </Link>
+            <div className="mt-2">God Roll v1.1 • Made with 🎲</div>
           </div>
         </div>
       </DrawerContent>
