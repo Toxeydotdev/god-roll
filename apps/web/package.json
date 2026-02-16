@@ -9,13 +9,13 @@
     "cap:open": "npx cap open ios"
   },
   "dependencies": {
-    "@capacitor/app": "^8.0.0",
-    "@capacitor/cli": "^8.0.0",
-    "@capacitor/core": "^8.0.0",
-    "@capacitor/ios": "^8.0.0",
-    "@capacitor/screen-orientation": "^8.0.0",
+    "@capacitor/app": "^8.0.1",
+    "@capacitor/cli": "^8.1.0",
+    "@capacitor/core": "^8.1.0",
+    "@capacitor/ios": "^8.1.0",
+    "@capacitor/screen-orientation": "^8.0.1",
     "@radix-ui/react-dialog": "^1.1.15",
-    "@supabase/supabase-js": "^2.90.0",
+    "@supabase/supabase-js": "^2.95.3",
     "@types/three": "^0.182.0",
     "three": "^0.182.0",
     "vaul": "^1.1.2"
